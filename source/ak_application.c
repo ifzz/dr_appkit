@@ -1,6 +1,6 @@
 
 #include "..\include\easy_appkit\ak_application.h"
-#include "..\include\easy_appkit\ak_config.h"
+#include "..\include\easy_appkit\ak_build_config.h"
 #include <easy_util/easy_util.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,6 +52,10 @@ void ak_delete_application(ak_application* pApplication)
 
 int ak_run_application(ak_application* pApplication)
 {
+    if (pApplication == NULL) {
+        return -1;
+    }
+
     return 0;
 }
 
