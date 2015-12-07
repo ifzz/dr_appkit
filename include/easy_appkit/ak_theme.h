@@ -6,6 +6,10 @@
 #include <easy_gui/easy_gui.h>      // For easygui_color, easygui_font
 #include <easy_draw/easy_draw.h>    // For easy2d_font_metrics
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct ak_application ak_application;
 typedef struct ak_theme ak_theme;
 typedef struct ak_text_theme ak_text_theme;
@@ -83,6 +87,10 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme);
 /// Loads a theme config file.
 void ak_theme_load_from_file(ak_application* pApplication, ak_theme* pTheme, const char* absolutePath);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

@@ -5,6 +5,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct ak_window ak_window;
 typedef struct ak_application ak_application;
 typedef struct easygui_element easygui_element;
@@ -67,6 +71,9 @@ void ak_show_window(ak_window* pWindow);
 /// Hides the given window.
 void ak_hide_window(ak_window* pWindow);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

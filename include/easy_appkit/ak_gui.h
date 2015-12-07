@@ -26,6 +26,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct easygui_element easygui_element;
 typedef struct ak_application ak_application;
 
@@ -173,6 +177,11 @@ void ak_panel_deactivate_tool(easygui_element* pPanel);
 /// @remarks
 ///     This will refresh the tab bar. Usually you will want to only set this once.
 void ak_panel_set_tab_options(easygui_element* pPanel, unsigned int options);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

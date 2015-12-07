@@ -3,9 +3,11 @@
 #include "../include/easy_appkit/ak_application.h"
 #include "../include/easy_appkit/ak_build_config.h"
 #include "../include/easy_appkit/ak_theme.h"
+#include "ak_config.h"
 #include <easy_util/easy_util.h>
 #include <easy_gui/easy_gui.h>
 #include <easy_fs/easy_vfs.h>
+#include <easy_path/easy_path.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -38,7 +40,7 @@ struct ak_application
 
     /// A pointer to the function to call when the default layout config is required. This will be called when
     /// layout config file could not be found.
-    ak_layout_config_proc onDefaultLayoutConfig;
+    ak_layout_config_proc onGetDefaultConfig;
 
 
     /// The size of the extra data, in bytes.
@@ -47,6 +49,16 @@ struct ak_application
     /// A pointer to the extra data associated with the application.
     char pExtraData[1];
 };
+
+
+/// Enter's into the main application loop.
+PRIVATE int ak_main_loop(ak_application* pApplication);
+
+/// Loads and apply's the main config.
+PRIVATE bool ak_load_and_apply_config(ak_application* pApplication);
+
+/// Applies the given config to the given application object.
+PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig);
 
 
 ak_application* ak_create_application(const char* pName, size_t extraDataSize, const void* pExtraData)
@@ -84,11 +96,12 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
                 char istr[16];
                 snprintf(istr, 16, "%d", iAttempt);
 
-                strcpy_s(path, sizeof(path), easypath_file_name(pApplication->name));
+                strcpy_s(path, sizeof(path), logDirPath);
+                easypath_append(path, sizeof(path), easypath_file_name(pApplication->name));
                 strcat_s(path, sizeof(path), istr);
                 strcat_s(path, sizeof(path), ".log");
 
-                pApplication->pLogFile = easyvfs_open(pApplication->pVFS, logDirPath, EASYVFS_WRITE, 0);
+                pApplication->pLogFile = easyvfs_open(pApplication->pVFS, path, EASYVFS_WRITE, 0);
                 if (pApplication->pLogFile != NULL)
                 {
                     // We were able to open the log file, so break here.
@@ -103,14 +116,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
 
 
-
         // GUI.
-        pApplication->pGUI = easygui_create_context();
-        if (pApplication->pGUI == NULL) {
-            free(pApplication);
-            return NULL;
-        }
-
 #ifdef AK_USE_WIN32
         pApplication->pDrawingContext = easy2d_create_context_gdi();
 #endif
@@ -123,9 +129,17 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
             return NULL;
         }
 
+        pApplication->pGUI = easygui_create_context_easy_draw();
+        if (pApplication->pGUI == NULL) {
+            free(pApplication);
+            return NULL;
+        }
+
+
+
 
         // Configs.
-        pApplication->onDefaultLayoutConfig = NULL;
+        pApplication->onGetDefaultConfig = NULL;
 
 
 
@@ -146,6 +160,18 @@ void ak_delete_application(ak_application* pApplication)
         return;
     }
 
+    // GUI.
+    easygui_delete_context(pApplication->pGUI);
+    easy2d_delete_context(pApplication->pDrawingContext);
+
+    // Logs.
+    easyvfs_close(pApplication->pLogFile);
+
+    // File system.
+    easyvfs_delete_context(pApplication->pVFS);
+
+
+    // Free the application object last.
     free(pApplication);
 }
 
@@ -156,10 +182,15 @@ int ak_run_application(ak_application* pApplication)
         return -1;
     }
 
-    // The first thing to do when running the application is to load the default config and apply it.
+    // The first thing to do when running the application is to load the default config and apply it. If a config
+    // file cannot be found, a default config will be requested. If the default config fails, the config will fail
+    // and an error code will be returned.
+    if (!ak_load_and_apply_config(pApplication)) {
+        return -2;
+    }
 
-
-    return 0;
+    // At this point the config should be loaded. Now we just enter the main loop.
+    return ak_main_loop(pApplication);
 }
 
 
@@ -170,6 +201,15 @@ const char* ak_get_application_name(ak_application* pApplication)
     }
 
     return pApplication->name;
+}
+
+easyvfs_context* ak_get_application_vfs(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->pVFS;
 }
 
 size_t ak_get_application_extra_data_size(ak_application* pApplication)
@@ -225,7 +265,7 @@ void ak_log(ak_application* pApplication, const char* message)
     }
 
 
-    // Write to the log file.
+    // Log file.
     if (pApplication->pLogFile != NULL) {
         char dateTime[64];
         easyutil_datetime_short(easyutil_now(), dateTime, sizeof(dateTime));
@@ -237,10 +277,11 @@ void ak_log(ak_application* pApplication, const char* message)
         easyvfs_flush(pApplication->pLogFile);
     }
 
-    
 
-    // Post to the terminal.
-    printf("%s\n", message);
+    // Log callback.
+    if (pApplication->onLog) {
+        pApplication->onLog(pApplication, message);
+    }
 }
 
 void ak_logf(ak_application* pApplication, const char* format, ...)
@@ -321,12 +362,40 @@ bool ak_get_log_file_folder_path(ak_application* pApplication, char* pathOut, si
     }
 
 
-    if (easyutil_get_log_folder_path(pathOut, pathOutSize) == 0) {
-        return 0;
+    if (!easyutil_get_log_folder_path(pathOut, pathOutSize)) {
+        return false;
     }
 
     return easypath_append(pathOut, pathOutSize, ak_get_application_name(pApplication));
 }
+
+bool ak_get_config_file_folder_path(ak_application* pApplication, char* pathOut, size_t pathOutSize)
+{
+    if (pApplication == NULL) {
+        return false;
+    }
+
+    if (pathOut == NULL || pathOutSize == 0) {
+        return false;
+    }
+
+    if (!easyutil_get_config_folder_path(pathOut, pathOutSize)) {
+        return false;
+    }
+
+    return easypath_append(pathOut, pathOutSize, ak_get_application_name(pApplication));
+}
+
+bool ak_get_config_file_path(ak_application* pApplication, char* pathOut, size_t pathOutSize)
+{
+    if (ak_get_config_file_folder_path(pApplication, pathOut, pathOutSize))
+    {
+        return easypath_append(pathOut, pathOutSize, easypath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".cfg") == 0;
+    }
+
+    return false;
+}
+
 
 void ak_set_on_default_config(ak_application* pApplication, ak_layout_config_proc proc)
 {
@@ -334,7 +403,7 @@ void ak_set_on_default_config(ak_application* pApplication, ak_layout_config_pro
         return;
     }
 
-    pApplication->onDefaultLayoutConfig;
+    pApplication->onGetDefaultConfig = proc;
 }
 
 ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication)
@@ -343,8 +412,93 @@ ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication)
         return NULL;
     }
 
-    return pApplication->onDefaultLayoutConfig;
+    return pApplication->onGetDefaultConfig;
 }
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Private
+//
+///////////////////////////////////////////////////////////////////////////////
+
+PRIVATE int ak_main_loop(ak_application* pApplication)
+{
+#ifdef AK_USE_WIN32
+    (void)pApplication;
+
+    MSG msg;
+    BOOL bRet;
+    while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
+    {
+        if (bRet == -1)
+        {
+            // Unknown error.
+            return -43;
+        }
+
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+
+    return 0;
+#endif
+
+#ifdef AK_USE_GTK
+    (void)pApplication;
+    return -1;
+#endif
+}
+
+PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
+{
+    assert(pApplication != NULL);
+
+    // We first need to try and open the config file. If we can't find it we need to try and load the default config. If both
+    // fail, we need to return false.
+    char configPath[EASYVFS_MAX_PATH];
+    if (ak_get_config_file_path(pApplication, configPath, sizeof(configPath)))
+    {
+        easyvfs_file* pConfigFile = easyvfs_open(ak_get_application_vfs(pApplication), configPath, EASYVFS_READ, 0);
+        if (pConfigFile != NULL)
+        {
+            ak_config config;
+            if (ak_parse_config_from_file(&config, pConfigFile))
+            {
+                if (ak_apply_config(pApplication, &config))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+
+    // If we get here we want to try loading the default config.
+    if (pApplication->onGetDefaultConfig)
+    {
+        ak_config config;
+        if (ak_parse_config_from_string(&config, pApplication->onGetDefaultConfig(pApplication)))
+        {
+            return ak_apply_config(pApplication, &config);
+        }
+    }
+
+
+    // If we get here, both configs have failed to load.
+    return false;
+}
+
+PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig)
+{
+    assert(pApplication != NULL);
+    assert(pConfig      != NULL);
+
+    return true;
+}
+
 
 
 /*

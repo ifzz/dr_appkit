@@ -6,14 +6,19 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct ak_application ak_application;
 typedef struct ak_window ak_window;
 typedef struct ak_theme ak_theme;
 typedef struct easygui_context easygui_context;
 typedef struct easy2d_context easy2d_context;
+typedef struct easyvfs_context easyvfs_context;
 
-typedef void (* ak_log_proc)           (ak_application* pApplication, const char* message);
-typedef void (* ak_layout_config_proc) (ak_application* pApplication, const char* layoutName);
+typedef void        (* ak_log_proc)           (ak_application* pApplication, const char* message);
+typedef const char* (* ak_layout_config_proc) (ak_application* pApplication);
 
 /// Creates a new application object.
 ///
@@ -53,6 +58,9 @@ int ak_run_application(ak_application* pApplication);
 ///     If null was passed to ak_create_application(), the returned string will be equal to the value of
 ///     AK_DEFAULT_APPLICATION_NAME which is defined in ak_build_config.h.
 const char* ak_get_application_name(ak_application* pApplication);
+
+/// Retrieves a pointer ot the application's virtual file system context.
+easyvfs_context* ak_get_application_vfs(ak_application* pApplication);
 
 /// Retrieves the size of the extra data that is associated with the application.
 size_t ak_get_application_extra_data_size(ak_application* pApplication);
@@ -94,12 +102,15 @@ void ak_set_log_callback(ak_application* pApplication, ak_log_proc proc);
 /// Retrieves a pointer to the log callback function, if any.
 ak_log_proc ak_get_log_callback(ak_application* pApplication);
 
-/// Retrieves the path of the log file.
-///
-/// @remarks
-///     If a log file is unable to be opened, this will append a numeric value to the file path in case the
-///     file already exists.
+
+/// Retrieves the path of the directory that contains the log file.
 bool ak_get_log_file_folder_path(ak_application* pApplication, char* pathOut, size_t pathOutSize);
+
+/// Retrieves the path of the directory that contains the config file.
+bool ak_get_config_file_folder_path(ak_application* pApplication, char* pathOut, size_t pathOutSize);
+
+/// Retrieves the path of the config file.
+bool ak_get_config_file_path(ak_application* pApplication, char* pathOut, size_t pathOutSize);
 
 
 /// Sets the function to call when the default config of a layout is required.
@@ -108,6 +119,11 @@ void ak_set_on_default_config(ak_application* pApplication, ak_layout_config_pro
 /// Retrieves the function to call when the default config of a layout is required.
 ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication);
 
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
