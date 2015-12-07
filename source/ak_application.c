@@ -1,14 +1,44 @@
+// Public domain. See "unlicense" statement at the end of this file.
 
-#include "..\include\easy_appkit\ak_application.h"
-#include "..\include\easy_appkit\ak_build_config.h"
+#include "../include/easy_appkit/ak_application.h"
+#include "../include/easy_appkit/ak_build_config.h"
+#include "../include/easy_appkit/ak_theme.h"
 #include <easy_util/easy_util.h>
+#include <easy_gui/easy_gui.h>
+#include <easy_fs/easy_vfs.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 struct ak_application
 {
     /// The name of the application.
     char name[AK_MAX_APPLICATION_NAME_LENGTH];
+
+    /// The virtual file system context. This is mainly used for opening log, theme and configuration files.
+    easyvfs_context* pVFS;
+
+    /// The log file.
+    easyvfs_file* pLogFile;
+
+    /// The log callback.
+    ak_log_proc onLog;
+    
+
+    /// A pointer to the GUI context.
+    easygui_context* pGUI;
+
+    /// The drawing context.
+    easy2d_context* pDrawingContext;
+
+    /// The application's theme.
+    ak_theme theme;
+
+
+    /// A pointer to the function to call when the default layout config is required. This will be called when
+    /// layout config file could not be found.
+    ak_layout_config_proc onDefaultLayoutConfig;
 
 
     /// The size of the extra data, in bytes.
@@ -24,12 +54,82 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
     ak_application* pApplication = malloc(sizeof(ak_application) + extraDataSize - sizeof(pApplication->pExtraData));
     if (pApplication != NULL)
     {
+        // Name.
         if (pName != NULL) {
             strcpy_s(pApplication->name, sizeof(pApplication->name), pName);
         } else {
             strcpy_s(pApplication->name, sizeof(pApplication->name), "easy_appkit");
         }
 
+
+        // File system.
+        pApplication->pVFS = easyvfs_create_context();
+        if (pApplication->pVFS == NULL) {
+            free(pApplication);
+            return NULL;
+        }
+
+
+        // Logging
+        pApplication->onLog = NULL;
+        
+        char logDirPath[EASYVFS_MAX_PATH];
+        if (ak_get_log_file_folder_path(pApplication, logDirPath, sizeof(logDirPath)))
+        {
+            const unsigned int maxAttempts = 10;
+
+            char path[EASYVFS_MAX_PATH];
+            for (unsigned int iAttempt = 0; iAttempt < maxAttempts; ++iAttempt)
+            {
+                char istr[16];
+                snprintf(istr, 16, "%d", iAttempt);
+
+                strcpy_s(path, sizeof(path), easypath_file_name(pApplication->name));
+                strcat_s(path, sizeof(path), istr);
+                strcat_s(path, sizeof(path), ".log");
+
+                pApplication->pLogFile = easyvfs_open(pApplication->pVFS, logDirPath, EASYVFS_WRITE, 0);
+                if (pApplication->pLogFile != NULL)
+                {
+                    // We were able to open the log file, so break here.
+                    break;
+                }
+            }
+        }
+        else
+        {
+            pApplication->pLogFile = NULL;
+        }
+
+
+
+
+        // GUI.
+        pApplication->pGUI = easygui_create_context();
+        if (pApplication->pGUI == NULL) {
+            free(pApplication);
+            return NULL;
+        }
+
+#ifdef AK_USE_WIN32
+        pApplication->pDrawingContext = easy2d_create_context_gdi();
+#endif
+#ifdef AK_USE_GTK
+        pApplication->pDrawingContext = easy2d_create_context_cairo();
+#endif
+        if (pApplication->pDrawingContext == NULL) {
+            easygui_delete_context(pApplication->pGUI);
+            free(pApplication);
+            return NULL;
+        }
+
+
+        // Configs.
+        pApplication->onDefaultLayoutConfig = NULL;
+
+
+
+        // Extra data.
         pApplication->extraDataSize = extraDataSize;
 
         if (extraDataSize > 0 && pExtraData != NULL) {
@@ -56,6 +156,9 @@ int ak_run_application(ak_application* pApplication)
         return -1;
     }
 
+    // The first thing to do when running the application is to load the default config and apply it.
+
+
     return 0;
 }
 
@@ -68,7 +171,6 @@ const char* ak_get_application_name(ak_application* pApplication)
 
     return pApplication->name;
 }
-
 
 size_t ak_get_application_extra_data_size(ak_application* pApplication)
 {
@@ -87,3 +189,187 @@ void* ak_get_application_extra_data(ak_application* pApplication)
 
     return pApplication->pExtraData;
 }
+
+easygui_context* ak_get_application_gui(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->pGUI;
+}
+
+easy2d_context* ak_get_application_drawing_context(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->pDrawingContext;
+}
+
+ak_theme* ak_get_application_theme(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return &pApplication->theme;
+}
+
+
+void ak_log(ak_application* pApplication, const char* message)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+
+    // Write to the log file.
+    if (pApplication->pLogFile != NULL) {
+        char dateTime[64];
+        easyutil_datetime_short(easyutil_now(), dateTime, sizeof(dateTime));
+
+        easyvfs_write_string(pApplication->pLogFile, "[");
+        easyvfs_write_string(pApplication->pLogFile, dateTime);
+        easyvfs_write_string(pApplication->pLogFile, "]");
+        easyvfs_write_line  (pApplication->pLogFile, message);
+        easyvfs_flush(pApplication->pLogFile);
+    }
+
+    
+
+    // Post to the terminal.
+    printf("%s\n", message);
+}
+
+void ak_logf(ak_application* pApplication, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    {
+        char msg[4096];
+        vsnprintf(msg, sizeof(msg), format, args);
+        
+        ak_log(pApplication, msg);
+    }
+    va_end(args);
+}
+
+void ak_warning(ak_application* pApplication, const char* message)
+{
+    ak_logf(pApplication, "[WARNING] %s", message);
+}
+
+void ak_warningf(ak_application* pApplication, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    {
+        char msg[4096];
+        vsnprintf(msg, sizeof(msg), format, args);
+        
+        ak_warning(pApplication, msg);
+    }
+    va_end(args);
+}
+
+void ak_error(ak_application* pApplication, const char* message)
+{
+    ak_logf(pApplication, "[ERROR] %s", message);
+}
+
+void ak_errorf(ak_application* pApplication, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    {
+        char msg[4096];
+        vsnprintf(msg, sizeof(msg), format, args);
+        
+        ak_error(pApplication, msg);
+    }
+    va_end(args);
+}
+
+void ak_set_log_callback(ak_application* pApplication, ak_log_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onLog = proc;
+}
+
+ak_log_proc ak_get_log_callback(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->onLog;
+}
+
+bool ak_get_log_file_folder_path(ak_application* pApplication, char* pathOut, size_t pathOutSize)
+{
+    if (pApplication == NULL) {
+        return false;
+    }
+
+    if (pathOut == NULL || pathOutSize == 0) {
+        return false;
+    }
+
+
+    if (easyutil_get_log_folder_path(pathOut, pathOutSize) == 0) {
+        return 0;
+    }
+
+    return easypath_append(pathOut, pathOutSize, ak_get_application_name(pApplication));
+}
+
+void ak_set_on_default_config(ak_application* pApplication, ak_layout_config_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onDefaultLayoutConfig;
+}
+
+ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->onDefaultLayoutConfig;
+}
+
+
+/*
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
+*/

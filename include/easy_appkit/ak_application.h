@@ -4,15 +4,24 @@
 #define ak_application_h
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct ak_application ak_application;
+typedef struct ak_window ak_window;
+typedef struct ak_theme ak_theme;
+typedef struct easygui_context easygui_context;
+typedef struct easy2d_context easy2d_context;
 
+typedef void (* ak_log_proc)           (ak_application* pApplication, const char* message);
+typedef void (* ak_layout_config_proc) (ak_application* pApplication, const char* layoutName);
 
 /// Creates a new application object.
 ///
 /// @remarks
 ///     <pName> is used for determining where to read and write user configuration files, log files, etc.
 ///     <pName> cannot be longer than AK_MAX_APPLICATION_NAME_LENGTH which is defined in ak_build_config.h.
+///     <pName> can be a path-style string such as "MyApplication/MySubApplication". In this case, the log
+///     theme, config, etc. files will be opened based on this path.
 ///     @par
 ///     User-defined data can be associated with an application by specifying the number of extra bytes
 ///     that are required. Use ak_application_get_extra_data() to retrieve a pointer to a buffer that can
@@ -45,15 +54,59 @@ int ak_run_application(ak_application* pApplication);
 ///     AK_DEFAULT_APPLICATION_NAME which is defined in ak_build_config.h.
 const char* ak_get_application_name(ak_application* pApplication);
 
-
 /// Retrieves the size of the extra data that is associated with the application.
 size_t ak_get_application_extra_data_size(ak_application* pApplication);
 
 /// Retrieves a pointer to the buffer containing the user-defined data.
 void* ak_get_application_extra_data(ak_application* pApplication);
 
+/// Retrieves a pointer to the GUI context associated with the application.
+easygui_context* ak_get_application_gui(ak_application* pApplication);
+
+/// Retrieves a pointer to the GUI drawing context.
+easy2d_context* ak_get_application_drawing_context(ak_application* pApplication);
+
+/// Retrieves a pointer to the object representing the application's theme.
+ak_theme* ak_get_application_theme(ak_application* pApplication);
 
 
+/// Posts a log message.
+void ak_log(ak_application* pApplication, const char* message);
+
+/// Posts a formatted log message.
+void ak_logf(ak_application* pApplication, const char* format, ...);
+
+/// Posts a warning to the log.
+void ak_warning(ak_application* pApplication, const char* message);
+
+/// Posts a formatted warning log message.
+void ak_warningf(ak_application* pApplication, const char* format, ...);
+
+/// Posts an error log message.
+void ak_error(ak_application* pApplication, const char* message);
+
+/// Posts a formatted error log message.
+void ak_errorf(ak_application* pApplication, const char* format, ...);
+
+/// Sets the function to call when a log message is posted.
+void ak_set_log_callback(ak_application* pApplication, ak_log_proc proc);
+
+/// Retrieves a pointer to the log callback function, if any.
+ak_log_proc ak_get_log_callback(ak_application* pApplication);
+
+/// Retrieves the path of the log file.
+///
+/// @remarks
+///     If a log file is unable to be opened, this will append a numeric value to the file path in case the
+///     file already exists.
+bool ak_get_log_file_folder_path(ak_application* pApplication, char* pathOut, size_t pathOutSize);
+
+
+/// Sets the function to call when the default config of a layout is required.
+void ak_set_on_default_config(ak_application* pApplication, ak_layout_config_proc proc);
+
+/// Retrieves the function to call when the default config of a layout is required.
+ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication);
 
 
 #endif
