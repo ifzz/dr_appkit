@@ -3,20 +3,28 @@
 #ifndef ak_layout_h
 #define ak_layout_h
 
+#include "../include/easy_appkit/ak_build_config.h"
 #include <easy_util/easy_util.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define AK_LAYOUT_TYPE_LAYOUT               "Layout"
+#define AK_LAYOUT_TYPE_APPLICATION_WINDOW   "ApplicationWindow"
+#define AK_LAYOUT_TYPE_SPLIT_PANEL_HORZ     "HSplitPanel"
+#define AK_LAYOUT_TYPE_SPLIT_PANEL_VERT     "VSplitPanel"
+#define AK_LAYOUT_TYPE_PANEL                "Panel"
+#define AK_LAYOUT_TYPE_TOOL                 "Tool"
+
 typedef struct ak_layout ak_layout;
 struct ak_layout
 {
     /// The type of the layout item.
-    char name[256];
+    char type[AK_MAX_LAYOUT_NAME_LENGTH];
 
     /// The attributes of the layout item as a string. The format of this string depends on the item type.
-    char attributes[256];
+    char attributes[AK_MAX_LAYOUT_ATTRIB_LENGTH];
 
 
     /// A pointer to the parent item.
@@ -49,10 +57,41 @@ void ak_prepend_layout(ak_layout* pChild, ak_layout* pParent);
 
 
 /// Creates a new layout item.
-ak_layout* ak_create_layout(const char* name, const char* attributes, ak_layout* pParent);
+ak_layout* ak_create_layout(const char* type, const char* attributes, ak_layout* pParent);
 
 /// Deletes the given layout object.
 void ak_delete_layout(ak_layout* pLayout);
+
+
+
+/// Structure representing the attributes of a window layout object.
+typedef struct
+{
+    /// The position of the window on the x axis.
+    int posX;
+
+    /// The position of the window on the y axis.
+    int posY;
+
+    /// The width of the window.
+    unsigned int width;
+
+    /// The height of the window.
+    unsigned int height;
+
+    /// Whether or not the window is maximized.
+    bool maximized;
+
+    /// The window title.
+    char title[AK_MAX_WINDOW_TITLE_LENGTH];
+
+    /// The name of the window.
+    char name[AK_MAX_WINDOW_NAME_LENGTH];
+
+} ak_window_layout_attributes;
+
+/// Parses the attribute string of a window layout type.
+bool ak_parse_window_layout_attributes(const char* attributesStr, ak_window_layout_attributes* pAttributesOut);
 
 
 

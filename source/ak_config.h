@@ -34,6 +34,10 @@ bool ak_init_config(ak_config* pConfig);
 void ak_uninit_config(ak_config* pConfig);
 
 
+/// Finds the first occurance of a root level layout with the given name.
+ak_layout* ak_config_find_root_layout_by_name(ak_config* pConfig, const char* layoutName);
+
+
 #ifdef __cplusplus
 }
 #endif

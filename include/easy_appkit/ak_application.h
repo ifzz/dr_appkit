@@ -14,6 +14,7 @@ typedef struct ak_application ak_application;
 typedef struct ak_window ak_window;
 typedef struct ak_theme ak_theme;
 typedef struct easygui_context easygui_context;
+typedef struct easygui_element easygui_element;
 typedef struct easy2d_context easy2d_context;
 typedef struct easyvfs_context easyvfs_context;
 
@@ -136,6 +137,12 @@ void ak_set_on_default_config(ak_application* pApplication, ak_layout_config_pro
 /// Retrieves the function to call when the default config of a layout is required.
 ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication);
 
+
+/// Retrieves the window that the given element is contained in.
+///
+/// @remarks
+///     This runs in linear time.
+ak_window* ak_get_element_window(easygui_element* pElement);
 
 
 #ifdef __cplusplus

@@ -7,12 +7,12 @@
 PRIVATE bool ak_is_layout_item_tag(const char* tag)
 {
     return
-        strcmp(tag, "Layout")            == 0 ||
-        strcmp(tag, "ApplicationWindow") == 0 ||
-        strcmp(tag, "HSplitPanel")       == 0 ||
-        strcmp(tag, "VSplitPanel")       == 0 ||
-        strcmp(tag, "Panel")             == 0 ||
-        strcmp(tag, "Tool")              == 0;
+        strcmp(tag, AK_LAYOUT_TYPE_LAYOUT)             == 0 ||
+        strcmp(tag, AK_LAYOUT_TYPE_APPLICATION_WINDOW) == 0 ||
+        strcmp(tag, AK_LAYOUT_TYPE_SPLIT_PANEL_HORZ)   == 0 ||
+        strcmp(tag, AK_LAYOUT_TYPE_SPLIT_PANEL_VERT)   == 0 ||
+        strcmp(tag, AK_LAYOUT_TYPE_PANEL)              == 0 ||
+        strcmp(tag, AK_LAYOUT_TYPE_TOOL)               == 0;
 }
 
 typedef struct
@@ -111,7 +111,7 @@ static void ak_config_on_pair(void* pUserData, const char* key, const char* valu
             if (pContext->pCurrentLayout != NULL)
             {
                 // Validation.
-                if (strcmp(pContext->pCurrentLayout->name, key + 1) != 0)
+                if (strcmp(pContext->pCurrentLayout->type, key + 1) != 0)
                 {
                     // Tag mismatch.
                     pContext->foundError = true;
@@ -209,6 +209,28 @@ void ak_uninit_config(ak_config* pConfig)
 
     // Clear the config to 0.
     memset(pConfig, 0, sizeof(*pConfig));
+}
+
+
+ak_layout* ak_config_find_root_layout_by_name(ak_config* pConfig, const char* layoutName)
+{
+    if (pConfig != NULL || layoutName == NULL) {
+        return NULL;
+    }
+
+    if (pConfig->pRootLayout == NULL) {
+        return NULL;
+    }
+
+    // Only searching root level layouts. The name of a root level layout object is defined by the attribute.
+    for (ak_layout* pLayout = pConfig->pRootLayout->pFirstChild; pLayout != NULL; pLayout = pLayout->pNextSibling)
+    {
+        if (strcmp(pLayout->type, "Layout") == 0 && strcmp(pLayout->attributes, layoutName) == 0) {
+            return pLayout;
+        }
+    }
+
+    return NULL;
 }
 
 

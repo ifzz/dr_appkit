@@ -68,6 +68,9 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication);
 /// Applies the given config to the given application object.
 PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig);
 
+/// Applies the given layout object to the given application object.
+PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, easygui_element* pElement);
+
 
 ak_application* ak_create_application(const char* pName, size_t extraDataSize, const void* pExtraData)
 {
@@ -149,6 +152,9 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         // Configs.
         pApplication->onGetDefaultConfig = NULL;
 
+
+        // Windows.
+        pApplication->pFirstWindow = NULL;
 
 
         // Extra data.
@@ -456,6 +462,16 @@ ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication)
 }
 
 
+ak_window* ak_get_element_window(easygui_element* pElement)
+{
+    if (pElement == NULL) {
+        return NULL;
+    }
+
+    return ak_get_panel_window(easygui_find_top_level_element(pElement));
+}
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -535,6 +551,71 @@ PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig)
 {
     assert(pApplication != NULL);
     assert(pConfig      != NULL);
+
+    // We need to find the initial layout object.
+    ak_layout* pInitialLayout = ak_config_find_root_layout_by_name(pConfig, pConfig->currentLayoutName);
+    if (pInitialLayout == NULL) {
+        pInitialLayout = pConfig->pRootLayout->pFirstChild;
+
+        if (pInitialLayout == NULL) {
+            return false;
+        }
+    }
+
+    return ak_apply_layout(pApplication, pInitialLayout, NULL);
+}
+
+PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, easygui_element* pParentPanel)
+{
+    assert(pApplication != NULL);
+    assert(pLayout      != NULL);
+
+    easygui_element* pNewPanel = NULL;
+
+    if (strcmp(pLayout->type, AK_LAYOUT_TYPE_LAYOUT) == 0)
+    {
+        // It's a root level layout object.
+        assert(pParentPanel == NULL);
+    }
+    else if (strcmp(pLayout->type, AK_LAYOUT_TYPE_APPLICATION_WINDOW) == 0)
+    {
+        // It's an application window.
+        ak_window* pParentWindow = ak_get_element_window(pParentPanel);
+
+        ak_window* pWindow = ak_create_window(pApplication, ak_window_type_application, pParentWindow, 0, NULL);
+        if (pWindow == NULL) {
+            return false;
+        }
+
+        // We need to parse the attributes.
+        ak_window_layout_attributes attr;
+        if (!ak_parse_window_layout_attributes(pLayout->attributes, &attr)) {
+            return false;
+        }
+
+        //ak_set_window_name(pWindow, attr.name);
+        ak_set_window_title(pWindow, attr.title);
+        ak_set_window_position(pWindow, attr.posX, attr.posY);
+        ak_set_window_size(pWindow, attr.width, attr.height);
+        
+        if (attr.maximized) {
+            ak_show_window_maximized(pWindow);
+        } else {
+            ak_show_window(pWindow);
+        }
+
+        pNewPanel = ak_get_window_panel(pWindow);
+    }
+
+
+    // Apply the child layouts.
+    for (ak_layout* pChild = pLayout->pFirstChild; pChild != NULL; pChild = pChild->pNextSibling)
+    {
+        if (!ak_apply_layout(pApplication, pChild, pNewPanel))
+        {
+            return false;
+        }
+    }
 
     return true;
 }

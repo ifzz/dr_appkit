@@ -85,19 +85,19 @@ void ak_prepend_layout(ak_layout* pChild, ak_layout* pParent)
 }
 
 
-ak_layout* ak_create_layout(const char* name, const char* attributes, ak_layout* pParent)
+ak_layout* ak_create_layout(const char* type, const char* attributes, ak_layout* pParent)
 {
     ak_layout* pLayout = malloc(sizeof(*pLayout));
     if (pLayout != NULL)
     {
-        if (name != NULL) {
-            strcpy_s(pLayout->name, sizeof(pLayout->name), name);
+        if (type != NULL) {
+            strcpy_s(pLayout->type, sizeof(pLayout->type), type);
         } else {
-            pLayout->name[0] = '\0';
+            pLayout->type[0] = '\0';
         }
 
         if (attributes != NULL) {
-            strcpy_s(pLayout->attributes, sizeof(pLayout->attributes), name);
+            strcpy_s(pLayout->attributes, sizeof(pLayout->attributes), attributes);
         } else {
             pLayout->attributes[0] = '\0';
         }
@@ -133,6 +133,72 @@ void ak_delete_layout(ak_layout* pLayout)
 
     // Free the object last.
     free(pLayout);
+}
+
+
+
+bool ak_parse_window_layout_attributes(const char* attributesStr, ak_window_layout_attributes* pAttributesOut)
+{
+    if (attributesStr == NULL || pAttributesOut == NULL) {
+        return false;
+    }
+
+
+    char posXStr[8];
+    char posYStr[8];
+    char widthStr[8];
+    char heightStr[8];
+    char maximizedStr[8];
+
+    attributesStr = easyutil_next_token(attributesStr, posXStr, sizeof(posXStr));
+    if (attributesStr == NULL) {
+        return false;
+    }
+
+    attributesStr = easyutil_next_token(attributesStr, posYStr, sizeof(posYStr));
+    if (attributesStr == NULL) {
+        return false;
+    }
+
+    attributesStr = easyutil_next_token(attributesStr, widthStr, sizeof(widthStr));
+    if (attributesStr == NULL) {
+        return false;
+    }
+
+    attributesStr = easyutil_next_token(attributesStr, heightStr, sizeof(heightStr));
+    if (attributesStr == NULL) {
+        return false;
+    }
+
+    attributesStr = easyutil_next_token(attributesStr, maximizedStr, sizeof(maximizedStr));
+    if (attributesStr == NULL) {
+        return false;
+    }
+
+
+    // The next two properties are optional (title and name).
+    attributesStr = easyutil_next_token(attributesStr, pAttributesOut->title, sizeof(pAttributesOut->title));
+    if (attributesStr == NULL) {
+        strcpy_s(pAttributesOut->title, sizeof(pAttributesOut->title), "");
+    }
+
+    attributesStr = easyutil_next_token(attributesStr, pAttributesOut->name, sizeof(pAttributesOut->name));
+    if (attributesStr == NULL) {
+        strcpy_s(pAttributesOut->name, sizeof(pAttributesOut->name), "");
+    }
+
+    pAttributesOut->posX   = atoi(posXStr);
+    pAttributesOut->posY   = atoi(posYStr);
+    pAttributesOut->width  = atoi(widthStr);
+    pAttributesOut->height = atoi(heightStr);
+
+    if (strcmp(maximizedStr, "false") == 0) {
+        pAttributesOut->maximized = false;
+    } else {
+        pAttributesOut->maximized = true;
+    }
+
+    return true;
 }
 
 

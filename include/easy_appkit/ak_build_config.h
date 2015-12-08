@@ -11,6 +11,24 @@
 #define AK_DEFAULT_APPLICATION_NAME     "easy_appkit"
 #endif
 
+#ifndef AK_MAX_WINDOW_NAME_LENGTH
+#define AK_MAX_WINDOW_NAME_LENGTH       64
+#endif
+
+#ifndef AK_MAX_WINDOW_TITLE_LENGTH
+#define AK_MAX_WINDOW_TITLE_LENGTH      128
+#endif
+
+#ifndef AK_MAX_LAYOUT_NAME_LENGTH
+#define AK_MAX_LAYOUT_NAME_LENGTH       64
+#endif
+
+#ifndef AK_MAX_LAYOUT_ATTRIB_LENGTH
+#define AK_MAX_LAYOUT_ATTRIB_LENGTH     256
+#endif
+
+
+
 
 //////////////////////////////////////////////////
 // Non-Configurable Section
