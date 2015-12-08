@@ -9,18 +9,6 @@
 extern "C" {
 #endif
 
-typedef enum
-{
-    ak_layout_type_unknown,
-    ak_layout_type_root,
-    ak_layout_type_application_window,
-    ak_layout_type_split_panel_horz,
-    ak_layout_type_split_panel_vert,
-    ak_layout_type_panel,
-    ak_layout_type_tool,
-
-} ak_layout_type;
-
 typedef struct ak_layout ak_layout;
 struct ak_layout
 {

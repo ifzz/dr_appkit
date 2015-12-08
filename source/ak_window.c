@@ -3,7 +3,12 @@
 #include "../include/easy_appkit/ak_window.h"
 #include "../include/easy_appkit/ak_application.h"
 #include "../include/easy_appkit/ak_build_config.h"
+#include "../include/easy_appkit/ak_gui.h"
+#include "ak_window_private.h"
+#include "ak_application_private.h"
 #include <easy_gui/easy_gui.h>
+#include <easy_util/easy_util.h>
+#include <assert.h>
 
 #ifdef AK_USE_WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -11,22 +16,1429 @@
 
 struct ak_window
 {
+    /// The Win32 window handle.
+    HWND hWnd;
+
+    /// The cursor to use with this window.
+    HCURSOR hCursor;
+
+    /// The relative position of the window. This is mainly required for popup windows because they require special handling when
+    /// setting their position.
+    int popupRelativePosX;
+    int popupRelativePosY;
+
+    /// Keeps track of whether or not the cursor is over this window.
+    bool isCursorOver;
+
+
+
     /// A pointer to the application that owns this window.
     ak_application* pApplication;
+
+    /// The window type.
+    ak_window_type type;
+
+    /// The top-level GUI element to draw to this window.
+    easygui_element* pPanel;
+
+    /// The easy_draw surface we'll be drawing to.
+    easy2d_surface* pSurface;
+
+
+    /// The function to call when the window is about to be hidden. If false is returned the window is prevented from being hidden.
+    ak_window_on_hide_proc onHide;
+
+    /// The function to call when the window is about to be shown. If false is returned, the window is prevented from being shown.
+    ak_window_on_show_proc onShow;
+    
+    /// The function to call when the window has been activated.
+    ak_window_on_activate_proc onActivate;
+
+    /// The function to call when the window has been deactivated.
+    ak_window_on_deactivate_proc onDeactivate;
+
+    /// Called when a mouse button is pressed.
+    ak_window_on_mouse_button_proc onMouseButtonDown;
+
+    /// Called when a mouse button is released.
+    ak_window_on_mouse_button_proc onMouseButtonUp;
+
+    /// Called when a mouse button is double clicked.
+    ak_window_on_mouse_button_proc onMouseButtonDblClick;
+
+    /// Called when the mouse wheel is turned.
+    ak_window_on_mouse_wheel_proc onMouseWheel;
+
+
+    /// [Internal Use Only] The next window in the linked list of windows that were created by this application. This is not necessarily a related window.
+    ak_window* pNextWindow;
+
+    /// [Internal Use Only] The previous window in the linked list of windows that were created by this application. This is not necessarily a related window.
+    ak_window* pPrevWindow;
+
+
+    /// The size of the extra data in bytes.
+    size_t extraDataSize;
+
+    /// A pointer to the extra data.
+    char pExtraData[1];
+};
+
+
+static const char* g_WindowClass       = "AK_WindowClass";
+static const char* g_WindowClass_Popup = "AK_WindowClass_Popup";
+
+#define GET_X_LPARAM(lp)                        ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp)                        ((int)(short)HIWORD(lp))
+
+
+typedef struct
+{
+    /// A pointer to the window object itself.
+    ak_window* pWindow;
 
     /// The Win32 window handle.
     HWND hWnd;
 
-    /// The top-level GUI element to draw to this window.
-    easygui_element* pGUIElement;
-};
+}element_user_data;
 
 
 
-#endif
+PRIVATE static void ak_on_global_capture_mouse(easygui_element* pElement)
+{
+    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL) {
+        SetCapture(pElementData->hWnd);
+    }
+}
+
+PRIVATE static void ak_on_global_release_mouse(easygui_element* pElement)
+{
+    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL) {
+        ReleaseCapture();
+    }
+}
+
+PRIVATE static void ak_on_global_capture_keyboard(easygui_element* pElement)
+{
+    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL) {
+        SetFocus(pElementData->hWnd);
+    }
+}
+
+PRIVATE static void ak_on_global_release_keyboard(easygui_element* pElement)
+{
+    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL) {
+        SetFocus(NULL);
+    }
+}
+
+PRIVATE static void ak_on_global_dirty(easygui_element* pElement, easygui_rect relativeRect)
+{
+    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL)
+    {
+        easygui_rect absoluteRect = relativeRect;
+        easygui_make_rect_absolute(pElement, &absoluteRect);
+
+
+        RECT rect;
+        rect.left   = (LONG)absoluteRect.left;
+        rect.top    = (LONG)absoluteRect.top;
+        rect.right  = (LONG)absoluteRect.right;
+        rect.bottom = (LONG)absoluteRect.bottom;
+        InvalidateRect(pElementData->hWnd, &rect, FALSE);
+    }
+}
+
+
+PRIVATE easygui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow, HWND hWnd)
+{
+    easygui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(element_user_data), NULL);
+    if (pElement == NULL) {
+        return NULL;
+    }
+
+    element_user_data* pUserData = ak_panel_get_extra_data(pElement);
+    assert(pUserData != NULL);
+
+    pUserData->hWnd    = hWnd;
+    pUserData->pWindow = pWindow;
+
+    return pElement;
+}
+
+void ak_delete_window_panel(easygui_element* pTopLevelElement)
+{
+    easygui_delete_element(pTopLevelElement);
+}
+
+
+ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_window_type type, HWND hWnd, size_t extraDataSize, const void* pExtraData)
+{
+    ak_window* pWindow = malloc(sizeof(*pWindow) + extraDataSize - sizeof(pWindow->pExtraData));
+    if (pWindow == NULL)
+    {
+        ak_errorf(pApplication, "Failed to allocate memory for window.");
+
+        DestroyWindow(hWnd);
+        return NULL;
+    }
+
+    pWindow->pSurface = easy2d_create_surface_gdi_HWND(ak_get_application_drawing_context(pApplication), hWnd);
+    if (pWindow->pSurface == NULL)
+    {
+        ak_errorf(pApplication, "Failed to create drawing surface for window.");
+
+        free(pWindow);
+        DestroyWindow(hWnd);
+        return NULL;
+    }
+
+    pWindow->pPanel = ak_create_window_panel(pApplication, pWindow, hWnd);
+    if (pWindow->pPanel == NULL)
+    {
+        ak_errorf(pApplication, "Failed to create panel element for window.");
+
+        free(pWindow);
+        DestroyWindow(hWnd);
+        return NULL;
+    }
+
+    // The top-level window needs to have it's initial size set.
+    unsigned int windowWidth;
+    unsigned int windowHeight;
+    ak_get_window_size(pWindow, &windowWidth, &windowHeight);
+    easygui_set_size(pWindow->pPanel, (float)windowWidth, (float)windowHeight);
+
+
+    pWindow->pApplication          = pApplication;
+    pWindow->type                  = type;
+    pWindow->onHide                = NULL;
+    pWindow->onShow                = NULL;
+    pWindow->onActivate            = NULL;
+    pWindow->onDeactivate          = NULL;
+    pWindow->onMouseButtonDown     = NULL;
+    pWindow->onMouseButtonUp       = NULL;
+    pWindow->onMouseButtonDblClick = NULL;
+    pWindow->onMouseWheel          = NULL;
+    pWindow->hWnd                  = hWnd;
+    pWindow->hCursor               = LoadCursor(NULL, IDC_ARROW);
+    pWindow->popupRelativePosX     = 0;
+    pWindow->popupRelativePosY     = 0;
+    pWindow->pNextWindow           = NULL;
+    pWindow->pPrevWindow           = NULL;
+    pWindow->extraDataSize         = extraDataSize;
+
+    if (pExtraData != NULL) {
+        memcpy(pWindow->pExtraData, pExtraData, extraDataSize);
+    }
+
+
+    // We need to link our window object to the Win32 window.
+    SetWindowLongPtrA(hWnd, 0, (LONG_PTR)pWindow);
+
+
+    // The application needs to track this window.
+    ak_application_track_window(pWindow);
+
+    return pWindow;
+}
+
+void ak_uninit_and_free_window_win32(ak_window* pWindow)
+{
+    ak_application_untrack_window(pWindow);
+
+
+    SetWindowLongPtrA(pWindow->hWnd, 0, (LONG_PTR)NULL);
+
+
+    ak_delete_window_panel(pWindow->pPanel);
+    pWindow->pPanel = NULL;
+
+    easy2d_delete_surface(pWindow->pSurface);
+    pWindow->pSurface = NULL;
+
+    free(pWindow);
+}
+
+PRIVATE void ak_refresh_popup_position(ak_window* pPopupWindow)
+{
+    // This function will place the given window (which is assumed to be a popup window) relative to the client area of it's parent.
+    
+    assert(pPopupWindow != NULL);
+    assert(pPopupWindow->type == ak_window_type_popup);
+
+    HWND hOwnerWnd = GetWindow(pPopupWindow->hWnd, GW_OWNER);
+    if (hOwnerWnd != NULL)
+    {
+        RECT ownerRect;
+        GetWindowRect(hOwnerWnd, &ownerRect);
+
+        POINT p;
+        p.x = 0;
+        p.y = 0;
+        if (ClientToScreen(hOwnerWnd, &p))
+        {
+            RECT parentRect;
+            GetWindowRect(hOwnerWnd, &parentRect);
+
+            int offsetX = p.x - parentRect.left;
+            int offsetY = p.y - parentRect.top;
+
+            SetWindowPos(pPopupWindow->hWnd, NULL, ownerRect.left + pPopupWindow->popupRelativePosX + offsetX, ownerRect.top + pPopupWindow->popupRelativePosY + offsetY, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+    }
+}
+
+PRIVATE HWND ak_get_top_level_application_HWND(HWND hWnd)
+{
+    HWND hTopLevelWindow = hWnd;
+    do
+    {
+        ak_window* pWindow = (ak_window*)GetWindowLongPtr(hTopLevelWindow, 0);
+        if (pWindow != NULL)
+        {
+            if (pWindow->type == ak_window_type_application)
+            {
+                return hTopLevelWindow;
+            }
+        }
+
+        hTopLevelWindow = GetWindow(hTopLevelWindow, GW_OWNER);
+
+    } while (hTopLevelWindow != 0);
+
+    return hTopLevelWindow;
+}
+
+
+PRIVATE BOOL ak_is_window_owned_by_this_application(HWND hWnd)
+{
+    // We just use the window class to determine this.
+    char className[256];
+    GetClassNameA(hWnd, className, sizeof(className));
+
+    return strcmp(className, g_WindowClass) == 0 || strcmp(className, g_WindowClass_Popup) == 0;
+}
+
+
+PRIVATE void ak_win32_track_mouse_leave_event(HWND hWnd)
+{
+    TRACKMOUSEEVENT tme;
+    ZeroMemory(&tme, sizeof(tme));
+    tme.cbSize    = sizeof(tme);
+    tme.dwFlags   = TME_LEAVE;
+    tme.hwndTrack = hWnd;
+    TrackMouseEvent(&tme);
+}
+
+LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    ak_window* pWindow = (ak_window*)GetWindowLongPtrA(hWnd, 0);
+    if (pWindow != NULL)
+    {
+        switch (msg)
+        {
+            case WM_CREATE:
+            {
+                // This allows us to track mouse enter and leave events for the window.
+                ak_win32_track_mouse_leave_event(hWnd);
+                return 0;
+            }
+
+            case WM_DESTROY:
+            {
+                ak_uninit_and_free_window_win32(pWindow);
+                break;
+            }
+
+            case WM_CLOSE:
+            {
+                ak_application_on_window_wants_to_close(pWindow);
+                return 0;
+            }
+
+            case WM_ERASEBKGND:
+            {
+                return 1;       // Never draw the background of the window - always leave that to easy_gui.
+            }
+
+
+            case WM_WINDOWPOSCHANGING:
+            {
+                // Showing and hiding windows can be cancelled if false is returned by any of the event handlers.
+                WINDOWPOS* pWindowPos = (WINDOWPOS*)lParam;
+                assert(pWindowPos != NULL);
+
+                if ((pWindowPos->flags & SWP_HIDEWINDOW) != 0)
+                {
+                    if (!ak_application_on_hide_window(pWindow))
+                    {
+                        pWindowPos->flags &= ~SWP_HIDEWINDOW;
+                    }
+                }
+
+                if ((pWindowPos->flags & SWP_SHOWWINDOW) != 0)
+                {
+                    if (!ak_application_on_show_window(pWindow))
+                    {
+                        pWindowPos->flags &= ~SWP_SHOWWINDOW;
+                    }
+                }
+                
+
+                break;
+            }
+
+
+            case WM_MOUSELEAVE:
+            {
+                pWindow->isCursorOver = false;
+
+                // TODO: Post on_mouse_leave
+
+                break;
+            }
+
+            case WM_MOUSEMOVE:
+            {
+                // On Win32 we need to explicitly tell the operating system to post a WM_MOUSELEAVE event. The problem is that it needs to be re-issued when the
+                // mouse re-enters the window. The easiest way to do this is to just call it in response to every WM_MOUSEMOVE event.
+                if (!pWindow->isCursorOver)
+                {
+                    ak_win32_track_mouse_leave_event(hWnd);
+                    pWindow->isCursorOver = true;
+
+                    // TODO: Post on_mouse_enter
+                }
+
+                easygui_post_inbound_event_mouse_move(pWindow->pPanel, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+
+
+            case WM_NCLBUTTONDOWN:
+            {
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, p.x, p.y);
+                break;
+            }
+            case WM_NCLBUTTONUP:
+            {
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, p.x, p.y);
+                break;
+            }
+            case WM_NCLBUTTONDBLCLK:
+            {
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, p.x, p.y);
+                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, p.x, p.y);
+                break;
+            }
+
+            case WM_LBUTTONDOWN:
+            {
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+            case WM_LBUTTONUP:
+            {
+                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+            case WM_LBUTTONDBLCLK:
+            {
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+
+
+            case WM_NCRBUTTONDOWN:
+            {
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, p.x, p.y);
+                break;
+            }
+            case WM_NCRBUTTONUP:
+            {
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, p.x, p.y);
+                break;
+            }
+            case WM_NCRBUTTONDBLCLK:
+            {
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, p.x, p.y);
+                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, p.x, p.y);
+                break;
+            }
+
+            case WM_RBUTTONDOWN:
+            {
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+            case WM_RBUTTONUP:
+            {
+                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+            case WM_RBUTTONDBLCLK:
+            {
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+
+
+            case WM_NCMBUTTONDOWN:
+            {
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y);
+                break;
+            }
+            case WM_NCMBUTTONUP:
+            {
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y);
+                break;
+            }
+            case WM_NCMBUTTONDBLCLK:
+            {
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y);
+                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y);
+                break;
+            }
+
+            case WM_MBUTTONDOWN:
+            {
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+            case WM_MBUTTONUP:
+            {
+                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+            case WM_MBUTTONDBLCLK:
+            {
+                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                break;
+            }
+
+
+
+            case WM_MOVE:
+            {
+                break;
+            }
+
+            case WM_SIZE:
+            {
+                easygui_set_size(pWindow->pPanel, LOWORD(lParam), HIWORD(lParam));
+                break;
+            }
+
+            case WM_PAINT:
+            {
+                RECT rect;
+                if (GetUpdateRect(hWnd, &rect, FALSE)) {
+                    easygui_draw(pWindow->pPanel, easygui_make_rect((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom), pWindow->pSurface);
+                }
+
+                break;
+            }
+
+
+            case WM_NCACTIVATE:
+            {
+                BOOL keepActive = (BOOL)wParam;
+                BOOL syncOthers = TRUE;
+
+                for (ak_window* pTrackedWindow = ak_get_application_first_window(pWindow->pApplication); pTrackedWindow != NULL; pTrackedWindow = pTrackedWindow->pNextWindow)
+                {
+                    if (pTrackedWindow->hWnd == (HWND)lParam)
+                    {
+                        keepActive = TRUE;
+                        syncOthers = FALSE;
+
+                        break;
+                    }
+                }
+
+                if (lParam == -1)
+                {
+                    return DefWindowProc(hWnd, msg, keepActive, 0);
+                }
+
+                if (syncOthers)
+                {
+                    for (ak_window* pTrackedWindow = ak_get_application_first_window(pWindow->pApplication); pTrackedWindow != NULL; pTrackedWindow = pTrackedWindow->pNextWindow)
+                    {
+                        if (hWnd != pTrackedWindow->hWnd && hWnd != (HWND)lParam)
+                        {
+                            SendMessage(pTrackedWindow->hWnd, msg, keepActive, -1);
+                        }
+                    }
+                }
+
+                return DefWindowProc(hWnd, msg, keepActive, lParam);
+            }
+
+            case WM_ACTIVATE:
+            {
+                HWND hActivatedWnd   = NULL;
+                HWND hDeactivatedWnd = NULL;
+
+                if (LOWORD(wParam) != WA_INACTIVE)
+                {
+                    // Activated.
+                    hActivatedWnd   = hWnd;
+                    hDeactivatedWnd = (HWND)lParam;
+                }
+                else
+                {
+                    // Deactivated.
+                    hActivatedWnd   = (HWND)lParam;
+                    hDeactivatedWnd = hWnd;
+                }
+
+
+                BOOL isActivatedWindowOwnedByThis   = ak_is_window_owned_by_this_application(hActivatedWnd);
+                BOOL isDeactivatedWindowOwnedByThis = ak_is_window_owned_by_this_application(hDeactivatedWnd);
+
+                if (isActivatedWindowOwnedByThis && isDeactivatedWindowOwnedByThis)
+                {
+                    // Both windows are owned the by application.
+
+                    if (LOWORD(wParam) != WA_INACTIVE)
+                    {
+                        hActivatedWnd   = ak_get_top_level_application_HWND(hActivatedWnd);
+                        hDeactivatedWnd = ak_get_top_level_application_HWND(hDeactivatedWnd);
+
+                        if (hActivatedWnd != hDeactivatedWnd)
+                        {
+                            if (hDeactivatedWnd != NULL)
+                            {
+                                ak_application_on_deactivate_window((ak_window*)GetWindowLongPtrA(hDeactivatedWnd, 0));
+                            }
+
+                            if (hActivatedWnd != NULL)
+                            {
+                                ak_application_on_deactivate_window((ak_window*)GetWindowLongPtrA(hActivatedWnd, 0));
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // The windows are not both owned by this manager.
+
+                    if (isDeactivatedWindowOwnedByThis)
+                    {
+                        hDeactivatedWnd = ak_get_top_level_application_HWND(hDeactivatedWnd);
+                        if (hDeactivatedWnd != NULL)
+                        {
+                            ak_application_on_deactivate_window((ak_window*)GetWindowLongPtrA(hDeactivatedWnd, 0));
+                        }
+                    }
+
+                    if (isActivatedWindowOwnedByThis)
+                    {
+                        hActivatedWnd = ak_get_top_level_application_HWND(hActivatedWnd);
+                        if (hActivatedWnd != NULL)
+                        {
+                            ak_application_on_deactivate_window((ak_window*)GetWindowLongPtrA(hActivatedWnd, 0));
+                        }
+                    }
+                }
+
+                break;
+            }
+
+            case WM_SETCURSOR:
+            {
+                if (LOWORD(lParam) == HTCLIENT)
+                {
+                    SetCursor(pWindow->hCursor);
+                    return TRUE;
+                }
+
+                break;
+            }
+
+
+        default: break;
+        }
+    }
+
+    return DefWindowProcA(hWnd, msg, wParam, lParam);
+}
+
+
+PRIVATE ak_window* ak_create_application_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    assert(pApplication != NULL);
+
+    // You will note here that we do not actually assign a parent window to the new window in CreateWindowEx(). The reason for this is that
+    // we want the window to show up on the task bar as a sort of stand alone window. If we set the parent in CreateWindowEx() we won't get
+    // this behaviour. As a result, pParent is actually completely ignored, however we assume all child application windows are, conceptually,
+    // children of the primary window.
+    (void)pParent;
+
+
+    // Create a window.
+    DWORD dwExStyle = 0;
+    DWORD dwStyle   = WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_OVERLAPPEDWINDOW;
+    HWND hWnd = CreateWindowExA(dwExStyle, g_WindowClass, "", dwStyle, 0, 0, 1280, 720, NULL, NULL, NULL, NULL);
+    if (hWnd == NULL)
+    {
+        ak_errorf(pApplication, "Failed to create Win32 application window.");
+        return NULL;
+    }
+
+
+    // This is deleted in the WM_DESTROY event. The reason for this is that deleting a window should be recursive and we can just
+    // let Windows tell us when a child window is deleted.
+    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, ak_window_type_application, hWnd, extraDataSize, pExtraData);
+    if (pWindow == NULL)
+    {
+        ak_errorf(pApplication, "Failed to allocate and initialize application window.");
+
+        DestroyWindow(hWnd);
+        return NULL;
+    }
+
+
+
+    return pWindow;
+}
+
+PRIVATE ak_window* ak_create_child_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    assert(pApplication  != NULL);
+    
+    // A child window must always have a parent.
+    if (pParent == NULL)
+    {
+        ak_errorf(pApplication, "Attempting to create a child window without a parent.");
+        return NULL;
+    }
+
+
+    // Create a window.
+    DWORD dwExStyle = 0;
+    DWORD dwStyle   = WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_CHILDWINDOW;
+    HWND hWnd = CreateWindowExA(dwExStyle, g_WindowClass, NULL, dwStyle, 0, 0, 1, 1, pParent->hWnd, NULL, NULL, NULL);
+    if (hWnd == NULL)
+    {
+        ak_errorf(pApplication, "Failed to create Win32 child window.");
+        return NULL;
+    }
+
+
+    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, ak_window_type_child, hWnd, extraDataSize, pExtraData);
+    if (pWindow == NULL)
+    {
+        ak_errorf(pApplication, "Failed to allocate and initialize child window.");
+
+        DestroyWindow(hWnd);
+        return NULL;
+    }
+
+
+    return pWindow;
+}
+
+PRIVATE ak_window* ak_create_dialog_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    assert(pApplication  != NULL);
+
+    // A dialog window must always have a parent.
+    if (pParent == NULL)
+    {
+        ak_errorf(pApplication, "Attempting to create a dialog window without a parent.");
+        return NULL;
+    }
+
+
+    // Create a window.
+    DWORD dwExStyle = WS_EX_DLGMODALFRAME;
+    DWORD dwStyle   = WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    HWND hWnd = CreateWindowExA(dwExStyle, g_WindowClass, "", dwStyle, 0, 0, 1, 1, pParent->hWnd, NULL, NULL, NULL);
+    if (hWnd == NULL)
+    {
+        ak_errorf(pApplication, "Failed to create Win32 dialog window.");
+        return NULL;
+    }
+
+
+    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, ak_window_type_dialog, hWnd, extraDataSize, pExtraData);
+    if (pWindow == NULL)
+    {
+        ak_errorf(pApplication, "Failed to allocate and initialize dialog window.");
+
+        DestroyWindow(hWnd);
+        return NULL;
+    }
+
+
+    return pWindow;
+}
+
+PRIVATE ak_window* ak_create_popup_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    assert(pApplication != NULL);
+
+    // A popup window must always have a parent.
+    if (pParent == NULL)
+    {
+        ak_errorf(pApplication, "Attempting to create a popup window without a parent.");
+        return NULL;
+    }
+
+
+    // Create a window.
+    DWORD dwExStyle = 0;
+    DWORD dwStyle   = WS_POPUP;
+    HWND hWnd = CreateWindowExA(dwExStyle, g_WindowClass_Popup, NULL, dwStyle, 0, 0, 1, 1, pParent->hWnd, NULL, NULL, NULL);
+    if (hWnd == NULL)
+    {
+        ak_errorf(pApplication, "Failed to create Win32 popup window.");
+        return NULL;
+    }
+
+
+    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, ak_window_type_popup, hWnd, extraDataSize, pExtraData);
+    if (pWindow == NULL)
+    {
+        ak_errorf(pApplication, "Failed to allocate and initialize popup window.");
+
+        DestroyWindow(hWnd);
+        return NULL;
+    }
+
+    pWindow->popupRelativePosX = 0;
+    pWindow->popupRelativePosY = 0;
+
+    ak_refresh_popup_position(pWindow);
+
+
+    return pWindow;
+}
+
+
+ak_window* ak_create_window(ak_application* pApplication, ak_window_type type, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    if (pApplication == NULL || type == ak_window_type_unknown) {
+        return NULL;
+    }
+
+    switch (type)
+    {
+        case ak_window_type_application:
+        {
+            return ak_create_application_window(pApplication, pParent, extraDataSize, pExtraData);
+        }
+
+        case ak_window_type_child:
+        {
+            return ak_create_child_window(pApplication, pParent, extraDataSize, pExtraData);
+        }
+
+        case ak_window_type_dialog:
+        {
+            return ak_create_dialog_window(pApplication, pParent, extraDataSize, pExtraData);
+        }
+
+        case ak_window_type_popup:
+        {
+            return ak_create_popup_window(pApplication, pParent, extraDataSize, pExtraData);
+        }
+
+        case ak_window_type_unknown:
+        default:
+        {
+            return NULL;
+        }
+    }
+}
+
+void ak_delete_window(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    // We just destroy the HWND. This will post a WM_DESTROY message which is where we delete our own window data structure.
+    DestroyWindow(pWindow->hWnd);
+}
+
+
+ak_application* ak_get_window_application(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->pApplication;
+}
+
+ak_window_type ak_get_window_type(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return ak_window_type_unknown;
+    }
+
+    return pWindow->type;
+}
+
+ak_window* ak_get_parent_window(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    HWND hParentWnd = GetParent(pWindow->hWnd);
+    if (hParentWnd != NULL)
+    {
+        return (ak_window*)GetWindowLongPtr(hParentWnd, 0);
+    }
+
+    return NULL;
+}
+
+easygui_element* ak_get_window_panel(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->pPanel;
+}
+
+
+void ak_set_window_title(ak_window* pWindow, const char* pTitle)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    SetWindowTextA(pWindow->hWnd, pTitle);
+}
+
+void ak_get_window_title(ak_window* pWindow, char* pTitleOut, size_t titleOutSize)
+{
+    if (pTitleOut == NULL || titleOutSize == 0) {
+        return;
+    }
+
+    if (pWindow == NULL) {
+        pTitleOut[0] = '\0';
+        return;
+    }
+
+    // For safety we always want the returned string to be null terminated. MSDN is a bit vague on whether or not it places a
+    // null terminator on error, so we'll do it explicitly.
+    int length = GetWindowTextA(pWindow->hWnd, pTitleOut, (int)titleOutSize);
+    pTitleOut[length] = '\0';
+}
+
+
+void ak_set_window_size(ak_window* pWindow, unsigned int width, unsigned int height)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    RECT windowRect;
+    RECT clientRect;
+    GetWindowRect(pWindow->hWnd, &windowRect);
+    GetClientRect(pWindow->hWnd, &clientRect);
+
+    int windowFrameX = (windowRect.right - windowRect.left) - (clientRect.right - clientRect.left);
+    int windowFrameY = (windowRect.bottom - windowRect.top) - (clientRect.bottom - clientRect.top);
+
+    assert(windowFrameX >= 0);
+    assert(windowFrameY >= 0);
+
+    unsigned int scaledWidth  = width  + windowFrameX;
+    unsigned int scaledHeight = height + windowFrameY;
+    SetWindowPos(pWindow->hWnd, NULL, 0, 0, scaledWidth, scaledHeight, SWP_NOZORDER | SWP_NOMOVE);
+}
+
+void ak_get_window_size(ak_window* pWindow, unsigned int* pWidthOut, unsigned int* pHeightOut)
+{
+    RECT rect;
+    if (pWindow == NULL)
+    {
+        rect.left   = 0;
+        rect.top    = 0;
+        rect.right  = 0;
+        rect.bottom = 0;
+    }
+    else
+    {
+        GetClientRect(pWindow->hWnd, &rect);
+    }
+
+    
+    if (pWidthOut != NULL) {
+        *pWidthOut = rect.right - rect.left;
+    }
+
+    if (pHeightOut != NULL) {
+        *pHeightOut = rect.bottom - rect.top;
+    }
+}
+
+
+void ak_set_window_position(ak_window* pWindow, int posX, int posY)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+
+    // Popup windows require special handling.
+    if (pWindow->type != ak_window_type_popup)
+    {
+        SetWindowPos(pWindow->hWnd, NULL, posX, posY, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    }
+    else
+    {
+        pWindow->popupRelativePosX = posX;
+        pWindow->popupRelativePosY = posY;
+        ak_refresh_popup_position(pWindow);
+    }
+}
+
+void ak_get_window_position(ak_window* pWindow, int* pPosXOut, int* pPosYOut)
+{
+    RECT rect;
+    if (pWindow == NULL)
+    {
+        rect.left   = 0;
+        rect.top    = 0;
+        rect.right  = 0;
+        rect.bottom = 0;
+    }
+    else
+    {
+        GetWindowRect(pWindow->hWnd, &rect);
+        MapWindowPoints(HWND_DESKTOP, GetParent(pWindow->hWnd), (LPPOINT)&rect, 2);
+    }
+
+    
+    if (pPosXOut != NULL) {
+        *pPosXOut = rect.left;
+    }
+
+    if (pPosYOut != NULL) {
+        *pPosYOut = rect.top;
+    }
+}
+
+
+void ak_show_window(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    ShowWindow(pWindow->hWnd, SW_SHOW);
+
+    // Popup windows should be activated as soon as it's being shown.
+    if (pWindow->type == ak_window_type_popup) {
+        SetActiveWindow(pWindow->hWnd);
+    }
+}
+
+void ak_show_window_maximized(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    ShowWindow(pWindow->hWnd, SW_SHOWMAXIMIZED);
+}
+
+void show_window_sized(ak_window* pWindow, unsigned int width, unsigned int height)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    // Set the size first.
+    ak_set_window_size(pWindow, width, height);
+
+    // Now show the window in it's default state.
+    ak_show_window(pWindow);
+}
+
+void ak_hide_window(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    ShowWindow(pWindow->hWnd, SW_HIDE);
+}
+
+
+bool ak_is_window_descendant(ak_window* pDescendant, ak_window* pAncestor)
+{
+    if (pDescendant == NULL || pAncestor == NULL) {
+        return false;
+    }
+
+    return IsChild(pAncestor->hWnd, pDescendant->hWnd);
+}
+
+bool ak_is_window_ancestor(ak_window* pAncestor, ak_window* pDescendant)
+{
+    if (pAncestor == NULL || pDescendant == NULL) {
+        return false;
+    }
+
+    ak_window* pParent = ak_get_parent_window(pDescendant);
+    if (pParent != NULL)
+    {
+        if (pParent == pAncestor) {
+            return true;
+        } else {
+            return ak_is_window_ancestor(pAncestor, pParent);
+        }
+    }
+    
+    return false;
+}
+
+
+ak_window* ak_get_panel_window(easygui_element* pPanel)
+{
+    assert(pPanel != NULL);
+    assert(pPanel->pParent == NULL);                                                // Must be a top-level element.
+    assert(ak_panel_get_extra_data_size(pPanel) == sizeof(element_user_data));       // A loose check to help ensure we're working with the right kind of panel. 
+
+    element_user_data* pWindowData = ak_panel_get_extra_data(pPanel);
+    assert(pWindowData != NULL);
+
+    return pWindowData->pWindow;
+}
+
+
+void ak_set_window_cursor(ak_window* pWindow, ak_cursor_type cursor)
+{
+    assert(pWindow != NULL);
+
+    switch (cursor)
+    {
+        case ak_cursor_type_ibeam:
+        {
+            pWindow->hCursor = LoadCursor(NULL, IDC_IBEAM);
+            break;
+        }
+
+
+        case ak_cursor_type_none:
+        {
+            pWindow->hCursor = NULL;
+            break;
+        }
+
+        //case cursor_type_arrow:
+        case ak_cursor_type_default:
+        default:
+        {
+            pWindow->hCursor = LoadCursor(NULL, IDC_ARROW);
+            break;
+        }
+    }
+
+    // If the cursor is currently inside the window it needs to be changed right now.
+    if (ak_is_cursor_over_window(pWindow))
+    {
+        SetCursor(pWindow->hCursor);
+    }
+}
+
+bool ak_is_cursor_over_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+    return pWindow->isCursorOver;
+}
+
+
+void ak_window_on_hide(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onHide) {
+        pWindow->onHide(pWindow);
+    }
+}
+
+void ak_window_on_show(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onShow) {
+        pWindow->onShow(pWindow);
+    }
+}
+
+void ak_window_on_activate(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onActivate) {
+        pWindow->onActivate(pWindow);
+    }
+}
+
+void ak_window_on_deactivate(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onDeactivate) {
+        pWindow->onDeactivate(pWindow);
+    }
+}
+
+void ak_window_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onMouseButtonDown) {
+        pWindow->onMouseButtonDown(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
+    }
+}
+
+void ak_window_on_mouse_button_up(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onMouseButtonUp) {
+        pWindow->onMouseButtonUp(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
+    }
+}
+
+void ak_window_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onMouseButtonDblClick) {
+        pWindow->onMouseButtonDblClick(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
+    }
+}
+
+void ak_window_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onMouseWheel) {
+        pWindow->onMouseWheel(pWindow, delta, relativeMousePosX, relativeMousePosY);
+    }
+}
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Private APIs
+//
+///////////////////////////////////////////////////////////////////////////////
+
+unsigned int g_Win32ClassRegCounter = 0;
+
+bool ak_win32_register_window_classes()
+{
+    if (g_Win32ClassRegCounter > 0)
+    {
+        g_Win32ClassRegCounter += 1;
+        return true;
+    }
+
+
+    // Standard windows.
+    WNDCLASSEXA wc;
+    ZeroMemory(&wc, sizeof(wc));
+    wc.cbSize        = sizeof(wc);
+    wc.cbWndExtra    = sizeof(ak_window*);
+    wc.lpfnWndProc   = (WNDPROC)GenericWindowProc;
+    wc.lpszClassName = g_WindowClass;
+    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wc.style         = CS_DBLCLKS;
+    if (!RegisterClassExA(&wc))
+    {
+        return false;
+    }
+
+
+    // Popup windows.
+    WNDCLASSEXA wcPopup;
+    ZeroMemory(&wcPopup, sizeof(wcPopup));
+    wcPopup.cbSize        = sizeof(wcPopup);
+    wcPopup.cbWndExtra    = sizeof(ak_window*);
+    wcPopup.lpfnWndProc   = (WNDPROC)GenericWindowProc;
+    wcPopup.lpszClassName = g_WindowClass_Popup;
+    wcPopup.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wcPopup.style         = CS_DBLCLKS | CS_DROPSHADOW;
+    if (!RegisterClassExA(&wcPopup))
+    {
+        UnregisterClassA(g_WindowClass, NULL);
+        return false;
+    }
+
+
+    g_Win32ClassRegCounter += 1;
+    return true;
+}
+
+void ak_win32_unregister_window_classes()
+{
+    if (g_Win32ClassRegCounter > 0)
+    {
+        g_Win32ClassRegCounter -= 1;
+
+        if (g_Win32ClassRegCounter == 0)
+        {
+            UnregisterClassA(g_WindowClass,       NULL);
+            UnregisterClassA(g_WindowClass_Popup, NULL);
+        }
+    }
+}
+
+void ak_win32_post_quit_message(int exitCode)
+{
+    PostQuitMessage(exitCode);
+}
+
+#endif  //!AK_USE_WIN32
 
 #ifdef AK_USE_GTK
 #endif
+
+
+
+//// Functions below are cross-platform ////
+
+void ak_connect_gui_to_window_system(easygui_context* pGUI)
+{
+    assert(pGUI != NULL);
+
+    easygui_register_global_on_capture_mouse(pGUI, ak_on_global_capture_mouse);
+    easygui_register_global_on_release_mouse(pGUI, ak_on_global_release_mouse);
+    easygui_register_global_on_capture_keyboard(pGUI, ak_on_global_capture_keyboard);
+    easygui_register_global_on_release_keyboard(pGUI, ak_on_global_release_keyboard);
+    easygui_register_global_on_dirty(pGUI, ak_on_global_dirty);
+}
+
+
+void ak_set_next_window(ak_window* pWindow, ak_window* pNextWindow)
+{
+    assert(pWindow != NULL);
+    pWindow->pNextWindow = pNextWindow;
+}
+
+ak_window* ak_get_next_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+    return pWindow->pNextWindow;
+}
+
+void ak_set_prev_window(ak_window* pWindow, ak_window* pPrevWindow)
+{
+    assert(pWindow != NULL);
+    pWindow->pPrevWindow = pPrevWindow;
+}
+
+ak_window* ak_get_prev_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+    return pWindow->pPrevWindow;
+}
+
 
 /*
 This is free and unencumbered software released into the public domain.

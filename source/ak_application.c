@@ -3,6 +3,9 @@
 #include "../include/easy_appkit/ak_application.h"
 #include "../include/easy_appkit/ak_build_config.h"
 #include "../include/easy_appkit/ak_theme.h"
+#include "../include/easy_appkit/ak_window.h"
+#include "ak_application_private.h"
+#include "ak_window_private.h"
 #include "ak_config.h"
 #include <easy_util/easy_util.h>
 #include <easy_gui/easy_gui.h>
@@ -41,6 +44,11 @@ struct ak_application
     /// A pointer to the function to call when the default layout config is required. This will be called when
     /// layout config file could not be found.
     ak_layout_config_proc onGetDefaultConfig;
+
+
+    /// We need to keep track of every existing window that is owned by the application. We implement this as a linked list, with this item being the first. The
+    /// first window is considered to be the primary window.
+    ak_window* pFirstWindow;
 
 
     /// The size of the extra data, in bytes.
@@ -149,6 +157,17 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         if (extraDataSize > 0 && pExtraData != NULL) {
             memcpy(pApplication->pExtraData, pExtraData, extraDataSize);
         }
+
+
+
+        // Everything looks good at this point, so now is a good time to setup the window system.
+#ifdef AK_USE_WIN32
+        // On Windows, we need to register the window classes. This is the part that makes ak_create_application() not thread safe.
+        ak_win32_register_window_classes();
+#endif
+
+        // The GUI needs to be connected to the window system.
+        ak_connect_gui_to_window_system(pApplication->pGUI);
     }
 
     return pApplication;
@@ -171,6 +190,12 @@ void ak_delete_application(ak_application* pApplication)
     easyvfs_delete_context(pApplication->pVFS);
 
 
+#ifdef AK_USE_WIN32
+    // On Windows, we need to unregister the window classes. This is the part that makes ak_delete_application() not thread safe.
+    ak_win32_unregister_window_classes();
+#endif
+
+
     // Free the application object last.
     free(pApplication);
 }
@@ -191,6 +216,21 @@ int ak_run_application(ak_application* pApplication)
 
     // At this point the config should be loaded. Now we just enter the main loop.
     return ak_main_loop(pApplication);
+}
+
+void ak_post_quit_message(ak_application* pApplication, int exitCode)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+#ifdef AK_USE_WIN32
+    ak_win32_post_quit_message(exitCode);
+#endif
+
+#ifdef AK_USE_GTK
+    ak_gtk_post_quit_message(exitCode);
+#endif
 }
 
 
@@ -420,7 +460,7 @@ ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication)
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Private
+// Private APIs
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -497,6 +537,180 @@ PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig)
     assert(pConfig      != NULL);
 
     return true;
+}
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Private APIs Declared in ak_application_private.h
+//
+///////////////////////////////////////////////////////////////////////////////
+
+ak_window* ak_get_application_first_window(ak_application* pApplication)
+{
+    assert(pApplication != NULL);
+    return pApplication->pFirstWindow;
+}
+
+void ak_application_on_window_wants_to_close(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_application* pApplication = ak_get_window_application(pWindow);
+    assert(pApplication != NULL);
+
+    // TODO: Improve this.
+    //
+    // This is very temporary. If the window that's wanting to close is the primary window (the first window in the list), we just post a global
+    // quit message. This actually restricts processes to being able to run only a single application instance at a time.
+    //
+    // Later on what we'll want to do is just pass this off the program by just calling a callback function and letting it handle things however
+    // it would like.
+    if (ak_get_prev_window(pWindow) == NULL)
+    {
+        ak_post_quit_message(pApplication, 0);
+    }
+    else
+    {
+        ak_delete_window(pWindow);
+    }
+}
+
+bool ak_application_on_hide_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_hide(pWindow);
+    return true;
+}
+
+bool ak_application_on_show_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_show(pWindow);
+    return true;
+}
+
+void ak_application_on_activate_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_activate(pWindow);
+}
+
+void ak_application_on_deactivate_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_deactivate(pWindow);
+    ak_application_hide_non_ancestor_popups(pWindow);
+}
+
+void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_mouse_button_down(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
+
+    // Any popup window that is not an ancestor of the input window needs to be hidden.
+    ak_application_hide_non_ancestor_popups(pWindow);
+
+    // Let the GUI know about the event.
+    easygui_post_inbound_event_mouse_button_down(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY);
+}
+
+void ak_application_on_mouse_button_up(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_mouse_button_up(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
+
+    // Let the GUI know about the event.
+    easygui_post_inbound_event_mouse_button_up(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY);
+}
+
+void ak_application_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_mouse_button_dblclick(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
+
+    // Let the GUI know about the event.
+    easygui_post_inbound_event_mouse_button_dblclick(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY);
+}
+
+void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_mouse_wheel(pWindow, delta, relativeMousePosX, relativeMousePosY);
+
+    // Let the GUI know about the event.
+    easygui_post_inbound_event_mouse_wheel(ak_get_window_panel(pWindow), delta, relativeMousePosX, relativeMousePosY);
+}
+
+
+void ak_application_track_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_application* pApplication = ak_get_window_application(pWindow);
+    assert(pApplication != NULL);
+
+    if (pApplication->pFirstWindow != NULL)
+    {
+        ak_set_prev_window(pApplication->pFirstWindow, pWindow);
+        ak_set_next_window(pWindow, pApplication->pFirstWindow);
+    }
+
+    pApplication->pFirstWindow = pWindow;
+}
+
+void ak_application_untrack_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_application* pApplication = ak_get_window_application(pWindow);
+    assert(pApplication != NULL);
+
+    if (pApplication->pFirstWindow != NULL)
+    {
+        if (pApplication->pFirstWindow == pWindow) {
+            pApplication->pFirstWindow = ak_get_next_window(pWindow);
+        }
+
+        if (ak_get_next_window(pWindow) != NULL) {
+            ak_set_prev_window(ak_get_next_window(pWindow), ak_get_prev_window(pWindow));
+        }
+
+        if (ak_get_prev_window(pWindow) != NULL) {
+            ak_set_next_window(ak_get_prev_window(pWindow), ak_get_next_window(pWindow));
+        }
+
+        ak_set_next_window(pWindow, NULL);
+        ak_set_prev_window(pWindow, NULL);
+    }
+}
+
+
+void ak_application_hide_non_ancestor_popups(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_application* pApplication = ak_get_window_application(pWindow);
+    assert(pApplication != NULL);
+
+    for (ak_window* pOtherWindow = pApplication->pFirstWindow; pOtherWindow != NULL; pOtherWindow = ak_get_next_window(pOtherWindow))
+    {
+        if (pOtherWindow != pWindow && ak_get_window_type(pOtherWindow) == ak_window_type_popup && !ak_is_window_ancestor(pOtherWindow, pWindow))
+        {
+            ak_hide_window(pOtherWindow);
+        }
+    }
 }
 
 

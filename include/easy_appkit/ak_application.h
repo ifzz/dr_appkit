@@ -34,9 +34,15 @@ typedef const char* (* ak_layout_config_proc) (ak_application* pApplication);
 ///     @par
 ///     <pExtraData> is a pointer to the initial user-defined data. This can be null, in which case the
 ///     extra data is left initially undefined. This will create a copy of the extra data.
+///     @par
+///     Multiple application objects can be created per process, however this function is not thread-safe
+///     due to a small section of global state that's required for the Windows build.
 ak_application* ak_create_application(const char* pName, size_t extraDataSize, const void* pExtraData);
 
 /// Deletes an application object that was created with ak_create_application().
+///
+/// @remarks
+///     This function is not thread safe.
 void ak_delete_application(ak_application* pApplication);
 
 
@@ -45,11 +51,22 @@ void ak_delete_application(ak_application* pApplication);
 /// @return The result code.
 ///
 /// @remarks
+///     Only a single application instance can be run at a time.
+///     @par
+///     This loop should be terminated with a call to ak_post_quit_message(). A call to ak_post_quit_message()
+///     will cause this function to return, after which another application can begin running if required.
+///     @par
 ///     This is where the application will load configs, create windows, create GUI elements and enter into
 ///     the main loop.
 ///     @par
 ///     A return value of 0 indicates the application was terminated naturally.
 int ak_run_application(ak_application* pApplication);
+
+/// Posts a quit message.
+///
+/// @remarks
+///     This is how the main loop must be terminated. Do not terminate from the main loop with ak_delete_application().
+void ak_post_quit_message(ak_application* pApplication, int exitCode);
 
 
 /// Retrieves the name of the application.

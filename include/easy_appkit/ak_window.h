@@ -1,9 +1,24 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
+//
+// QUICK NOTES
+//
+// General
+// - There are several types of windows: application, child, popup and dialogs.
+// - Application windows are the main windows with a title bar, minimize/maximize/close buttons, resizability, etc.
+// - Child windows are borderless windows that are placed within the client area of a parent window. They would
+//   most commonly be used for things like viewports or whatnot.
+// - Dialog windows are used for dialogs like an about window, confirmation dialogs, etc.
+// - Popup windows are used for things like menus, tooltips, list-box drop-downs, etc.
+// - Every window is associated with a single panel GUI element. This panel is always resized such that it's the same
+//   size as the window that owns it. The panel is always a top-level element and should never be re-parented.
+//
+
 #ifndef ak_window_h
 #define ak_window_h
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,14 +27,34 @@ extern "C" {
 typedef struct ak_window ak_window;
 typedef struct ak_application ak_application;
 typedef struct easygui_element easygui_element;
+typedef struct easy2d_surface easy2d_surface;
 
 typedef enum
 {
-    ak_window_type_primary,
+    ak_cursor_type_none,
+    ak_cursor_type_default,
+
+    ak_cursor_type_arrow = ak_cursor_type_default,
+    ak_cursor_type_ibeam
+
+} ak_cursor_type;
+
+typedef enum
+{
+    ak_window_type_unknown,         // <-- ak_create_window() will fail if this is used.
+    ak_window_type_application,
     ak_window_type_child,
+    ak_window_type_dialog,
     ak_window_type_popup
 
 } ak_window_type;
+
+typedef bool (* ak_window_on_hide_proc)        (ak_window* pWindow);
+typedef bool (* ak_window_on_show_proc)        (ak_window* pWindow);
+typedef void (* ak_window_on_activate_proc)    (ak_window* pWindow);
+typedef void (* ak_window_on_deactivate_proc)  (ak_window* pWindow);
+typedef void (* ak_window_on_mouse_button_proc)(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+typedef void (* ak_window_on_mouse_wheel_proc) (ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
 
 
 /// Creates a window of the given type.
@@ -40,21 +75,33 @@ ak_application* ak_get_window_application(ak_window* pWindow);
 /// Retrieves the type of the given window.
 ak_window_type ak_get_window_type(ak_window* pWindow);
 
+/// Retrieves a pointer to the parent window, if any.
+ak_window* ak_get_parent_window(ak_window* pWindow);
+
 /// Retrieves a pointer to the top-level GUI element associated with the given window.
-easygui_element* ak_get_window_gui_element(ak_window* pWindow);
+easygui_element* ak_get_window_panel(ak_window* pWindow);
+
+/// Retrieves a pointer to the easy_draw surface the window will be drawing to.
+easy2d_surface* ak_get_window_surface(ak_window* pWindow);
 
 
 /// Sets the title of the given window.
 void ak_set_window_title(ak_window* pWindow, const char* pTitle);
 
 /// Retrieves the title of the given window.
-const char* ak_get_window_title(ak_window* pWindow);
+void ak_get_window_title(ak_window* pWindow, char* pTitleOut, size_t titleOutSize);
 
 
 /// Sets the size of the given window.
+///
+/// @remarks
+///     On Windows, this sets the size of the client area. This is done for consistency with GTK.
 void ak_set_window_size(ak_window* pWindow, unsigned int width, unsigned int height);
 
 /// Retrieves the size of the given window.
+///
+/// @remarks
+///     On Windows, this retrieves the size of the client area of the window.
 void ak_get_window_size(ak_window* pWindow, unsigned int* pWidthOut, unsigned int* pHeightOut);
 
 
@@ -68,8 +115,63 @@ void ak_get_window_position(ak_window* pWindow, int* pPosXOut, int* pPosYOut);
 /// Shows the given window.
 void ak_show_window(ak_window* pWindow);
 
+/// Shows the window maximized.
+void ak_show_window_maximized(ak_window* pWindow);
+
+/// Shows a window in a non-maximized state with an initial size.
+void show_window_sized(ak_window* pWindow, unsigned int width, unsigned int height);
+
 /// Hides the given window.
 void ak_hide_window(ak_window* pWindow);
+
+
+/// Determines if the window is a descendant of another window.
+bool ak_is_window_descendant(ak_window* pDescendant, ak_window* pAncestor);
+
+/// Determines if the window is an ancestor of another window.
+bool ak_is_window_ancestor(ak_window* pAncestor, ak_window* pDescendant);
+
+
+/// Retrieves a pointer to the window that is associated with the given panel.
+///
+/// @remarks
+///     It is assumed the given panel is a top-level element and is associated with a window.
+///     @par
+///     This will return null if the panel is not a top-level element.
+ak_window* ak_get_panel_window(easygui_element* pPanel);
+
+
+/// Sets the cursor to use with the given window.
+void ak_set_window_cursor(ak_window* pWindow, ak_cursor_type cursor);
+
+/// Determines whether or not the cursor is over the given window.
+bool ak_is_cursor_over_window(ak_window* pWindow);
+
+
+/// Calls the on_hide event handler for the given window.
+void ak_window_on_hide(ak_window* pWindow);
+
+/// Calls the on_show event handler for the given window.
+void ak_window_on_show(ak_window* pWindow);
+
+/// Calls the on_activate event handler for the given window.
+void ak_window_on_activate(ak_window* pWindow);
+
+/// Calls the on_deactivate event handler for the given window.
+void ak_window_on_deactivate(ak_window* pWindow);
+
+/// Calls the on_mouse_button_down event handler for the given window.
+void ak_window_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+
+/// Calls the on_mouse_button_up event handler for the given window.
+void ak_window_on_mouse_button_up(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+
+/// Calls the on_mouse_button_dblclick event handler for the given window.
+void ak_window_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+
+/// Calls the on_mouse_button_wheel event handler for the given window.
+void ak_window_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
+
 
 #ifdef __cplusplus
 }
