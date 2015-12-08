@@ -131,6 +131,9 @@ bool ak_get_config_file_folder_path(ak_application* pApplication, char* pathOut,
 /// Retrieves the path of the config file.
 bool ak_get_config_file_path(ak_application* pApplication, char* pathOut, size_t pathOutSize);
 
+/// Retrieves the path of the theme file.
+bool ak_get_theme_file_path(ak_application* pApplication, char* pathOut, size_t pathOutSize);
+
 
 /// Sets the function to call when the default config of a layout is required.
 void ak_set_on_default_config(ak_application* pApplication, ak_layout_config_proc proc);

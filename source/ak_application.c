@@ -150,6 +150,8 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         }
 
 
+        // Theme.
+        memset(&pApplication->theme, 0, sizeof(pApplication->theme));
 
 
         // Callbacks.
@@ -446,6 +448,30 @@ bool ak_get_config_file_path(ak_application* pApplication, char* pathOut, size_t
     return false;
 }
 
+bool ak_get_theme_file_path(ak_application* pApplication, char* pathOut, size_t pathOutSize)
+{
+    if (pApplication == NULL) {
+        return false;
+    }
+
+    if (pathOut == NULL || pathOutSize == 0) {
+        return false;
+    }
+
+    // Use the config path as the basis.
+    if (!easyutil_get_config_folder_path(pathOut, pathOutSize)) {
+        return false;
+    }
+
+    // Append the sub-directory.
+    if (!easypath_append(pathOut, pathOutSize, ak_get_application_name(pApplication))) {
+        return false;
+    }
+
+    // Append the file name.
+    return easypath_append(pathOut, pathOutSize, easypath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".theme") == 0;
+}
+
 
 void ak_set_on_default_config(ak_application* pApplication, ak_layout_config_proc proc)
 {
@@ -577,6 +603,15 @@ PRIVATE static void ak_on_config_error(void* pUserData, const char* message)
 PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
 {
     assert(pApplication != NULL);
+
+
+    // We load the theme first because it contains the data we need for drawing the window which will be shown when the
+    // main config is applied.
+    char themePath[EASYVFS_MAX_PATH];
+    if (ak_get_theme_file_path(pApplication, themePath, sizeof(themePath))) {
+        ak_theme_load_from_file(pApplication, &pApplication->theme, themePath);
+    }
+
 
     // We first need to try and open the config file. If we can't find it we need to try and load the default config. If both
     // fail, we need to return false.
