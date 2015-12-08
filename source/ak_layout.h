@@ -4,18 +4,18 @@
 #define ak_layout_h
 
 #include "../include/easy_appkit/ak_build_config.h"
+#include "../include/easy_appkit/ak_gui.h"
+#include "../include/easy_appkit/ak_window.h"
 #include <easy_util/easy_util.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define AK_LAYOUT_TYPE_LAYOUT               "Layout"
-#define AK_LAYOUT_TYPE_APPLICATION_WINDOW   "ApplicationWindow"
-#define AK_LAYOUT_TYPE_SPLIT_PANEL_HORZ     "HSplitPanel"
-#define AK_LAYOUT_TYPE_SPLIT_PANEL_VERT     "VSplitPanel"
-#define AK_LAYOUT_TYPE_PANEL                "Panel"
-#define AK_LAYOUT_TYPE_TOOL                 "Tool"
+#define AK_LAYOUT_TYPE_LAYOUT   "Layout"
+#define AK_LAYOUT_TYPE_WINDOW   "Window"
+#define AK_LAYOUT_TYPE_PANEL    "Panel"
+#define AK_LAYOUT_TYPE_TOOL     "Tool"
 
 typedef struct ak_layout ak_layout;
 struct ak_layout
@@ -67,6 +67,9 @@ void ak_delete_layout(ak_layout* pLayout);
 /// Structure representing the attributes of a window layout object.
 typedef struct
 {
+    /// The window type.
+    ak_window_type type;
+
     /// The position of the window on the x axis.
     int posX;
 
@@ -93,6 +96,20 @@ typedef struct
 /// Parses the attribute string of a window layout type.
 bool ak_parse_window_layout_attributes(const char* attributesStr, ak_window_layout_attributes* pAttributesOut);
 
+
+/// Structure representing the attributes of a panel layout object.
+typedef struct
+{
+    /// The split axis.
+    ak_panel_split_axis splitAxis;
+
+    /// The position of the split.
+    float splitPos;
+
+} ak_panel_layout_attributes;
+
+/// Parses the attribute string of a panel layout type.
+bool ak_parse_panel_layout_attributes(const char* attributesStr, ak_panel_layout_attributes* pAttributesOut);
 
 
 #ifdef __cplusplus

@@ -798,7 +798,7 @@ bool ak_panel_split(easygui_element* pPanel, ak_panel_split_axis splitAxis, floa
     }
 
     // It's an error for a panel to be split while it has tools attached.
-    if (pPanelData->pToolContainer == NULL) {
+    if (pPanelData->pToolContainer != NULL) {
         return false;
     }
 

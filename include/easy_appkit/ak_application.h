@@ -18,8 +18,9 @@ typedef struct easygui_element easygui_element;
 typedef struct easy2d_context easy2d_context;
 typedef struct easyvfs_context easyvfs_context;
 
-typedef void        (* ak_log_proc)           (ak_application* pApplication, const char* message);
-typedef const char* (* ak_layout_config_proc) (ak_application* pApplication);
+typedef void             (* ak_log_proc)           (ak_application* pApplication, const char* message);
+typedef const char*      (* ak_layout_config_proc) (ak_application* pApplication);
+typedef easygui_element* (* ak_create_tool_proc)   (ak_application* pApplication, const char* type, const char* attributes, easygui_element* pParentElement);
 
 /// Creates a new application object.
 ///
@@ -146,6 +147,22 @@ ak_window* ak_get_element_window(easygui_element* pElement);
 
 /// Retrieves the first occurance of the window with the given name.
 ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName);
+
+
+/// Sets the callback function to call when a custom tool needs to be instantiated.
+///
+/// @remarks
+///     The tool must be created with ak_create_tool(), with the parent element set to <pParentElement>.
+void ak_set_on_create_tool(ak_application* pApplication, ak_create_tool_proc proc);
+
+/// Retrieves a pointer to the callback function that is called when a custom tool needs to be instantiated.
+ak_create_tool_proc ak_get_on_create_tool(ak_application* pApplication);
+
+/// Creates a tool from it's type and attributes.
+///
+/// @remarks
+///     If the tool type is not a built-in type, it will call the onCreateTool callback.
+easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, const char* type, const char* attributes, easygui_element* pParentElement);
 
 
 #ifdef __cplusplus

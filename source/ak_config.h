@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+typedef void (* ak_on_config_error_proc)(void* pUserData, const char* message);
+
 typedef struct ak_config ak_config;
 struct ak_config
 {
@@ -21,10 +23,10 @@ struct ak_config
 };
 
 /// Parses a config script from a file.
-bool ak_parse_config_from_file(ak_config* pConfig, easyvfs_file* pFile);
+bool ak_parse_config_from_file(ak_config* pConfig, easyvfs_file* pFile, ak_on_config_error_proc onError, void* pOnErrorUserData);
 
 /// Parses a config script from a string.
-bool ak_parse_config_from_string(ak_config* pConfig, const char* configString);
+bool ak_parse_config_from_string(ak_config* pConfig, const char* configString, ak_on_config_error_proc onError, void* pOnErrorUserData);
 
 
 /// Initializes the given config object. This does not allocate the config object.

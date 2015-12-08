@@ -4,6 +4,7 @@
 #include "../include/easy_appkit/ak_build_config.h"
 #include "../include/easy_appkit/ak_theme.h"
 #include "../include/easy_appkit/ak_window.h"
+#include "../include/easy_appkit/ak_gui.h"
 #include "ak_application_private.h"
 #include "ak_window_private.h"
 #include "ak_config.h"
@@ -45,6 +46,8 @@ struct ak_application
     /// layout config file could not be found.
     ak_layout_config_proc onGetDefaultConfig;
 
+    /// A pointer to the function to call when a custom tool needs to be instantiated.
+    ak_create_tool_proc onCreateTool;
 
     /// We need to keep track of every existing window that is owned by the application. We implement this as a linked list, with this item being the first. The
     /// first window is considered to be the primary window.
@@ -149,8 +152,9 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
 
 
-        // Configs.
+        // Callbacks.
         pApplication->onGetDefaultConfig = NULL;
+        pApplication->onCreateTool       = NULL;
 
 
         // Windows.
@@ -488,6 +492,44 @@ ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName
 }
 
 
+void ak_set_on_create_tool(ak_application* pApplication, ak_create_tool_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onCreateTool = proc;
+}
+
+ak_create_tool_proc ak_get_on_create_tool(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->onCreateTool;
+}
+
+
+easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, const char* type, const char* attributes, easygui_element* pParentElement)
+{
+    if (pApplication == NULL || type == NULL) {
+        return false;
+    }
+
+    // First check for built-in tools.
+
+
+    // At this point we know the tool type is not a built-in so we need to give the host application a chance to
+    // instantiate it in case it's a custom tool type.
+    if (pApplication->onCreateTool) {
+        return pApplication->onCreateTool(pApplication, type, attributes, pParentElement);
+    }
+
+    return NULL;
+}
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -524,6 +566,14 @@ PRIVATE int ak_main_loop(ak_application* pApplication)
 #endif
 }
 
+PRIVATE static void ak_on_config_error(void* pUserData, const char* message)
+{
+    ak_application* pApplication = pUserData;
+    assert(pApplication != NULL);
+
+    ak_errorf(pApplication, "[CONFIG] %s", message);
+}
+
 PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
 {
     assert(pApplication != NULL);
@@ -537,7 +587,7 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
         if (pConfigFile != NULL)
         {
             ak_config config;
-            if (ak_parse_config_from_file(&config, pConfigFile))
+            if (ak_parse_config_from_file(&config, pConfigFile, ak_on_config_error, pApplication))
             {
                 if (ak_apply_config(pApplication, &config))
                 {
@@ -552,7 +602,7 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
     if (pApplication->onGetDefaultConfig)
     {
         ak_config config;
-        if (ak_parse_config_from_string(&config, pApplication->onGetDefaultConfig(pApplication)))
+        if (ak_parse_config_from_string(&config, pApplication->onGetDefaultConfig(pApplication), ak_on_config_error, pApplication))
         {
             return ak_apply_config(pApplication, &config);
         }
@@ -581,22 +631,28 @@ PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig)
     return ak_apply_layout(pApplication, pInitialLayout, NULL);
 }
 
-PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, easygui_element* pParentPanel)
+PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, easygui_element* pWorkingPanel)
 {
     assert(pApplication != NULL);
     assert(pLayout      != NULL);
 
-    easygui_element* pNewPanel = NULL;
-
     if (strcmp(pLayout->type, AK_LAYOUT_TYPE_LAYOUT) == 0)
     {
-        // It's a root level layout object.
-        assert(pParentPanel == NULL);
+        // It's a root level layout object - we just iterate over every child and call this function recursively.
+        assert(pWorkingPanel == NULL);
+
+        for (ak_layout* pChild = pLayout->pFirstChild; pChild != NULL; pChild = pChild->pNextSibling)
+        {
+            if (!ak_apply_layout(pApplication, pChild, pWorkingPanel))
+            {
+                return false;
+            }
+        }
     }
-    else if (strcmp(pLayout->type, AK_LAYOUT_TYPE_APPLICATION_WINDOW) == 0)
+    else if (strcmp(pLayout->type, AK_LAYOUT_TYPE_WINDOW) == 0)
     {
         // It's an application window.
-        ak_window* pParentWindow = ak_get_element_window(pParentPanel);
+        ak_window* pParentWindow = ak_get_element_window(pWorkingPanel);
 
         ak_window* pWindow = ak_create_window(pApplication, ak_window_type_application, pParentWindow, 0, NULL);
         if (pWindow == NULL) {
@@ -620,18 +676,70 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
             ak_show_window(pWindow);
         }
 
-        pNewPanel = ak_get_window_panel(pWindow);
+
+        // There should only be one child item, and it should be a panel.
+        return ak_apply_layout(pApplication, pLayout->pFirstChild, ak_get_window_panel(pWindow));
     }
-
-
-    // Apply the child layouts.
-    for (ak_layout* pChild = pLayout->pFirstChild; pChild != NULL; pChild = pChild->pNextSibling)
+    else if (strcmp(pLayout->type, AK_LAYOUT_TYPE_PANEL) == 0)
     {
-        if (!ak_apply_layout(pApplication, pChild, pNewPanel))
-        {
+        // It's a panel. If it's a split panel we just split it and load the next two panels which correspond to the two split partitions. If
+        // it's not split, we just leave it be and iterate over what should be a list of tools.
+
+        ak_panel_layout_attributes attr;
+        if (!ak_parse_panel_layout_attributes(pLayout->attributes, &attr)) {
             return false;
         }
+
+        if (attr.splitAxis == ak_panel_split_axis_none)
+        {
+            // It's not a split panel which means the next items should be just a list of tools.
+            for (ak_layout* pChild = pLayout->pFirstChild; pChild != NULL; pChild = pChild->pNextSibling)
+            {
+                if (!ak_apply_layout(pApplication, pChild, pWorkingPanel))
+                {
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            // It's a split panel which means there should be two children. If not, it's an error.
+            ak_layout* pChildLayout1 = pLayout->pFirstChild;
+            if (pChildLayout1 == NULL) {
+                return false;
+            }
+
+            ak_layout* pChildLayout2 = pChildLayout1->pNextSibling;
+            if (pChildLayout2 == NULL) {
+                return false;
+            }
+
+
+            if (!ak_panel_split(pWorkingPanel, attr.splitAxis, attr.splitPos)) {
+                return false;
+            }
+
+
+            return ak_apply_layout(pApplication, pChildLayout1, ak_panel_get_split_panel_1(pWorkingPanel)) && ak_apply_layout(pApplication, pChildLayout2, ak_panel_get_split_panel_2(pWorkingPanel));
+        }
     }
+    else if (strcmp(pLayout->type, AK_LAYOUT_TYPE_TOOL) == 0)
+    {
+        // It's a tool. Tools are instantiated based on it's type and attributes. The type is the first token in the config script's
+        // attribute list and the attributes is the remainder.
+        //
+        // When instantiating tools, we don't actually fail - we just silently ignore it. Thus, we never return false at this point.
+
+        char toolType[AK_MAX_WINDOW_NAME_LENGTH];
+        const char* toolAttributes = easyutil_first_non_whitespace(easyutil_next_token(pLayout->attributes, toolType, sizeof(toolType)));
+        if (toolAttributes != NULL)
+        {
+            ak_create_tool_by_type_and_attributes(pApplication, toolType, toolAttributes, pWorkingPanel);
+        }
+    }
+
+
+    
 
     return true;
 }

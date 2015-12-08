@@ -144,32 +144,51 @@ bool ak_parse_window_layout_attributes(const char* attributesStr, ak_window_layo
     }
 
 
-    char posXStr[8];
-    char posYStr[8];
-    char widthStr[8];
-    char heightStr[8];
-    char maximizedStr[8];
+    char typeStr[16];
+    attributesStr = easyutil_next_token(attributesStr, typeStr, sizeof(typeStr));
+    if (attributesStr == NULL) {
+        return false;
+    }
 
+    ak_window_type type = ak_window_type_unknown;
+    if (strcmp(typeStr, "application") == 0) {
+        type = ak_window_type_application;
+    } else if (strcmp(typeStr, "child") == 0) {
+        type = ak_window_type_child;
+    } else if (strcmp(typeStr, "dialog") == 0) {
+        type = ak_window_type_dialog;
+    } else if (strcmp(typeStr, "popup") == 0) {
+        type = ak_window_type_popup;
+    } else {
+        return false;
+    }
+
+
+    char posXStr[8];
     attributesStr = easyutil_next_token(attributesStr, posXStr, sizeof(posXStr));
     if (attributesStr == NULL) {
         return false;
     }
 
+    char posYStr[8];
     attributesStr = easyutil_next_token(attributesStr, posYStr, sizeof(posYStr));
     if (attributesStr == NULL) {
         return false;
     }
 
+    char widthStr[8];
     attributesStr = easyutil_next_token(attributesStr, widthStr, sizeof(widthStr));
     if (attributesStr == NULL) {
         return false;
     }
 
+    char heightStr[8];
     attributesStr = easyutil_next_token(attributesStr, heightStr, sizeof(heightStr));
     if (attributesStr == NULL) {
         return false;
     }
 
+    char maximizedStr[8];
     attributesStr = easyutil_next_token(attributesStr, maximizedStr, sizeof(maximizedStr));
     if (attributesStr == NULL) {
         return false;
@@ -187,6 +206,7 @@ bool ak_parse_window_layout_attributes(const char* attributesStr, ak_window_layo
         strcpy_s(pAttributesOut->name, sizeof(pAttributesOut->name), "");
     }
 
+    pAttributesOut->type   = type;
     pAttributesOut->posX   = atoi(posXStr);
     pAttributesOut->posY   = atoi(posYStr);
     pAttributesOut->width  = atoi(widthStr);
@@ -197,6 +217,48 @@ bool ak_parse_window_layout_attributes(const char* attributesStr, ak_window_layo
     } else {
         pAttributesOut->maximized = true;
     }
+
+    return true;
+}
+
+
+bool ak_parse_panel_layout_attributes(const char* attributesStr, ak_panel_layout_attributes* pAttributesOut)
+{
+    if (attributesStr == NULL || pAttributesOut == NULL) {
+        return false;
+    }
+
+    ak_panel_split_axis splitAxis = ak_panel_split_axis_none;
+    float splitPos = 0;
+
+
+    // The first token is the split axis.
+    char splitAxisStr[8];
+    attributesStr = easyutil_next_token(attributesStr, splitAxisStr, sizeof(splitAxisStr));
+    if (attributesStr != NULL)
+    {
+        if (strcmp(splitAxisStr, "hsplit") == 0) {
+            splitAxis = ak_panel_split_axis_horizontal;
+        } else if (strcmp(splitAxisStr, "vsplit") == 0) {
+            splitAxis = ak_panel_split_axis_vertical;
+        } else {
+            return false;
+        }
+
+
+        // The second token 
+        char splitPosStr[8];
+        attributesStr = easyutil_next_token(attributesStr, splitPosStr, sizeof(splitPosStr));
+        if (attributesStr == NULL) {
+            return false;
+        }
+
+        splitPos = (float)atof(splitPosStr);
+    }
+
+
+    pAttributesOut->splitAxis = splitAxis;
+    pAttributesOut->splitPos  = splitPos;
 
     return true;
 }

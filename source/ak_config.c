@@ -1,18 +1,17 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
 #include "ak_config.h"
+#include <stdio.h>
 #include <assert.h>
 
 /// Determines whether or not the given string is a layout item tag.
 PRIVATE bool ak_is_layout_item_tag(const char* tag)
 {
     return
-        strcmp(tag, AK_LAYOUT_TYPE_LAYOUT)             == 0 ||
-        strcmp(tag, AK_LAYOUT_TYPE_APPLICATION_WINDOW) == 0 ||
-        strcmp(tag, AK_LAYOUT_TYPE_SPLIT_PANEL_HORZ)   == 0 ||
-        strcmp(tag, AK_LAYOUT_TYPE_SPLIT_PANEL_VERT)   == 0 ||
-        strcmp(tag, AK_LAYOUT_TYPE_PANEL)              == 0 ||
-        strcmp(tag, AK_LAYOUT_TYPE_TOOL)               == 0;
+        strcmp(tag, AK_LAYOUT_TYPE_LAYOUT) == 0 ||
+        strcmp(tag, AK_LAYOUT_TYPE_WINDOW) == 0 ||
+        strcmp(tag, AK_LAYOUT_TYPE_PANEL)  == 0 ||
+        strcmp(tag, AK_LAYOUT_TYPE_TOOL)   == 0;
 }
 
 typedef struct
@@ -35,6 +34,12 @@ typedef struct
 
     /// Tracks whether or not an error has been found.
     bool foundError;
+
+    /// The function to call when an error occurs.
+    ak_on_config_error_proc onError;
+
+    /// A pointer to the user data to pass to the error callback.
+    void* pOnErrorUserData;
 
 } ak_config_parse_context;
 
@@ -94,6 +99,10 @@ static void ak_config_on_pair(void* pUserData, const char* key, const char* valu
         ak_layout* pNewLayout = ak_create_layout(key, value, pContext->pCurrentLayout);
         if (pNewLayout == NULL)
         {
+            if (pContext->onError) {
+                pContext->onError(pContext->pOnErrorUserData, "Failed to allocate memory for layout object.");
+            }
+
             pContext->foundError = true;
             return;
         }
@@ -114,6 +123,14 @@ static void ak_config_on_pair(void* pUserData, const char* key, const char* valu
                 if (strcmp(pContext->pCurrentLayout->type, key + 1) != 0)
                 {
                     // Tag mismatch.
+                    if (pContext->onError)
+                    {
+                        char msg[4096];
+                        snprintf(msg, sizeof(msg), "Tag mismatch. Expecting /%s but got %s", pContext->pCurrentLayout->type, key);
+
+                        pContext->onError(pContext->pOnErrorUserData, msg);
+                    }
+
                     pContext->foundError = true;
                     return;
                 }
@@ -128,7 +145,22 @@ static void ak_config_on_pair(void* pUserData, const char* key, const char* valu
     }
 }
 
-bool ak_parse_config_from_file(ak_config* pConfig, easyvfs_file* pFile)
+static void ak_config_on_error(void* pUserData, const char* message, unsigned int line)
+{
+    ak_config_parse_context* pContext = pUserData;
+    assert(pContext != NULL);
+
+    if (pContext->onError)
+    {
+        char msg[4096];
+        snprintf(msg, sizeof(msg), "(Line %d) %s", line, message);
+
+        pContext->onError(pContext->pOnErrorUserData, msg);
+    }
+}
+
+
+bool ak_parse_config_from_file(ak_config* pConfig, easyvfs_file* pFile, ak_on_config_error_proc onError, void* pOnErrorUserData)
 {
     if (pConfig == NULL || pFile == NULL) {
         return false;
@@ -141,9 +173,11 @@ bool ak_parse_config_from_file(ak_config* pConfig, easyvfs_file* pFile)
 
     ak_config_parse_context context;
     memset(&context, 0, sizeof(context));
-    context.pFile          = pFile;
-    context.pConfig        = pConfig;
-    context.pCurrentLayout = pConfig->pRootLayout;
+    context.pFile            = pFile;
+    context.pConfig          = pConfig;
+    context.pCurrentLayout   = pConfig->pRootLayout;
+    context.onError          = onError;
+    context.pOnErrorUserData = pOnErrorUserData;
     easyutil_parse_key_value_pairs(ak_config_on_read_from_file_proc, ak_config_on_pair, NULL, &context);
 
     if (context.foundError) {
@@ -154,7 +188,7 @@ bool ak_parse_config_from_file(ak_config* pConfig, easyvfs_file* pFile)
     return true;
 }
 
-bool ak_parse_config_from_string(ak_config* pConfig, const char* configString)
+bool ak_parse_config_from_string(ak_config* pConfig, const char* configString, ak_on_config_error_proc onError, void* pOnErrorUserData)
 {
     if (pConfig == NULL || configString == NULL) {
         return false;
@@ -171,6 +205,8 @@ bool ak_parse_config_from_string(ak_config* pConfig, const char* configString)
     context.configStringLength = (unsigned int)strlen(configString);
     context.pConfig            = pConfig;
     context.pCurrentLayout     = pConfig->pRootLayout;
+    context.onError            = onError;
+    context.pOnErrorUserData   = pOnErrorUserData;
     easyutil_parse_key_value_pairs(ak_config_on_read_from_file_proc, ak_config_on_pair, NULL, &context);
 
     if (context.foundError) {
