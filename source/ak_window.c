@@ -44,6 +44,9 @@ struct ak_window
     /// The easy_draw surface we'll be drawing to.
     easy2d_surface* pSurface;
 
+    /// The name of the window.
+    char name[AK_MAX_WINDOW_NAME_LENGTH];
+
 
     /// The function to call when the window is about to be hidden. If false is returned the window is prevented from being hidden.
     ak_window_on_hide_proc onHide;
@@ -223,15 +226,22 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
         return NULL;
     }
 
-    // The top-level window needs to have it's initial size set.
+    // The GUI panel needs to have it's initial size set.
     unsigned int windowWidth;
     unsigned int windowHeight;
     ak_get_window_size(pWindow, &windowWidth, &windowHeight);
     easygui_set_size(pWindow->pPanel, (float)windowWidth, (float)windowHeight);
 
+    // The name should be an empty string by default.
+    pWindow->hWnd                  = hWnd;
+    pWindow->hCursor               = LoadCursor(NULL, IDC_ARROW);
+    pWindow->popupRelativePosX     = 0;
+    pWindow->popupRelativePosY     = 0;
+    pWindow->isCursorOver          = false;
 
     pWindow->pApplication          = pApplication;
     pWindow->type                  = type;
+    pWindow->name[0]               = '\0';
     pWindow->onHide                = NULL;
     pWindow->onShow                = NULL;
     pWindow->onActivate            = NULL;
@@ -240,10 +250,6 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     pWindow->onMouseButtonUp       = NULL;
     pWindow->onMouseButtonDblClick = NULL;
     pWindow->onMouseWheel          = NULL;
-    pWindow->hWnd                  = hWnd;
-    pWindow->hCursor               = LoadCursor(NULL, IDC_ARROW);
-    pWindow->popupRelativePosX     = 0;
-    pWindow->popupRelativePosY     = 0;
     pWindow->pNextWindow           = NULL;
     pWindow->pPrevWindow           = NULL;
     pWindow->extraDataSize         = extraDataSize;
@@ -974,6 +980,38 @@ easygui_element* ak_get_window_panel(ak_window* pWindow)
     }
 
     return pWindow->pPanel;
+}
+
+easy2d_surface* ak_get_window_surface(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->pSurface;
+}
+
+
+bool ak_set_window_name(ak_window* pWindow, const char* pName)
+{
+    if (pWindow == NULL) {
+        return false;
+    }
+
+    if (pName == NULL) {
+        return strcpy_s(pWindow->name, sizeof(pWindow->name), "") == 0;
+    } else {
+        return strcpy_s(pWindow->name, sizeof(pWindow->name), pName) == 0;
+    }
+}
+
+const char* ak_get_window_name(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->name;
 }
 
 

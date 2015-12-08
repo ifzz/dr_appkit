@@ -471,6 +471,22 @@ ak_window* ak_get_element_window(easygui_element* pElement)
     return ak_get_panel_window(easygui_find_top_level_element(pElement));
 }
 
+ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    for (ak_window* pWindow = pApplication->pFirstWindow; pWindow != NULL; pWindow = ak_get_next_window(pWindow))
+    {
+        if (strcmp(ak_get_window_name(pWindow), pName) == 0) {
+            return pWindow;
+        }
+    }
+
+    return NULL;
+}
+
 
 
 
@@ -593,7 +609,7 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
             return false;
         }
 
-        //ak_set_window_name(pWindow, attr.name);
+        ak_set_window_name(pWindow, attr.name);
         ak_set_window_title(pWindow, attr.title);
         ak_set_window_position(pWindow, attr.posX, attr.posY);
         ak_set_window_size(pWindow, attr.width, attr.height);

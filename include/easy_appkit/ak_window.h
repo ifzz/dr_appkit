@@ -85,6 +85,16 @@ easygui_element* ak_get_window_panel(ak_window* pWindow);
 easy2d_surface* ak_get_window_surface(ak_window* pWindow);
 
 
+/// Sets the name of the window.
+///
+/// @remarks
+///     The name of the window acts as an identifier which can be used to retrieve a pointer to the window.
+bool ak_set_window_name(ak_window* pWindow, const char* pName);
+
+/// Retrieves the name of the given window.
+const char* ak_get_window_name(ak_window* pWindow);
+
+
 /// Sets the title of the given window.
 void ak_set_window_title(ak_window* pWindow, const char* pTitle);
 

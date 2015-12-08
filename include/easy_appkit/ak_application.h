@@ -144,6 +144,9 @@ ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication);
 ///     This runs in linear time.
 ak_window* ak_get_element_window(easygui_element* pElement);
 
+/// Retrieves the first occurance of the window with the given name.
+ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName);
+
 
 #ifdef __cplusplus
 }
