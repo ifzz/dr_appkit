@@ -633,7 +633,7 @@ PRIVATE void ak_panel_on_paint(easygui_element* pPanel, easygui_rect relativeRec
     // Only draw the background if we have no children.
     if (pPanel->pFirstChild == NULL || (pPanelData->pToolContainer != NULL && pPanelData->pToolContainer->pFirstChild == NULL))
     {
-        easygui_draw_rect(pPanel, easygui_get_local_rect(pPanel), pTheme->baseColor, pPaintData);
+        easygui_draw_rect(pPanel, relativeRect, pTheme->baseColor, pPaintData);
     }
 
     ak_panel_paint_tab_bar(pPanel, pPaintData);

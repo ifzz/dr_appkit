@@ -537,7 +537,7 @@ ak_create_tool_proc ak_get_on_create_tool(ak_application* pApplication)
 }
 
 
-easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, const char* type, const char* attributes, easygui_element* pParentElement)
+easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, const char* type, const char* attributes)
 {
     if (pApplication == NULL || type == NULL) {
         return false;
@@ -549,7 +549,7 @@ easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplicat
     // At this point we know the tool type is not a built-in so we need to give the host application a chance to
     // instantiate it in case it's a custom tool type.
     if (pApplication->onCreateTool) {
-        return pApplication->onCreateTool(pApplication, type, attributes, pParentElement);
+        return pApplication->onCreateTool(pApplication, type, attributes);
     }
 
     return NULL;
@@ -769,7 +769,10 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
         const char* toolAttributes = easyutil_first_non_whitespace(easyutil_next_token(pLayout->attributes, toolType, sizeof(toolType)));
         if (toolAttributes != NULL)
         {
-            ak_create_tool_by_type_and_attributes(pApplication, toolType, toolAttributes, pWorkingPanel);
+            easygui_element* pTool = ak_create_tool_by_type_and_attributes(pApplication, toolType, toolAttributes);
+            if (pTool != NULL) {
+                ak_panel_attach_tool(pWorkingPanel, pTool);
+            }
         }
     }
 
