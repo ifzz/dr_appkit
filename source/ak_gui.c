@@ -24,7 +24,7 @@ typedef struct
 
 
     /// The size of the tool's extra data, in bytes.
-    unsigned int extraDataSize;
+    size_t extraDataSize;
 
     /// A pointer to the tool's extra data.
     char pExtraData[1];
@@ -38,6 +38,7 @@ easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* p
     if (pElement != NULL)
     {
         easygui_hide(pElement);
+
 
         ak_tool_data* pToolData = easygui_get_extra_data(pElement);
         assert(pToolData != NULL);
@@ -157,7 +158,7 @@ typedef struct
 
 
     /// The size of the panel's extra data, in bytes.
-    unsigned int extraDataSize;
+    size_t extraDataSize;
 
     /// A pointer to the panel's extra data.
     char pExtraData[1];
@@ -381,8 +382,8 @@ PRIVATE void ak_panel_iterate_tool_tabs(easygui_element* pPanel, ak_panel_tab_it
     assert(pTheme != NULL);
 
 
-    easygui_font font = pTheme->uiFont;
-    const easy2d_font_metrics fontMetrics = pTheme->uiFontMetrics;
+    easygui_font* pFont = pTheme->pUIFont;
+    const easygui_font_metrics fontMetrics = pTheme->uiFontMetrics;
 
     float paddingLeft   = pTheme->tabPaddingLeft;
     float paddingTop    = pTheme->tabPaddingTop;
@@ -398,7 +399,7 @@ PRIVATE void ak_panel_iterate_tool_tabs(easygui_element* pPanel, ak_panel_tab_it
 
         float titleWidth  = 0;
         float titleHeight = (float)fontMetrics.lineHeight;
-        easy2d_measure_string(ak_get_application_drawing_context(pApplication), (easy2d_font)font, text, textLength, &titleWidth, NULL);   // NULL as last argument (pHeightOut) is intentional - want to use the line height instead.
+        easygui_measure_string(pFont, text, textLength, &titleWidth, NULL);   // NULL as last argument (pHeightOut) is intentional - want to use the line height instead.
 
         
         ak_panel_tab_info info;
@@ -514,7 +515,7 @@ PRIVATE bool ak_panel_tab_paint_callback(easygui_element* pPanel, ak_panel_tab_i
 
 
     void* pPaintData = pPaintContext->pPaintData;
-    easygui_font  font      = pTheme->uiFont;
+    easygui_font* pFont     = pTheme->pUIFont;
     easygui_color textColor = pTheme->uiFontColor;
 
     easygui_color backgroundColor;
@@ -529,7 +530,7 @@ PRIVATE bool ak_panel_tab_paint_callback(easygui_element* pPanel, ak_panel_tab_i
     // Text.
     const char*  toolTitle       = ak_get_tool_title(pTabInfo->pTool);
     unsigned int toolTitleLength = (unsigned int)strlen(toolTitle);
-    easygui_draw_text(pPanel, toolTitle, toolTitleLength, pTabInfo->textRect.left, pTabInfo->textRect.top, font, textColor, backgroundColor, pPaintData);
+    easygui_draw_text(pPanel, pFont, toolTitle, toolTitleLength, pTabInfo->textRect.left, pTabInfo->textRect.top, textColor, backgroundColor, pPaintData);
 
     // Background. Part of the background was drawn with the text which we do in order to avoid overdraw. Thus, the background is
     // drawn in four parts - one for each side around the text.
@@ -908,7 +909,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
         }
         easygui_set_size(pPanelData->pToolContainer, easygui_get_width(pPanel), easygui_get_height(pPanel));
 
-        easygui_register_on_size(pPanelData->pToolContainer, easygui_on_size_fit_to_parent);
+        easygui_register_on_size(pPanelData->pToolContainer, easygui_on_size_fit_children_to_parent);
     }
 
     assert(pPanelData->pToolContainer != NULL);

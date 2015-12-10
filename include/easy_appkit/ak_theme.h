@@ -17,7 +17,7 @@ typedef struct ak_text_theme ak_text_theme;
 struct ak_text_theme
 {
     /// The font.
-    easygui_font font;
+    easygui_font* pFont;
 
     /// The text color.
     easygui_color textColor;
@@ -26,7 +26,7 @@ struct ak_text_theme
     easygui_color backgroundColor;
 
     /// The font metrics for efficient and easy access.
-    easy2d_font_metrics fontMetrics;
+    easygui_font_metrics fontMetrics;
 };
 
 struct ak_theme
@@ -60,16 +60,16 @@ struct ak_theme
     //// Fonts ////
 
     /// The font to use for normal UI elements, but not text editors.
-    easygui_font uiFont;
+    easygui_font* pUIFont;
 
     /// The color to use for the normal UI elements, but not text editor.
     easygui_color uiFontColor;
 
     /// The metrics of the UI font.
-    easy2d_font_metrics uiFontMetrics;
+    easygui_font_metrics uiFontMetrics;
 
     /// The metrics of the cross glyph.
-    easy2d_glyph_metrics uiCrossMetrics;
+    easygui_glyph_metrics uiCrossMetrics;
 
 
 

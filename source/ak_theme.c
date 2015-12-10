@@ -5,21 +5,18 @@
 #include "../include/easy_appkit/ak_build_config.h"
 #include <assert.h>
 
-ak_text_theme ak_init_text_theme(ak_application* pApplication, const char* family, unsigned int size, easy2d_font_weight weight, easy2d_font_slant slant, easygui_color textColor, easygui_color backgroundColor)
+ak_text_theme ak_init_text_theme(ak_application* pApplication, const char* family, unsigned int size, easygui_font_weight weight, easygui_font_slant slant, easygui_color textColor, easygui_color backgroundColor)
 {
-    easy2d_context* pDrawingContext = ak_get_application_drawing_context(pApplication);
-    assert(pDrawingContext != NULL);
-
     ak_text_theme result;
     result.textColor = textColor;
     result.backgroundColor = backgroundColor;
 
-    result.font = easy2d_create_font(pDrawingContext, family, size, weight, slant, 0);
-    if (result.font == NULL) {
+    result.pFont = easygui_create_font(ak_get_application_gui(pApplication), family, size, weight, slant, 0);
+    if (result.pFont == NULL) {
         ak_logf(pApplication, "[ERROR] Failed to load font \"%s\"", family);
     }
 
-    if (!easy2d_get_font_metrics(pDrawingContext, result.font, &result.fontMetrics)) {
+    if (!easygui_get_font_metrics(result.pFont, &result.fontMetrics)) {
         ak_logf(pApplication, "[ERROR] Failed to retrieve font metrics for \"%s\"", family);
     }
 
@@ -32,8 +29,8 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     assert(pApplication != NULL);
     assert(pTheme       != NULL);
 
-    easy2d_context* pDrawingContext = ak_get_application_drawing_context(pApplication);
-    assert(pDrawingContext != NULL);
+    //easy2d_context* pDrawingContext = ak_get_application_drawing_context(pApplication);
+    //assert(pDrawingContext != NULL);
 
 #ifdef AK_USE_WIN32
     const char*  defaultUIFontFamily = "Segoe UI";
@@ -68,10 +65,10 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
 
 
     //// Fonts ////
-    pTheme->uiFont = easy2d_create_font(pDrawingContext, defaultUIFontFamily, defaultUIFontSize, easy2d_weight_normal, easy2d_slant_none, 0);
+    pTheme->pUIFont = easygui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, easy2d_weight_normal, easy2d_slant_none, 0);
     pTheme->uiFontColor = easygui_rgb(210, 210, 210);
-    easy2d_get_font_metrics(pDrawingContext, pTheme->uiFont, &pTheme->uiFontMetrics);
-    easy2d_get_glyph_metrics(pDrawingContext, 'X', pTheme->uiFont, &pTheme->uiCrossMetrics);
+    easygui_get_font_metrics(pTheme->pUIFont, &pTheme->uiFontMetrics);
+    easygui_get_glyph_metrics(pTheme->pUIFont, 'X', &pTheme->uiCrossMetrics);
 
 
 
