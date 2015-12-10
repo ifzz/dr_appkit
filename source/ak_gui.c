@@ -34,7 +34,7 @@ typedef struct
 
 easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* pParent, size_t extraDataSize, const void* pExtraData)
 {
-    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_tool_data) + extraDataSize);
+    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_tool_data) - sizeof(char) + extraDataSize);
     if (pElement != NULL)
     {
         easygui_hide(pElement);
@@ -726,7 +726,7 @@ PRIVATE void ak_panel_on_mouse_button_down(easygui_element* pElement, int button
 
 easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* pParent, size_t extraDataSize, const void* pExtraData)
 {
-    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_panel_data) + extraDataSize);
+    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_panel_data) - sizeof(char) + extraDataSize);
     if (pElement != NULL)
     {
         ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
