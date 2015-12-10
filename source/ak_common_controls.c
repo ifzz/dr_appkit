@@ -521,7 +521,7 @@ static void ak_tree_view_on_mouse_button_dblclick(easygui_element* pTV, int mous
 
     if (mouseButton == EASYGUI_MOUSE_BUTTON_LEFT)
     {
-        if (hit.pItem != NULL)
+        if (hit.pItem != NULL && !hit.hitArrow)
         {
             if (ak_is_tree_view_item_expanded(hit.pItem)) {
                 ak_collapse_tree_view_item(hit.pItem);
