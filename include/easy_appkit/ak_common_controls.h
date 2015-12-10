@@ -46,6 +46,10 @@ ak_tree_view_item* ak_create_tree_view_item(easygui_element* pTV, ak_tree_view_i
 /// Recursively deletes a tree view item.
 void ak_delete_tree_view_item(ak_tree_view_item* pItem);
 
+/// Deselects every item in the given tree-view control.
+void ak_deselect_all_tree_view_items(easygui_element* pTV);
+
+
 
 /// Appends a tree view item as a child of the given parent item.
 void ak_append_tree_view_item(ak_tree_view_item* pItem, ak_tree_view_item* pParent);
@@ -58,6 +62,24 @@ void ak_append_sibling_tree_view_item(ak_tree_view_item* pItemToAppend, ak_tree_
 
 /// Prepends the given tree view item to the given sibling.
 void ak_prepend_sibling_tree_view_item(ak_tree_view_item* pItemToPrepend, ak_tree_view_item* pItemToPrependTo);
+
+/// Selects the given item.
+void ak_select_tree_view_item(ak_tree_view_item* pItem);
+
+/// Deselects the given item.
+void ak_deselect_tree_view_item(ak_tree_view_item* pItem);
+
+/// Determines whether or not the given tree view item is selected.
+bool ak_is_tree_view_item_selected(ak_tree_view_item* pItem);
+
+/// Expands the given item.
+void ak_expand_tree_view_item(ak_tree_view_item* pItem);
+
+/// Collapses the given item.
+void ak_collapse_tree_view_item(ak_tree_view_item* pItem);
+
+/// Determines whether or not the given item is expanded.
+bool ak_is_tree_view_item_expanded(ak_tree_view_item* pItem);
 
 
 
