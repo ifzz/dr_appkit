@@ -53,6 +53,8 @@ typedef bool (* ak_window_on_hide_proc)        (ak_window* pWindow);
 typedef bool (* ak_window_on_show_proc)        (ak_window* pWindow);
 typedef void (* ak_window_on_activate_proc)    (ak_window* pWindow);
 typedef void (* ak_window_on_deactivate_proc)  (ak_window* pWindow);
+typedef void (* ak_window_on_mouse_enter_proc) (ak_window* pWindow);
+typedef void (* ak_window_on_mouse_leave_proc) (ak_window* pWindow);
 typedef void (* ak_window_on_mouse_button_proc)(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
 typedef void (* ak_window_on_mouse_wheel_proc) (ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
 
@@ -169,6 +171,12 @@ void ak_window_on_activate(ak_window* pWindow);
 
 /// Calls the on_deactivate event handler for the given window.
 void ak_window_on_deactivate(ak_window* pWindow);
+
+/// Calls the on_mouse_enter event handler for the given window.
+void ak_window_on_mouse_enter(ak_window* pWindow);
+
+/// Calls the on_mouse_leave event handler for the given window.
+void ak_window_on_mouse_leave(ak_window* pWindow);
 
 /// Calls the on_mouse_button_down event handler for the given window.
 void ak_window_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);

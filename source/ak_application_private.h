@@ -36,6 +36,12 @@ void ak_application_on_activate_window(ak_window* pWindow);
 /// Called when a window is deactivated.
 void ak_application_on_deactivate_window(ak_window* pWindow);
 
+/// Called when the mouse enters the given window.
+void ak_application_on_mouse_enter(ak_window* pWindow);
+
+/// Called when the mouse leaves the given window.
+void ak_application_on_mouse_leave(ak_window* pWindow);
+
 /// Called when a mouse button is pressed.
 void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
 

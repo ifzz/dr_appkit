@@ -877,6 +877,23 @@ void ak_application_on_deactivate_window(ak_window* pWindow)
     ak_application_hide_non_ancestor_popups(pWindow);
 }
 
+void ak_application_on_mouse_enter(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_mouse_enter(pWindow);
+}
+
+void ak_application_on_mouse_leave(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_mouse_leave(pWindow);
+
+    // Let the GUI know about the event.
+    easygui_post_inbound_event_mouse_leave(ak_get_window_panel(pWindow));
+}
+
 void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
 {
     assert(pWindow != NULL);

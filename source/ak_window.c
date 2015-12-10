@@ -60,6 +60,12 @@ struct ak_window
     /// The function to call when the window has been deactivated.
     ak_window_on_deactivate_proc onDeactivate;
 
+    /// Called when the mouse enters the client area of the window.
+    ak_window_on_mouse_enter_proc onMouseEnter;
+
+    /// Called when the mouse leaves the client area of the window.
+    ak_window_on_mouse_leave_proc onMouseLeave;
+
     /// Called when a mouse button is pressed.
     ak_window_on_mouse_button_proc onMouseButtonDown;
 
@@ -246,6 +252,8 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     pWindow->onShow                = NULL;
     pWindow->onActivate            = NULL;
     pWindow->onDeactivate          = NULL;
+    pWindow->onMouseEnter          = NULL;
+    pWindow->onMouseLeave          = NULL;
     pWindow->onMouseButtonDown     = NULL;
     pWindow->onMouseButtonUp       = NULL;
     pWindow->onMouseButtonDblClick = NULL;
@@ -420,8 +428,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
             {
                 pWindow->isCursorOver = false;
 
-                // TODO: Post on_mouse_leave
-
+                ak_application_on_mouse_leave(pWindow);
                 break;
             }
 
@@ -434,7 +441,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                     ak_win32_track_mouse_leave_event(hWnd);
                     pWindow->isCursorOver = true;
 
-                    // TODO: Post on_mouse_enter
+                    ak_application_on_mouse_enter(pWindow);
                 }
 
                 easygui_post_inbound_event_mouse_move(pWindow->pPanel, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -1308,6 +1315,28 @@ void ak_window_on_deactivate(ak_window* pWindow)
 
     if (pWindow->onDeactivate) {
         pWindow->onDeactivate(pWindow);
+    }
+}
+
+void ak_window_on_mouse_enter(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onMouseEnter) {
+        pWindow->onMouseEnter(pWindow);
+    }
+}
+
+void ak_window_on_mouse_leave(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onMouseLeave) {
+        pWindow->onMouseLeave(pWindow);
     }
 }
 
