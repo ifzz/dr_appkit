@@ -21,6 +21,7 @@ typedef struct easyvfs_context easyvfs_context;
 typedef void             (* ak_log_proc)           (ak_application* pApplication, const char* message);
 typedef const char*      (* ak_layout_config_proc) (ak_application* pApplication);
 typedef easygui_element* (* ak_create_tool_proc)   (ak_application* pApplication, const char* type, const char* attributes);
+typedef void             (* ak_delete_tool_proc)   (easygui_element* pTool);
 
 /// Creates a new application object.
 ///
@@ -161,6 +162,14 @@ void ak_set_on_create_tool(ak_application* pApplication, ak_create_tool_proc pro
 
 /// Retrieves a pointer to the callback function that is called when a custom tool needs to be instantiated.
 ak_create_tool_proc ak_get_on_create_tool(ak_application* pApplication);
+
+
+/// Sets the callback function to call when a custom tool needs to be deleted.
+void ak_set_on_delete_tool(ak_application* pApplication, ak_delete_tool_proc proc);
+
+/// Retrieves a pointer to the callback function that is called when a custom tool needs to be deleted.
+ak_delete_tool_proc ak_get_on_delete_tool(ak_application* pApplication);
+
 
 /// Creates a tool from it's type and attributes.
 ///

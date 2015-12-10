@@ -49,6 +49,9 @@ struct ak_application
     /// A pointer to the function to call when a custom tool needs to be instantiated.
     ak_create_tool_proc onCreateTool;
 
+    /// A pointer to the function to call when a custom tooll needs to be deleted.
+    ak_delete_tool_proc onDeleteTool;
+
     /// We need to keep track of every existing window that is owned by the application. We implement this as a linked list, with this item being the first. The
     /// first window is considered to be the primary window.
     ak_window* pFirstWindow;
@@ -143,7 +146,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
             return NULL;
         }
 
-        pApplication->pGUI = easygui_create_context_easy_draw();
+        pApplication->pGUI = easygui_create_context_easy_draw(pApplication->pDrawingContext);
         if (pApplication->pGUI == NULL) {
             free(pApplication);
             return NULL;
@@ -537,6 +540,25 @@ ak_create_tool_proc ak_get_on_create_tool(ak_application* pApplication)
 }
 
 
+void ak_set_on_delete_tool(ak_application* pApplication, ak_delete_tool_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onDeleteTool = proc;
+}
+
+ak_delete_tool_proc ak_get_on_delete_tool(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->onDeleteTool;
+}
+
+
 easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, const char* type, const char* attributes)
 {
     if (pApplication == NULL || type == NULL) {
@@ -771,7 +793,9 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
         {
             easygui_element* pTool = ak_create_tool_by_type_and_attributes(pApplication, toolType, toolAttributes);
             if (pTool != NULL) {
-                ak_panel_attach_tool(pWorkingPanel, pTool);
+                if (ak_panel_attach_tool(pWorkingPanel, pTool)) {
+                    easygui_show(pTool);
+                }
             }
         }
     }
