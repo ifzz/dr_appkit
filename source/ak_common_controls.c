@@ -46,14 +46,8 @@ struct ak_tree_view
     float offsetY;
 
 
-    /// The font to use when drawing tree-view item text.
-    easygui_font* pTextFont;
-
-    /// The color to use when drawing text.
-    easygui_color textColor;
-
-    /// The padding to apply to each item.
-    float textPadding;
+    /// The theme.
+    ak_tree_view_theme theme;
 
 
     /// The font to use for the arrow glyphs.
@@ -150,9 +144,9 @@ PRIVATE float ak_get_tree_view_item_height(easygui_element* pTV)
     assert(pTVData != NULL);
 
     easygui_font_metrics fontMetrics;
-    easygui_get_font_metrics(pTVData->pTextFont, &fontMetrics);
+    easygui_get_font_metrics(pTVData->theme.pDefaultFont, &fontMetrics);
 
-    return fontMetrics.lineHeight + (pTVData->textPadding*2);
+    return fontMetrics.lineHeight + (pTVData->theme.padding*2);
 }
 
 /// Helper for finding the width of the arrow.
@@ -161,7 +155,7 @@ PRIVATE float ak_get_tree_view_arrow_width(easygui_element* pTV)
     ak_tree_view* pTVData = easygui_get_extra_data(pTV);
     assert(pTVData != NULL);
 
-    return (float)pTVData->arrowMetrics.width + (pTVData->textPadding*2);
+    return (float)pTVData->arrowMetrics.width + (pTVData->theme.padding*2);
 }
 
 /// Helper for finding the height of the arrow.
@@ -170,7 +164,7 @@ PRIVATE float ak_get_tree_view_arrow_height(easygui_element* pTV)
     ak_tree_view* pTVData = easygui_get_extra_data(pTV);
     assert(pTVData != NULL);
 
-    return (float)pTVData->arrowMetrics.height + (pTVData->textPadding*2);
+    return (float)pTVData->arrowMetrics.height + (pTVData->theme.padding*2);
 }
 
 /// relativePosX and relativePosY are relative to the main tree-view control.
@@ -293,19 +287,19 @@ PRIVATE bool ak_draw_tree_view_item(easygui_element* pTV, ak_tree_view_item* pIt
     assert(pTVData != NULL);
 
     easygui_font_metrics fontMetrics;
-    if (!easygui_get_font_metrics(pTVData->pTextFont, &fontMetrics)) {
+    if (!easygui_get_font_metrics(pTVData->theme.pDefaultFont, &fontMetrics)) {
         assert(false);
     }
 
 
     // Background. TODO: Only draw the background region that falls outside of the text rectangle in order to prevent overdraw.
-    easygui_color bgcolor = easygui_rgb(96, 96, 96);
+    easygui_color bgcolor = pTVData->theme.backgroundColor;
     if (pTVData->pHoveredItem == pItem) {
-        bgcolor = easygui_rgb(112, 112, 112);
+        bgcolor = pTVData->theme.backgroundColorHovered;
     }
 
     if (ak_is_tree_view_item_selected(pItem)) {
-        bgcolor = easygui_rgb(140, 140, 140);
+        bgcolor = pTVData->theme.backgroundColorSelected;
     }
 
 
@@ -315,7 +309,7 @@ PRIVATE bool ak_draw_tree_view_item(easygui_element* pTV, ak_tree_view_item* pIt
     // Arrow. Only draw this if we have children. TODO: Only draw the background region that falls outside of the arrow's rectangle.
     if (pItem->pFirstChild != NULL)
     {
-        float arrowPosX = penPosX + pTVData->textPadding;
+        float arrowPosX = penPosX + pTVData->theme.padding;
         float arrowPosY = penPosY + ((ak_get_tree_view_item_height(pTV) - pTVData->arrowMetrics.height) / 2) + (pTVData->arrowMetrics.originY - pTVData->arrowFontMetrics.ascent);
 
         easygui_color arrowColor = pTVData->arrowColor;
@@ -334,9 +328,9 @@ PRIVATE bool ak_draw_tree_view_item(easygui_element* pTV, ak_tree_view_item* pIt
 
 
     // Text.
-    float textPosX = penPosX + ak_get_tree_view_arrow_width(pTV) + pTVData->textPadding;
-    float textPosY = penPosY + pTVData->textPadding;
-    easygui_draw_text(pTV, pTVData->pTextFont, pItem->text, strlen(pItem->text), textPosX, textPosY, pTVData->textColor, bgcolor, pPaintData);
+    float textPosX = penPosX + ak_get_tree_view_arrow_width(pTV) + pTVData->theme.padding;
+    float textPosY = penPosY + pTVData->theme.padding;
+    easygui_draw_text(pTV, pTVData->theme.pDefaultFont, pItem->text, strlen(pItem->text), textPosX, textPosY, pTVData->theme.textColor, bgcolor, pPaintData);
 
 
     // Now we need to draw children if the item is expanded.
@@ -376,9 +370,9 @@ PRIVATE void ak_measure_tree_view_items_recursive(ak_tree_view_item* pItem, floa
     if (pWidthOut != NULL)
     {
         float textWidth;
-        easygui_measure_string(pTVData->pTextFont, pItem->text, strlen(pItem->text), &textWidth, NULL);
+        easygui_measure_string(pTVData->theme.pDefaultFont, pItem->text, strlen(pItem->text), &textWidth, NULL);
 
-        float itemRight  = runningPosX + ak_get_tree_view_arrow_width(pItem->pTV) + textWidth + pTVData->textPadding;
+        float itemRight  = runningPosX + ak_get_tree_view_arrow_width(pItem->pTV) + textWidth + pTVData->theme.padding;
             
         if (itemRight > *pWidthOut) {
             *pWidthOut = itemRight;
@@ -561,7 +555,7 @@ static void ak_tree_view_on_mouse_wheel(easygui_element* pTV, int delta, int rel
 }
 
 
-easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element* pParent, easygui_font* pFont, easygui_color textColor, size_t extraDataSize, const void* pExtraData)
+easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element* pParent, ak_tree_view_theme* pTheme, size_t extraDataSize, const void* pExtraData)
 {
     easygui_element* pTV = easygui_create_element(pContext, pParent, sizeof(ak_tree_view) - sizeof(char) + extraDataSize);
     if (pTV == NULL) {
@@ -580,9 +574,7 @@ easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element*
 
 
     // Theme.
-    pTVData->pTextFont   = pFont;
-    pTVData->textColor   = textColor;
-    pTVData->textPadding = 2;
+    memcpy(&pTVData->theme, pTheme, sizeof(*pTheme));
 
     pTVData->pArrowFont = easygui_create_font(pTV->pContext, "Segoe UI Symbol", 9, easygui_weight_normal, easygui_slant_none, 0);   // TODO: Change this font for non-Win32 builds, or allow the application to draw their own arrows.
     pTVData->arrowColor = easygui_rgb(224, 224, 224);

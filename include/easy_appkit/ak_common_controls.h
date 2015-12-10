@@ -31,8 +31,33 @@ typedef struct ak_tree_view_item ak_tree_view_item;
 typedef void (* ak_on_tree_view_item_picked_proc)(ak_tree_view_item* pItem);
 
 
+typedef struct
+{
+    /// The default font to use for the text of each item.
+    easygui_font* pDefaultFont;
+
+    /// The color of the text.
+    easygui_color textColor;
+
+
+    /// The background color.
+    easygui_color backgroundColor;
+
+    /// The background color of hovered items.
+    easygui_color backgroundColorHovered;
+
+    /// The background color of selected items.
+    easygui_color backgroundColorSelected;
+
+
+    /// The padding to apply to each item.
+    float padding;
+
+} ak_tree_view_theme;
+
+
 /// Creates a tree-view control.
-easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element* pParent, easygui_font* pFont, easygui_color textColor, size_t extraDataSize, const void* pExtraData);
+easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element* pParent, ak_tree_view_theme* pTheme, size_t extraDataSize, const void* pExtraData);
 
 /// Deletes the given tree-view control and all of it's child items.
 void ak_delete_tree_view(easygui_element* pTV);

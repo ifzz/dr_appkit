@@ -66,7 +66,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
 
     //// Fonts ////
     pTheme->pUIFont = easygui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, easy2d_weight_normal, easy2d_slant_none, 0);
-    pTheme->uiFontColor = easygui_rgb(210, 210, 210);
+    pTheme->uiFontColor = easygui_rgb(240, 240, 240);
     easygui_get_font_metrics(pTheme->pUIFont, &pTheme->uiFontMetrics);
     easygui_get_glyph_metrics(pTheme->pUIFont, 'X', &pTheme->uiCrossMetrics);
 
