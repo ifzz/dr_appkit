@@ -28,12 +28,20 @@ extern "C" {
 
 typedef struct ak_tree_view_item ak_tree_view_item;
 
+typedef void (* ak_on_tree_view_item_picked_proc)(ak_tree_view_item* pItem);
+
 
 /// Creates a tree-view control.
-easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element* pParent, easygui_font* pFont, easygui_color textColor);
+easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element* pParent, easygui_font* pFont, easygui_color textColor, size_t extraDataSize, const void* pExtraData);
 
 /// Deletes the given tree-view control and all of it's child items.
 void ak_delete_tree_view(easygui_element* pTV);
+
+/// Retrieves the size of the extra data associated with the given tree-view control.
+size_t ak_get_tree_view_extra_data_size(easygui_element* pTV);
+
+/// Retrieves a pointer to the buffer containing the given tree-view's extra data.
+void* ak_get_tree_view_extra_data(easygui_element* pTV);
 
 
 /// Creates a tree view item.
@@ -49,7 +57,28 @@ void ak_delete_tree_view_item(ak_tree_view_item* pItem);
 /// Deselects every item in the given tree-view control.
 void ak_deselect_all_tree_view_items(easygui_element* pTV);
 
+/// Sets the function to call when an leaf item (an item with no children) is picked (double-clicked).
+void ak_set_on_tree_view_item_picked(easygui_element* pTV, ak_on_tree_view_item_picked_proc proc);
 
+/// Retrieves the function to call when a leaf item is picked.
+ak_on_tree_view_item_picked_proc ak_get_on_tree_view_item_picked(easygui_element* pTV);
+
+
+
+/// Retrieves the tree-view control that owns the given item.
+easygui_element* ak_get_tree_view_from_item(ak_tree_view_item* pItem);
+
+/// Retrieves the parent tree-view item.
+ak_tree_view_item* ak_get_tree_view_item_parent(ak_tree_view_item* pItem);
+
+/// Retrieves the text of the given tree view item.
+const char* ak_get_tree_view_item_text(ak_tree_view_item* pItem);
+
+/// Retrieves the size of the extra data associated with the given tree-view item.
+size_t ak_get_tree_view_item_extra_data_size(ak_tree_view_item* pItem);
+
+/// Retrieves a pointer to the extra data associated with the given tree-view item.
+void* ak_get_tree_view_item_extra_data(ak_tree_view_item* pItem);
 
 /// Appends a tree view item as a child of the given parent item.
 void ak_append_tree_view_item(ak_tree_view_item* pItem, ak_tree_view_item* pParent);
@@ -62,6 +91,9 @@ void ak_append_sibling_tree_view_item(ak_tree_view_item* pItemToAppend, ak_tree_
 
 /// Prepends the given tree view item to the given sibling.
 void ak_prepend_sibling_tree_view_item(ak_tree_view_item* pItemToPrepend, ak_tree_view_item* pItemToPrependTo);
+
+/// Determines whether or not the given item has any children.
+bool ak_does_tree_view_item_have_children(ak_tree_view_item* pItem);
 
 /// Selects the given item.
 void ak_select_tree_view_item(ak_tree_view_item* pItem);

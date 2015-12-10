@@ -67,6 +67,17 @@ struct ak_tree_view
 
     /// The glyph metrics of the arrow glyph.
     easygui_glyph_metrics arrowMetrics;
+
+
+    /// Event handlers.
+    ak_on_tree_view_item_picked_proc onItemPicked;
+
+
+    /// The size of the extra data.
+    size_t extraDataSize;
+
+    /// A pointer to the extra data buffer.
+    char pExtraData[1];
 };
 
 struct ak_tree_view_item
@@ -242,7 +253,7 @@ PRIVATE bool ak_do_tree_view_hit_test(easygui_element* pTV, unsigned int relativ
 
     if (pResult != NULL)
     {
-        if (result.pItem != NULL)
+        if (result.pItem != NULL && ak_does_tree_view_item_have_children(result.pItem))
         {
             // Now check if the point is over the arrow.
             float offsetPosX = relativePosX + pTVData->offsetX;
@@ -523,10 +534,19 @@ static void ak_tree_view_on_mouse_button_dblclick(easygui_element* pTV, int mous
     {
         if (hit.pItem != NULL && !hit.hitArrow)
         {
-            if (ak_is_tree_view_item_expanded(hit.pItem)) {
-                ak_collapse_tree_view_item(hit.pItem);
-            } else {
-                ak_expand_tree_view_item(hit.pItem);
+            if (ak_does_tree_view_item_have_children(hit.pItem))
+            {
+                if (ak_is_tree_view_item_expanded(hit.pItem)) {
+                    ak_collapse_tree_view_item(hit.pItem);
+                } else {
+                    ak_expand_tree_view_item(hit.pItem);
+                }
+            }
+            else
+            {
+                if (pTVData->onItemPicked) {
+                    pTVData->onItemPicked(hit.pItem);
+                }
             }
         }
     }
@@ -541,9 +561,9 @@ static void ak_tree_view_on_mouse_wheel(easygui_element* pTV, int delta, int rel
 }
 
 
-easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element* pParent, easygui_font* pFont, easygui_color textColor)
+easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element* pParent, easygui_font* pFont, easygui_color textColor, size_t extraDataSize, const void* pExtraData)
 {
-    easygui_element* pTV = easygui_create_element(pContext, pParent, sizeof(ak_tree_view));
+    easygui_element* pTV = easygui_create_element(pContext, pParent, sizeof(ak_tree_view) - sizeof(char) + extraDataSize);
     if (pTV == NULL) {
         return NULL;
     }
@@ -584,15 +604,22 @@ easygui_element* ak_create_tree_view(easygui_context* pContext, easygui_element*
     pTVData->pRootItem = ak_create_tree_view_item(pTV, NULL, NULL, 0, NULL);
     ak_expand_tree_view_item(pTVData->pRootItem);
 
+
+    // Event handlers.
+    pTVData->onItemPicked = NULL;
+
+
+    // Extra data.
+    pTVData->extraDataSize = extraDataSize;
+    if (pExtraData != NULL) {
+        memcpy(pTVData->pExtraData, pExtraData, extraDataSize);
+    }
+
     return pTV;
 }
 
 void ak_delete_tree_view(easygui_element* pTV)
 {
-    if (pTV == NULL) {
-        return;
-    }
-
     ak_tree_view* pTVData = easygui_get_extra_data(pTV);
     if (pTVData == NULL) {
         return;
@@ -605,14 +632,58 @@ void ak_delete_tree_view(easygui_element* pTV)
     easygui_delete_element(pTV);
 }
 
+
+size_t ak_get_tree_view_extra_data_size(easygui_element* pTV)
+{
+    ak_tree_view* pTVData = easygui_get_extra_data(pTV);
+    if (pTVData == NULL) {
+        return 0;
+    }
+
+    return pTVData->extraDataSize;
+}
+
+void* ak_get_tree_view_extra_data(easygui_element* pTV)
+{
+    ak_tree_view* pTVData = easygui_get_extra_data(pTV);
+    if (pTVData == NULL) {
+        return NULL;
+    }
+
+    return pTVData->pExtraData;
+}
+
+
 void ak_deselect_all_tree_view_items(easygui_element* pTV)
 {
     ak_tree_view* pTVData = easygui_get_extra_data(pTV);
-    assert(pTVData != NULL);
+    if (pTVData == NULL) {
+        return;
+    }
 
     ak_deselect_all_tree_view_items_recursive(pTVData->pRootItem);
 
     easygui_dirty(pTV, easygui_get_local_rect(pTV));
+}
+
+void ak_set_on_tree_view_item_picked(easygui_element* pTV, ak_on_tree_view_item_picked_proc proc)
+{
+    ak_tree_view* pTVData = easygui_get_extra_data(pTV);
+    if (pTVData == NULL) {
+        return;
+    }
+
+    pTVData->onItemPicked = proc;
+}
+
+ak_on_tree_view_item_picked_proc ak_get_on_tree_view_item_picked(easygui_element* pTV)
+{
+    ak_tree_view* pTVData = easygui_get_extra_data(pTV);
+    if (pTVData == NULL) {
+        return NULL;
+    }
+
+    return pTVData->onItemPicked;
 }
 
 
@@ -685,6 +756,51 @@ void ak_delete_tree_view_item(ak_tree_view_item* pItem)
     free(pItem);
 }
 
+
+easygui_element* ak_get_tree_view_from_item(ak_tree_view_item* pItem)
+{
+    if (pItem == NULL) {
+        return NULL;
+    }
+
+    return pItem->pTV;
+}
+
+ak_tree_view_item* ak_get_tree_view_item_parent(ak_tree_view_item* pItem)
+{
+    if (pItem == NULL) {
+        return NULL;
+    }
+
+    return pItem->pParent;
+}
+
+const char* ak_get_tree_view_item_text(ak_tree_view_item* pItem)
+{
+    if (pItem == NULL) {
+        return NULL;
+    }
+
+    return pItem->text;
+}
+
+size_t ak_get_tree_view_item_extra_data_size(ak_tree_view_item* pItem)
+{
+    if (pItem == NULL) {
+        return 0;
+    }
+
+    return pItem->extraDataSize;
+}
+
+void* ak_get_tree_view_item_extra_data(ak_tree_view_item* pItem)
+{
+    if (pItem == NULL) {
+        return NULL;
+    }
+
+    return pItem->pExtraData;
+}
 
 void ak_append_tree_view_item(ak_tree_view_item* pItem, ak_tree_view_item* pParent)
 {
@@ -876,6 +992,15 @@ void ak_prepend_sibling_tree_view_item(ak_tree_view_item* pItemToPrepend, ak_tre
         // Refresh the layout and redraw the tree-view control.
         ak_refresh_and_redraw_tree_view(pItemToPrepend->pTV);
     }
+}
+
+bool ak_does_tree_view_item_have_children(ak_tree_view_item* pItem)
+{
+    if (pItem == NULL) {
+        return false;
+    }
+
+    return pItem->pFirstChild != NULL;
 }
 
 void ak_select_tree_view_item(ak_tree_view_item* pItem)
