@@ -137,6 +137,21 @@ typedef struct
 
 } ak_tree_view_hit_test_result;
 
+typedef struct
+{
+    /// A pointer to the relevant item.
+    ak_tree_view_item* pItem;
+
+    /// The metrics of the item.
+    ak_tree_view_item_metrics metrics;
+
+    /// The depth of the item.
+    int depth;
+
+} ak_tree_view_iterator;
+
+
+
 /// Helper for finding the height of an item.
 PRIVATE float ak_get_tree_view_item_height(easygui_element* pTV)
 {
@@ -167,64 +182,67 @@ PRIVATE float ak_get_tree_view_arrow_height(easygui_element* pTV)
     return (float)pTVData->arrowMetrics.height + (pTVData->theme.padding*2);
 }
 
-/// relativePosX and relativePosY are relative to the main tree-view control.
-PRIVATE ak_tree_view_item* ak_find_tree_view_item_under_point_recursive(easygui_element* pTV, ak_tree_view_item* pItem, unsigned int relativePosX, unsigned int relativePosY, float runningPosX, float runningPosY, ak_tree_view_item_metrics* pMetricsOut)
-{
-    assert(pItem  != NULL);
 
+/// Begins iteration of each expanded item in the given tree view.
+PRIVATE ak_tree_view_iterator ak_tree_view_begin(easygui_element* pTV)
+{
     ak_tree_view* pTVData = easygui_get_extra_data(pTV);
     assert(pTVData != NULL);
 
-    float offsetPosX = relativePosX + pTVData->offsetX;
-    float offsetPosY = relativePosY + pTVData->offsetY;
+    ak_tree_view_iterator i;
+    i.pItem = pTVData->pRootItem;
 
-    if (pItem != pTVData->pRootItem)        // <-- Never check the root item.
-    {
-        easygui_rect childRect;
-        childRect.left   = 0;
-        childRect.right  = easygui_get_width(pTV);
-        childRect.top    = runningPosY;
-        childRect.bottom = childRect.top + ak_get_tree_view_item_height(pTV);
+    // We set the initial y position and depth to a negative value to nullify the root item.
+    i.metrics.posX = 0;
+    i.metrics.posY = -ak_get_tree_view_item_height(pTV);;
+    i.depth = -1;
 
-        if (easygui_rect_contains_point(childRect, offsetPosX, offsetPosY))
-        {
-            // This child contains the point.
-            if (pMetricsOut != NULL)
-            {
-                pMetricsOut->posX = runningPosX;
-                pMetricsOut->posY = runningPosY;
-            }
-
-            return pItem;
-        }
-    }
-
-
-    // At this point we know that the input item does not contain the point. Check it's children.
-    if (ak_is_tree_view_item_expanded(pItem))
-    {
-        if (pItem != pTVData->pRootItem) {
-            runningPosX += 16;
-        }
-
-        for (ak_tree_view_item* pChild = pItem->pFirstChild; pChild != NULL; pChild = pChild->pNextSibling)
-        {
-            if (pItem != pTVData->pRootItem) {
-                runningPosY += ak_get_tree_view_item_height(pTV);
-            }
-        
-            ak_tree_view_item* pItemUnderPoint = ak_find_tree_view_item_under_point_recursive(pTV, pChild, relativePosX, relativePosY, runningPosX, runningPosY, pMetricsOut);
-            if (pItemUnderPoint != NULL) {
-                return pItemUnderPoint;
-            }
-        }
-    }
-
-    
-
-    // If we make it here it means we were unable to find a child under the given point.
-    return NULL;
+    return i;
 }
+
+PRIVATE ak_tree_view_item* ak_next_visible_tree_view_item_non_child(ak_tree_view_item* pItem, ak_tree_view_iterator* pIterator)
+{
+    if (pItem == NULL) {
+        return NULL;
+    }
+
+    if (pItem->pNextSibling != NULL) {
+        return pItem->pNextSibling;
+    }
+
+    pIterator->depth -= 1;
+    return ak_next_visible_tree_view_item_non_child(pItem->pParent, pIterator);
+}
+
+/// Moves to the next visible item in the tree view based on the given iterator.
+PRIVATE bool ak_tree_view_next(ak_tree_view_iterator* pIterator)
+{
+    if (pIterator->pItem == NULL) {
+        return false;
+    }
+
+    // If the item is expanded and has children, we go to the first child. Otherwise we go to the next sibling.
+    if (ak_does_tree_view_item_have_children(pIterator->pItem) && ak_is_tree_view_item_expanded(pIterator->pItem))
+    {
+        pIterator->pItem = pIterator->pItem->pFirstChild;
+        pIterator->depth += 1;
+    }
+    else
+    {
+        pIterator->pItem = ak_next_visible_tree_view_item_non_child(pIterator->pItem, pIterator);
+    }
+
+
+    if (pIterator->pItem == NULL) {
+        return false;
+    }
+
+    pIterator->metrics.posX  = pIterator->depth * 16.0f;
+    pIterator->metrics.posY += ak_get_tree_view_item_height(pIterator->pItem->pTV);
+
+    return true;
+}
+
 
 /// Finds the tree-view item that's sitting under the given point, in relative coordinates.
 PRIVATE ak_tree_view_item* ak_find_tree_view_item_under_point(easygui_element* pTV, unsigned int relativePosX, unsigned int relativePosY, ak_tree_view_item_metrics* pMetricsOut)
@@ -232,7 +250,35 @@ PRIVATE ak_tree_view_item* ak_find_tree_view_item_under_point(easygui_element* p
     ak_tree_view* pTVData = easygui_get_extra_data(pTV);
     assert(pTVData != NULL);
 
-    return ak_find_tree_view_item_under_point_recursive(pTV, pTVData->pRootItem, relativePosX, relativePosY, 0, 0, pMetricsOut);
+    float offsetPosX = relativePosX + pTVData->offsetX;
+    float offsetPosY = relativePosY + pTVData->offsetY;
+
+
+    ak_tree_view_iterator iItem = ak_tree_view_begin(pTV);
+    while (ak_tree_view_next(&iItem))
+    {
+        if (iItem.pItem != pTVData->pRootItem)        // <-- Never check the root item.
+        {
+            easygui_rect childRect;
+            childRect.left   = 0;
+            childRect.right  = easygui_get_width(pTV);
+            childRect.top    = iItem.metrics.posY;
+            childRect.bottom = childRect.top + ak_get_tree_view_item_height(pTV);
+
+            if (easygui_rect_contains_point(childRect, offsetPosX, offsetPosY))
+            {
+                if (pMetricsOut != NULL)
+                {
+                    pMetricsOut->posX = iItem.metrics.posX;
+                    pMetricsOut->posY = iItem.metrics.posY;
+                }
+
+                return iItem.pItem;
+            }
+        }
+    }
+
+    return NULL;
 }
 
 /// Performs a hit test against the given point.
@@ -281,6 +327,8 @@ PRIVATE void ak_deselect_all_tree_view_items_recursive(ak_tree_view_item* pItem)
 // Recursively draws a tree view item. Returns false if the item is not within the clipping rectangle.
 PRIVATE bool ak_draw_tree_view_item(easygui_element* pTV, ak_tree_view_item* pItem, float penPosX, float penPosY, easygui_rect relativeClippingRect, void* pPaintData)
 {
+    (void)relativeClippingRect;
+
     // TODO: Check against clipping rectangle. If completely hidden, return false.
 
     ak_tree_view* pTVData = easygui_get_extra_data(pTV);
@@ -323,7 +371,6 @@ PRIVATE bool ak_draw_tree_view_item(easygui_element* pTV, ak_tree_view_item* pIt
         } else {
             easygui_draw_text(pTV, pTVData->pArrowFont, g_TreeView_ArrowFacingRightString, strlen(g_TreeView_ArrowFacingRightString), arrowPosX, arrowPosY, arrowColor, bgcolor, pPaintData);
         }
-        
     }
 
 
@@ -332,85 +379,37 @@ PRIVATE bool ak_draw_tree_view_item(easygui_element* pTV, ak_tree_view_item* pIt
     float textPosY = penPosY + pTVData->theme.padding;
     easygui_draw_text(pTV, pTVData->theme.pDefaultFont, pItem->text, strlen(pItem->text), textPosX, textPosY, pTVData->theme.textColor, bgcolor, pPaintData);
 
-
-    // Now we need to draw children if the item is expanded.
-    if (ak_is_tree_view_item_expanded(pItem))
-    {
-        if (pItem != pTVData->pRootItem) {
-            penPosX += 16;
-        }
-    
-        for (ak_tree_view_item* pChild = pItem->pFirstChild; pChild != NULL; pChild = pChild->pNextSibling)
-        {
-            if (pItem != pTVData->pRootItem) {
-                penPosY += ak_get_tree_view_item_height(pTV);
-            }
-        
-
-            // False will be returned if the child is not visible. In this case we can know that the next children will also be invisible
-            // so we just terminate from the loop early.
-            if (!ak_draw_tree_view_item(pTV, pChild, penPosX, penPosY, relativeClippingRect, pPaintData)) {
-                break;
-            }
-        }
-    }
-
     return true;
 }
 
-
-PRIVATE void ak_measure_tree_view_items_recursive(ak_tree_view_item* pItem, float runningPosX, float runningPosY, float* pWidthOut, float* pHeightOut)
-{
-    assert(pItem != NULL);
-
-    ak_tree_view* pTVData = easygui_get_extra_data(pItem->pTV);
-    assert(pTVData != NULL);
-
-
-    if (pWidthOut != NULL)
-    {
-        float textWidth;
-        easygui_measure_string(pTVData->theme.pDefaultFont, pItem->text, strlen(pItem->text), &textWidth, NULL);
-
-        float itemRight  = runningPosX + ak_get_tree_view_arrow_width(pItem->pTV) + textWidth + pTVData->theme.padding;
-            
-        if (itemRight > *pWidthOut) {
-            *pWidthOut = itemRight;
-        }
-    }
-
-    if (pHeightOut != NULL)
-    {
-        float itemBottom = runningPosY + ak_get_tree_view_item_height(pItem->pTV);
-
-        *pHeightOut = itemBottom;
-    }
-
-
-
-    if (ak_is_tree_view_item_expanded(pItem))
-    {
-        if (pItem != pTVData->pRootItem) {
-            runningPosX += 16;
-        }
-
-        for (ak_tree_view_item* pChild = pItem->pFirstChild; pChild != NULL; pChild = pChild->pNextSibling)
-        {
-            if (pItem != pTVData->pRootItem) {
-                runningPosY += ak_get_tree_view_item_height(pItem->pTV);
-            }
-
-            ak_measure_tree_view_items_recursive(pChild, runningPosX, runningPosY, pWidthOut, pHeightOut);
-        }
-    }
-}
 
 PRIVATE void ak_measure_tree_view_items(easygui_element* pTV, float* pWidthOut, float* pHeightOut)
 {
     ak_tree_view* pTVData = easygui_get_extra_data(pTV);
     assert(pTVData != NULL);
 
-    ak_measure_tree_view_items_recursive(pTVData->pRootItem, 0, 0, pWidthOut, pHeightOut);
+    ak_tree_view_iterator iItem = ak_tree_view_begin(pTV);
+    while (ak_tree_view_next(&iItem))
+    {
+        if (pWidthOut != NULL)
+        {
+            float textWidth;
+            easygui_measure_string(pTVData->theme.pDefaultFont, iItem.pItem->text, strlen(iItem.pItem->text), &textWidth, NULL);
+
+            float itemRight  = iItem.metrics.posX + ak_get_tree_view_arrow_width(pTV) + textWidth + pTVData->theme.padding;
+            
+            if (itemRight > *pWidthOut) {
+                *pWidthOut = itemRight;
+            }
+        }
+
+        if (pHeightOut != NULL)
+        {
+            float itemBottom = iItem.metrics.posY + ak_get_tree_view_item_height(pTV);
+
+            *pHeightOut = itemBottom;
+        }
+    }
 }
 
 
@@ -427,7 +426,14 @@ static void ak_tree_view_on_paint(easygui_element* pTV, easygui_rect relativeCli
     // at the last visible item.
 
     // TEMP: For now, just draw every item to get the basics working.
-    ak_draw_tree_view_item(pTV, pTVData->pRootItem, 0, 0, relativeClippingRect, pPaintData);
+    //ak_draw_tree_view_item(pTV, pTVData->pRootItem, 0, 0, relativeClippingRect, pPaintData);
+
+    ak_tree_view_iterator iItem = ak_tree_view_begin(pTV);
+    while (ak_tree_view_next(&iItem))
+    {
+        ak_draw_tree_view_item(pTV, iItem.pItem, iItem.metrics.posX, iItem.metrics.posY, relativeClippingRect, pPaintData);
+    }
+
 
 
     // Draw the part of the background that's not covered by items.
@@ -435,7 +441,7 @@ static void ak_tree_view_on_paint(easygui_element* pTV, easygui_rect relativeCli
     ak_measure_tree_view_items(pTV, NULL, &itemsBottom);
     itemsBottom += pTVData->offsetX;
 
-    easygui_draw_rect(pTV, easygui_make_rect(0, itemsBottom, easygui_get_width(pTV), easygui_get_height(pTV)), easygui_rgb(96, 96, 96), pPaintData);
+    easygui_draw_rect(pTV, easygui_make_rect(0, itemsBottom, easygui_get_width(pTV), easygui_get_height(pTV)), easygui_rgb(128, 96, 96), pPaintData);
 }
 
 static void ak_tree_view_on_mouse_leave(easygui_element* pTV)
