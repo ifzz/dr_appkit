@@ -836,7 +836,7 @@ void ak_application_on_window_wants_to_close(ak_window* pWindow)
     //
     // Later on what we'll want to do is just pass this off the program by just calling a callback function and letting it handle things however
     // it would like.
-    if (ak_get_prev_window(pWindow) == NULL)
+    if (ak_get_next_window(pWindow) == NULL)
     {
         ak_post_quit_message(pApplication, 0);
     }

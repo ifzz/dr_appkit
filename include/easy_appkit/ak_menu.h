@@ -1,0 +1,160 @@
+// Public domain. See "unlicense" statement at the end of this file.
+
+//
+// QUICK NOTES
+//
+// General
+// - A menu is seperate from the menu bar.
+// - A menu is a popup window.
+// - A menu is made up of a series of menu items. Each menu item can be assigned a sub-menu.
+// - Menu items cannot be re-parented after creation.
+//
+
+#ifndef ak_menu_h
+#define ak_menu_h
+
+#include <easy_gui/easy_gui.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct ak_window ak_window;
+typedef struct ak_application ak_application;
+typedef struct ak_menu_item ak_menu_item;
+
+typedef void (* ak_mi_on_picked_proc)  (ak_menu_item* pMI);
+typedef void (* ak_mi_on_measure_proc) (ak_menu_item* pMI, float* pWidthOut, float* pHeightOut);
+typedef void (* ak_mi_on_paint_proc)   (easygui_element* pMenuElement, ak_menu_item* pMI, easygui_rect relativeClippingRect, void* pPaintData);
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Creates an empty menu.
+///
+/// @remarks
+///     The menu is initially hidden.
+ak_window* ak_create_menu(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData);
+
+/// Deletes the given menu.
+///
+/// @remarks
+///     Deleting a menu will delete every attached item.
+void ak_delete_menu(ak_window* pMenuWindow);
+
+
+/// Retrieves the size of the extra data associated with the menu.
+size_t ak_menu_get_extra_data_size(ak_window* pMenuWindow);
+
+/// Retrieves a pointer to the extra data associated with the given menu.
+void* ak_menu_get_extra_data(ak_window* pMenuWindow);
+
+/// Retrieves the root GUI element of the menu.
+easygui_element* ak_menu_get_gui_element(ak_window* pMenuWindow);
+
+
+/// Shows the given menu.
+void ak_menu_show(ak_window* pMenuWindow);
+
+/// Hides the given menu.
+void ak_menu_hide(ak_window* pMenuWindow);
+
+/// Sets the position of the menu.
+void ak_menu_set_position(ak_window* pMenuWindow, int posX, int posY);
+
+/// Sets the size of the menu.
+void ak_menu_set_size(ak_window* pMenuWindow, unsigned int width, unsigned int height);
+
+
+/// Sets the function to call when an item is picked.
+void ak_menu_set_on_item_picked(ak_window* pMenuWindow, ak_mi_on_picked_proc proc);
+
+/// Sets the function to call when an item needs to be measured.
+void ak_menu_set_on_item_measure(ak_window* pMenuWindow, ak_mi_on_measure_proc proc);
+
+/// Sets the function to call when an item needs to be painted.
+void ak_menu_set_on_item_paint(ak_window* pMenuWindow, ak_mi_on_paint_proc proc);
+
+
+// For the functions below, note how it's the menu's GUI element that's passed as the first agument.
+
+/// Called when the mouse leave event needs to be processed for the given menu.
+void ak_menu_on_mouse_leave(easygui_element* pMenuElement);
+
+/// Called when the mouse move event needs to be processed for the given tree-view control.
+void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX, int relativeMousePosY);
+
+/// Called when the mouse button down event needs to be processed for the given tree-view control.
+void ak_menu_on_mouse_button_down(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+
+/// Called when the paint event needs to be processed for the given tree-view control.
+void ak_menu_on_paint(easygui_element* pMenuElement, easygui_rect relativeClippingRect, void* pPaintData);
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Menu Item
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Creates a new menu item.
+ak_menu_item* ak_create_menu_item(ak_window* pMenuWindow, size_t extraDataSize, const void* pExtraData);
+
+/// Deletes the given menu item.
+void ak_delete_menu_item(ak_menu_item* pMI);
+
+
+/// Retrieves the size of the extra data associated with the given menu item.
+size_t ak_mi_get_extra_data_size(ak_menu_item* pMI);
+
+/// Retrieves a pointer to the extra data assocaited with the menu item.
+void* ak_mi_get_extra_data(ak_menu_item* pMI);
+
+
+/// Retrieves a pointer to the menu that owns the given item.
+ak_window* ak_mi_get_menu(ak_menu_item* pMI);
+
+/// Retrieves a pointer to the next item in the list.
+ak_menu_item* ak_mi_get_next_item(ak_menu_item* pMI);
+
+/// Retrieves a pointer to the previous item in the list.
+ak_menu_item* ak_mi_get_prev_item(ak_menu_item* pMI);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+
+/*
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
+*/

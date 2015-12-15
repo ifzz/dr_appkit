@@ -80,6 +80,12 @@ ak_window_type ak_get_window_type(ak_window* pWindow);
 /// Retrieves a pointer to the parent window, if any.
 ak_window* ak_get_parent_window(ak_window* pWindow);
 
+/// Retrieves the size of the extra data associated with the given window.
+size_t ak_get_window_extra_data_size(ak_window* pWindow);
+
+/// Retrieves a pointer to the extra data associated with the given window.
+void* ak_get_window_extra_data(ak_window* pWindow);
+
 /// Retrieves a pointer to the top-level GUI element associated with the given window.
 easygui_element* ak_get_window_panel(ak_window* pWindow);
 

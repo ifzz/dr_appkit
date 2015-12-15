@@ -992,6 +992,24 @@ ak_window* ak_get_parent_window(ak_window* pWindow)
     return NULL;
 }
 
+size_t ak_get_window_extra_data_size(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return 0;
+    }
+
+    return pWindow->extraDataSize;
+}
+
+void* ak_get_window_extra_data(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->pExtraData;
+}
+
 easygui_element* ak_get_window_panel(ak_window* pWindow)
 {
     if (pWindow == NULL) {
