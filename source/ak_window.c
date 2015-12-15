@@ -598,6 +598,18 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 break;
             }
 
+            case WM_MOUSEWHEEL:
+            {
+                int delta = GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
+
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ak_application_on_mouse_wheel(pWindow, delta, p.x, p.y);
+                break;
+            }
 
 
             case WM_MOVE:
