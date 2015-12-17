@@ -421,7 +421,7 @@ bool ak_get_log_file_folder_path(ak_application* pApplication, char* pathOut, si
         return false;
     }
 
-    return easypath_append(pathOut, pathOutSize, ak_get_application_name(pApplication));
+    return easypath_append(pathOut, (unsigned int)pathOutSize, ak_get_application_name(pApplication));
 }
 
 bool ak_get_config_file_folder_path(ak_application* pApplication, char* pathOut, size_t pathOutSize)
@@ -438,14 +438,14 @@ bool ak_get_config_file_folder_path(ak_application* pApplication, char* pathOut,
         return false;
     }
 
-    return easypath_append(pathOut, pathOutSize, ak_get_application_name(pApplication));
+    return easypath_append(pathOut, (unsigned int)pathOutSize, ak_get_application_name(pApplication));
 }
 
 bool ak_get_config_file_path(ak_application* pApplication, char* pathOut, size_t pathOutSize)
 {
     if (ak_get_config_file_folder_path(pApplication, pathOut, pathOutSize))
     {
-        return easypath_append(pathOut, pathOutSize, easypath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".cfg") == 0;
+        return easypath_append(pathOut, (unsigned int)pathOutSize, easypath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".cfg") == 0;
     }
 
     return false;
@@ -467,12 +467,12 @@ bool ak_get_theme_file_path(ak_application* pApplication, char* pathOut, size_t 
     }
 
     // Append the sub-directory.
-    if (!easypath_append(pathOut, pathOutSize, ak_get_application_name(pApplication))) {
+    if (!easypath_append(pathOut, (unsigned int)pathOutSize, ak_get_application_name(pApplication))) {
         return false;
     }
 
     // Append the file name.
-    return easypath_append(pathOut, pathOutSize, easypath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".theme") == 0;
+    return easypath_append(pathOut, (unsigned int)pathOutSize, easypath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".theme") == 0;
 }
 
 
@@ -734,7 +734,11 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
         }
 
 
-        // There should only be one child item, and it should be a panel.
+        // There should only be one child item, and it should be a panel. If not, it's an error.
+        if (pLayout->pFirstChild == NULL) {
+            return false;
+        }
+
         return ak_apply_layout(pApplication, pLayout->pFirstChild, ak_get_window_panel(pWindow));
     }
     else if (strcmp(pLayout->type, AK_LAYOUT_TYPE_PANEL) == 0)

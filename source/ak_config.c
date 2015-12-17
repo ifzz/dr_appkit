@@ -23,7 +23,7 @@ typedef struct
     const char* configString;
 
     /// The size of the config string. Not used if script is being read from a file instead of the string.
-    unsigned int configStringLength;
+    size_t configStringLength;
 
 
     /// A pointer to the config object to load the data into.
@@ -43,20 +43,20 @@ typedef struct
 
 } ak_config_parse_context;
 
-static unsigned int ak_config_on_read_from_file_proc(void* pUserData, void* pDataOut, unsigned int bytesToRead)
+static size_t ak_config_on_read_from_file_proc(void* pUserData, void* pDataOut, size_t bytesToRead)
 {
     ak_config_parse_context* pContext = pUserData;
     assert(pContext != NULL);
 
     unsigned int bytesRead;
-    if (easyvfs_read(pContext->pFile, pDataOut, bytesToRead, &bytesRead)) {
+    if (easyvfs_read(pContext->pFile, pDataOut, (unsigned int)bytesToRead, &bytesRead)) {
         return bytesRead;
     }
 
     return 0;
 }
 
-static unsigned int ak_config_on_read_from_string_proc(void* pUserData, void* pDataOut, unsigned int bytesToRead)
+static size_t ak_config_on_read_from_string_proc(void* pUserData, void* pDataOut, size_t bytesToRead)
 {
     ak_config_parse_context* pContext = pUserData;
     assert(pContext != NULL);
@@ -78,6 +78,8 @@ static unsigned int ak_config_on_read_from_string_proc(void* pUserData, void* pD
 
 static void ak_config_on_pair(void* pUserData, const char* key, const char* value)
 {
+    printf("PAIR: [%s] [%s]\n", key, value);
+
     ak_config_parse_context* pContext = pUserData;
     assert(pContext != NULL);
 
@@ -207,7 +209,7 @@ bool ak_parse_config_from_string(ak_config* pConfig, const char* configString, a
     context.pCurrentLayout     = pConfig->pRootLayout;
     context.onError            = onError;
     context.pOnErrorUserData   = pOnErrorUserData;
-    easyutil_parse_key_value_pairs(ak_config_on_read_from_file_proc, ak_config_on_pair, NULL, &context);
+    easyutil_parse_key_value_pairs(ak_config_on_read_from_string_proc, ak_config_on_pair, NULL, &context);
 
     if (context.foundError) {
         ak_uninit_config(pConfig);
