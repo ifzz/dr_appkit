@@ -167,10 +167,10 @@ easygui_element* ak_create_menu_bar(easygui_context* pContext, easygui_element* 
     }
 
     // Events.
-    easygui_register_on_mouse_leave(pMBElement, ak_mb_on_mouse_leave);
-    easygui_register_on_mouse_move(pMBElement, ak_mb_on_mouse_move);
-    easygui_register_on_mouse_button_down(pMBElement, ak_mb_on_mouse_button_down);
-    easygui_register_on_paint(pMBElement, ak_mb_on_paint);
+    easygui_set_on_mouse_leave(pMBElement, ak_mb_on_mouse_leave);
+    easygui_set_on_mouse_move(pMBElement, ak_mb_on_mouse_move);
+    easygui_set_on_mouse_button_down(pMBElement, ak_mb_on_mouse_button_down);
+    easygui_set_on_paint(pMBElement, ak_mb_on_paint);
 
     return pMBElement;
 }
@@ -546,55 +546,6 @@ PRIVATE ak_menu_bar_item* ak_mb_find_item_under_point(easygui_element* pMBElemen
     return NULL;
 }
 
-#if 0
-PRIVATE bool ak_mb_find_item_menu_position(ak_menu_bar_item* pMBI, float* pPosXOut, float* pPosYOut, float* pPosXRelativeToItemOut, float* pPosYRelativeToItemOut)
-{
-    assert(pPosXOut != NULL);
-    assert(pPosYOut != NULL);
-
-    ak_menu_bar* pMB = easygui_get_extra_data(pMBI->pMBElement);
-    if (pMB == NULL) {
-        return false;
-    }
-
-    float runningPosX = 0;
-    if (pMB->onItemMeasure)
-    {
-        for (ak_menu_bar_item* pNextMBI = pMB->pFirstItem; pNextMBI != NULL; pNextMBI = pNextMBI->pNextItem)
-        {
-            float width;
-            float height;
-            pMB->onItemMeasure(pNextMBI, &width, &height);
-
-            if (pNextMBI == pMBI)
-            {
-                float posX = runningPosX;
-                float posY = height;
-
-                if (pPosXOut) {
-                    *pPosXOut = (int)runningPosX;
-                }
-                if (pPosYOut) {
-                    *pPosYOut = (int)height;
-                }
-
-                if (pPosXRelativeToItemOut) {
-                    *pPosXRelativeToItemOut = posX - runningPosX;
-                }
-                if (pPosYRelativeToItemOut) {
-                    *pPosYRelativeToItemOut = posY - height;
-                }
-
-                return true;
-            }
-
-            runningPosX += width;
-        }
-    }
-
-    return false;
-}
-#endif
 
 PRIVATE bool ak_mb_find_item_metrics(ak_menu_bar_item* pMBI, float* pPosXOut, float* pPosYOut, float* pWidthOut, float* pHeightOut)
 {

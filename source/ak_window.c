@@ -1534,11 +1534,11 @@ void ak_connect_gui_to_window_system(easygui_context* pGUI)
 {
     assert(pGUI != NULL);
 
-    easygui_register_global_on_capture_mouse(pGUI, ak_on_global_capture_mouse);
-    easygui_register_global_on_release_mouse(pGUI, ak_on_global_release_mouse);
-    easygui_register_global_on_capture_keyboard(pGUI, ak_on_global_capture_keyboard);
-    easygui_register_global_on_release_keyboard(pGUI, ak_on_global_release_keyboard);
-    easygui_register_global_on_dirty(pGUI, ak_on_global_dirty);
+    easygui_set_global_on_capture_mouse(pGUI, ak_on_global_capture_mouse);
+    easygui_set_global_on_release_mouse(pGUI, ak_on_global_release_mouse);
+    easygui_set_global_on_capture_keyboard(pGUI, ak_on_global_capture_keyboard);
+    easygui_set_global_on_release_keyboard(pGUI, ak_on_global_release_keyboard);
+    easygui_set_global_on_dirty(pGUI, ak_on_global_dirty);
 }
 
 

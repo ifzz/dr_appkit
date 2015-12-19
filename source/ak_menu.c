@@ -128,7 +128,7 @@ ak_window* ak_create_menu(ak_application* pApplication, ak_window* pParent, size
     ak_window_set_on_show(pMenuWindow, ak_menu_on_show);
 
     // GUI event handlers.
-    easygui_register_on_paint(ak_get_window_panel(pMenuWindow), ak_menu_on_paint);
+    easygui_set_on_paint(ak_get_window_panel(pMenuWindow), ak_menu_on_paint);
 
 
     return pMenuWindow;

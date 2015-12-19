@@ -749,12 +749,12 @@ easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* 
             memcpy(pPanelData->pExtraData, pExtraData, extraDataSize);
         }
 
-        easygui_register_on_paint(pElement, ak_panel_on_paint);
-        easygui_register_on_size(pElement, ak_panel_on_size);
-        easygui_register_on_mouse_enter(pElement, ak_panel_on_mouse_enter);
-        easygui_register_on_mouse_leave(pElement, ak_panel_on_mouse_leave);
-        easygui_register_on_mouse_move(pElement, ak_panel_on_mouse_move);
-        easygui_register_on_mouse_button_down(pElement, ak_panel_on_mouse_button_down);
+        easygui_set_on_paint(pElement, ak_panel_on_paint);
+        easygui_set_on_size(pElement, ak_panel_on_size);
+        easygui_set_on_mouse_enter(pElement, ak_panel_on_mouse_enter);
+        easygui_set_on_mouse_leave(pElement, ak_panel_on_mouse_leave);
+        easygui_set_on_mouse_move(pElement, ak_panel_on_mouse_move);
+        easygui_set_on_mouse_button_down(pElement, ak_panel_on_mouse_button_down);
     }
 
     return pElement;
@@ -909,7 +909,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
         }
         easygui_set_size(pPanelData->pToolContainer, easygui_get_width(pPanel), easygui_get_height(pPanel));
 
-        easygui_register_on_size(pPanelData->pToolContainer, easygui_on_size_fit_children_to_parent);
+        easygui_set_on_size(pPanelData->pToolContainer, easygui_on_size_fit_children_to_parent);
     }
 
     assert(pPanelData->pToolContainer != NULL);
