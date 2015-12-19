@@ -15,6 +15,25 @@ struct ak_menu
     ak_menu_item* pLastItem;
 
 
+    /// The border to mask, if any.
+    ak_menu_border borderMask;
+
+    /// The offset of the masked section of the border.
+    float borderMaskOffset;
+
+    /// The length of the masked section of the border.
+    float borderMaskLength;
+
+    /// The color of the menu's border.
+    easygui_color borderColor;
+
+    /// The background color of the menu.
+    easygui_color backgroundColor;
+
+    /// The background color of hovered menu items.
+    easygui_color backgroundColorHovered;
+
+
     /// The function to call when an item is picked.
     ak_mi_on_picked_proc onItemPicked;
 
@@ -23,6 +42,19 @@ struct ak_menu
 
     /// The function to call when an item needs to be painted.
     ak_mi_on_paint_proc onItemPaint;
+
+
+    /// The function to call when the menu is shown.
+    ak_menu_on_show_proc onShow;
+
+    /// The user data to pass to onShow().
+    void* pOnShowData;
+
+    /// The function to call when the menu is hidden.
+    ak_menu_on_hide_proc onHide;
+
+    /// The user data to pass to onHide().
+    void* pOnHideData;
 
 
     /// The size of the extra data.
@@ -69,18 +101,31 @@ ak_window* ak_create_menu(ak_application* pApplication, ak_window* pParent, size
     ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
     assert(pMenu != NULL);
 
-    pMenu->pFirstItem    = NULL;
-    pMenu->pLastItem     = NULL;
-
-    pMenu->onItemPicked  = NULL;
-    pMenu->onItemMeasure = NULL;
-    pMenu->onItemPaint   = NULL;
+    pMenu->pFirstItem             = NULL;
+    pMenu->pLastItem              = NULL;
+    pMenu->borderMask             = ak_menu_border_none;
+    pMenu->borderMaskOffset       = 0;
+    pMenu->borderMaskLength       = 0;
+    pMenu->borderColor            = easygui_rgb(96, 96, 96);
+    pMenu->backgroundColor        = easygui_rgb(48, 48, 48);
+    pMenu->backgroundColorHovered = easygui_rgb(96, 96, 96);
+    pMenu->onItemPicked           = NULL;
+    pMenu->onItemMeasure          = NULL;
+    pMenu->onItemPaint            = NULL;
+    pMenu->onShow                 = NULL;
+    pMenu->pOnShowData            = NULL;
+    pMenu->onHide                 = NULL;
+    pMenu->pOnHideData            = NULL;
 
     pMenu->extraDataSize = extraDataSize;
     if (pExtraData != NULL) {
         memcpy(pMenu->pExtraData, pExtraData, extraDataSize);
     }
 
+
+    // Window event handlers.
+    ak_window_set_on_hide(pMenuWindow, ak_menu_on_hide);
+    ak_window_set_on_show(pMenuWindow, ak_menu_on_show);
 
     // GUI event handlers.
     easygui_register_on_paint(ak_get_window_panel(pMenuWindow), ak_menu_on_paint);
@@ -140,7 +185,7 @@ void ak_menu_show(ak_window* pMenuWindow)
 
 void ak_menu_hide(ak_window* pMenuWindow)
 {
-    ak_hide_window(pMenuWindow);
+    ak_hide_window(pMenuWindow, 0);
 }
 
 void ak_menu_set_position(ak_window* pMenuWindow, int posX, int posY)
@@ -151,6 +196,79 @@ void ak_menu_set_position(ak_window* pMenuWindow, int posX, int posY)
 void ak_menu_set_size(ak_window* pMenuWindow, unsigned int width, unsigned int height)
 {
     ak_set_window_size(pMenuWindow, width, height);
+}
+
+
+void ak_menu_set_border_mask(ak_window* pMenuWindow, ak_menu_border border, float offset, float length)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    pMenu->borderMask = border;
+    pMenu->borderMaskOffset = offset;
+    pMenu->borderMaskLength = length;
+}
+
+void ak_menu_set_border_color(ak_window* pMenuWindow, easygui_color color)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    pMenu->borderColor = color;
+}
+
+easygui_color ak_menu_get_border_color(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return easygui_rgb(0, 0, 0);
+    }
+
+    return pMenu->borderColor;
+}
+
+void ak_menu_set_background_color(ak_window* pMenuWindow, easygui_color color)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    pMenu->backgroundColor = color;
+}
+
+easygui_color ak_menu_get_background_color(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return easygui_rgb(0, 0, 0);
+    }
+
+    return pMenu->backgroundColor;
+}
+
+void ak_menu_set_hovered_background_color(ak_window* pMenuWindow, easygui_color color)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    pMenu->backgroundColorHovered = color;
+}
+
+easygui_color ak_menu_get_hovered_background_color(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return easygui_rgb(0, 0, 0);
+    }
+
+    return pMenu->backgroundColorHovered;
 }
 
 
@@ -182,6 +300,28 @@ void ak_menu_set_on_item_paint(ak_window* pMenuWindow, ak_mi_on_paint_proc proc)
     }
 
     pMenu->onItemPaint = proc;
+}
+
+void ak_menu_set_on_show(ak_window* pMenuWindow, ak_menu_on_show_proc proc, void* pUserData)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    pMenu->onShow = proc;
+    pMenu->pOnShowData = pUserData;
+}
+
+void ak_menu_set_on_hide(ak_window* pMenuWindow, ak_menu_on_hide_proc proc, void* pUserData)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    pMenu->onHide = proc;
+    pMenu->pOnHideData = pUserData;
 }
 
 
@@ -222,10 +362,120 @@ void ak_menu_on_paint(easygui_element* pMenuElement, easygui_rect relativeClippi
         return;
     }
 
+    float borderWidth = 1;
+
+
+
     // TODO: Implement Me.
 
     // TEMP: For now, just draw a outlined rectangle around the element.
-    easygui_draw_rect_with_outline(pMenuElement, easygui_get_local_rect(pMenuElement), easygui_rgb(48, 48, 48), 1, easygui_rgb(128, 128, 128), pPaintData);
+    easygui_draw_rect(pMenuElement, easygui_grow_rect(easygui_get_local_rect(pMenuElement), -borderWidth), pMenu->backgroundColor, pPaintData);
+
+
+    // Border.
+    float menuWidth;
+    float menuHeight;
+    easygui_get_size(pMenuElement, &menuWidth, &menuHeight);
+    
+    // Top.
+    {
+        easygui_rect borderRect = easygui_make_rect(0, 0, menuWidth, borderWidth);
+        if (pMenu->borderMask == ak_menu_border_top && pMenu->borderMaskLength > 0)
+        {
+            if (pMenu->borderMaskOffset > 0) {
+                easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left, borderRect.top, borderRect.left + pMenu->borderMaskOffset, borderRect.bottom), pMenu->borderColor, pPaintData);
+            }
+            
+            easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left + pMenu->borderMaskOffset, borderRect.top, borderRect.left + pMenu->borderMaskOffset + pMenu->borderMaskLength, borderRect.bottom), pMenu->backgroundColor, pPaintData);
+            easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left + pMenu->borderMaskOffset + pMenu->borderMaskLength, borderRect.top, borderRect.right, borderRect.bottom), pMenu->borderColor, pPaintData);
+        }
+        else
+        {
+            easygui_draw_rect(pMenuElement, borderRect, pMenu->borderColor, pPaintData);
+        }
+    }
+    
+    // Bottom
+    {
+        easygui_rect borderRect = easygui_make_rect(0, menuHeight - borderWidth, menuWidth, menuHeight);
+        if (pMenu->borderMask == ak_menu_border_bottom && pMenu->borderMaskLength > 0)
+        {
+            if (pMenu->borderMaskOffset > 0) {
+                easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left, borderRect.top, borderRect.left + pMenu->borderMaskOffset, borderRect.bottom), pMenu->borderColor, pPaintData);
+            }
+
+            easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left + pMenu->borderMaskOffset, borderRect.top, borderRect.left + pMenu->borderMaskOffset + pMenu->borderMaskLength, borderRect.bottom), pMenu->backgroundColor, pPaintData);
+            easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left + pMenu->borderMaskOffset + pMenu->borderMaskLength, borderRect.top, borderRect.right, borderRect.bottom), pMenu->borderColor, pPaintData);
+        }
+        else
+        {
+            easygui_draw_rect(pMenuElement, borderRect, pMenu->borderColor, pPaintData);
+        }
+    }
+
+    // Left
+    {
+        easygui_rect borderRect = easygui_make_rect(0, borderWidth, borderWidth, menuHeight - borderWidth);
+        if (pMenu->borderMask == ak_menu_border_left && pMenu->borderMaskLength > 0)
+        {
+            if (pMenu->borderMaskOffset > 0) {
+                easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left, borderRect.top, borderRect.right, borderRect.top + pMenu->borderMaskOffset), pMenu->borderColor, pPaintData);
+            }
+
+            easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left, borderRect.top + pMenu->borderMaskOffset, borderRect.right, borderRect.top + pMenu->borderMaskOffset + pMenu->borderMaskLength), pMenu->backgroundColor, pPaintData);
+            easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left, borderRect.top + pMenu->borderMaskOffset + pMenu->borderMaskLength, borderRect.right, borderRect.bottom), pMenu->borderColor, pPaintData);
+        }
+        else
+        {
+            easygui_draw_rect(pMenuElement, borderRect, pMenu->borderColor, pPaintData);
+        }
+    }
+
+    // Right
+    {
+        easygui_rect borderRect = easygui_make_rect(menuWidth - borderWidth, borderWidth, menuWidth, menuHeight - borderWidth);
+        if (pMenu->borderMask == ak_menu_border_right && pMenu->borderMaskLength > 0)
+        {
+            if (pMenu->borderMaskOffset > 0) {
+                easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left, borderRect.top, borderRect.right, borderRect.top + pMenu->borderMaskOffset), pMenu->borderColor, pPaintData);
+            }
+
+            easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left, borderRect.top + pMenu->borderMaskOffset, borderRect.right, borderRect.top + pMenu->borderMaskOffset + pMenu->borderMaskLength), pMenu->backgroundColor, pPaintData);
+            easygui_draw_rect(pMenuElement, easygui_make_rect(borderRect.left, borderRect.top + pMenu->borderMaskOffset + pMenu->borderMaskLength, borderRect.right, borderRect.bottom), pMenu->borderColor, pPaintData);
+        }
+        else
+        {
+            easygui_draw_rect(pMenuElement, borderRect, pMenu->borderColor, pPaintData);
+        }
+    }
+}
+
+bool ak_menu_on_show(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return false;;
+    }
+
+    if (pMenu->onShow) {
+        pMenu->onShow(pMenuWindow, pMenu->pOnShowData);
+    }
+
+    return true;
+}
+
+bool ak_menu_on_hide(ak_window* pMenuWindow, unsigned int flags)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return false;
+    }
+
+    if (pMenu->onHide) {
+        pMenu->onHide(pMenuWindow, flags, pMenu->pOnHideData);
+    }
+
+    return true;
 }
 
 

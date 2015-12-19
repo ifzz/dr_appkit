@@ -20,6 +20,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// This flag is posted on on_hide events when a popup window is automatically hidden as a result of the user clicking
+// outside of it's region.
+#define AK_AUTO_HIDE_FROM_OUTSIDE_CLICK     (1 << 0)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,7 +53,7 @@ typedef enum
 
 } ak_window_type;
 
-typedef bool (* ak_window_on_hide_proc)        (ak_window* pWindow);
+typedef bool (* ak_window_on_hide_proc)        (ak_window* pWindow, unsigned int flags);
 typedef bool (* ak_window_on_show_proc)        (ak_window* pWindow);
 typedef void (* ak_window_on_activate_proc)    (ak_window* pWindow);
 typedef void (* ak_window_on_deactivate_proc)  (ak_window* pWindow);
@@ -140,7 +144,13 @@ void ak_show_window_maximized(ak_window* pWindow);
 void show_window_sized(ak_window* pWindow, unsigned int width, unsigned int height);
 
 /// Hides the given window.
-void ak_hide_window(ak_window* pWindow);
+///
+/// @remarks
+///     The value of <flags> will be passed on the on_hide event handler.
+///     @par
+///     When a popup window is automatically hidden as a result of the user clicking outside of it's region, this will
+///     be set to AK_AUTO_HIDE_FROM_OUTSIDE_CLICK.
+void ak_hide_window(ak_window* pWindow, unsigned int flags);
 
 
 /// Determines if the window is a descendant of another window.
@@ -166,11 +176,18 @@ void ak_set_window_cursor(ak_window* pWindow, ak_cursor_type cursor);
 bool ak_is_cursor_over_window(ak_window* pWindow);
 
 
+/// Sets the function to call when the on_hide event is received.
+void ak_window_set_on_hide(ak_window* pWindow, ak_window_on_hide_proc proc);
+
+/// Sets the function to call when the on_show event is received.
+void ak_window_set_on_show(ak_window* pWindow, ak_window_on_show_proc proc);
+
+
 /// Calls the on_hide event handler for the given window.
-void ak_window_on_hide(ak_window* pWindow);
+bool ak_window_on_hide(ak_window* pWindow, unsigned int flags);
 
 /// Calls the on_show event handler for the given window.
-void ak_window_on_show(ak_window* pWindow);
+bool ak_window_on_show(ak_window* pWindow);
 
 /// Calls the on_activate event handler for the given window.
 void ak_window_on_activate(ak_window* pWindow);

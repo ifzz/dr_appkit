@@ -19,6 +19,15 @@
 extern "C" {
 #endif
 
+typedef enum
+{
+    ak_menu_border_none,
+    ak_menu_border_left,
+    ak_menu_border_right,
+    ak_menu_border_top,
+    ak_menu_border_bottom
+} ak_menu_border;
+
 typedef struct ak_window ak_window;
 typedef struct ak_application ak_application;
 typedef struct ak_menu_item ak_menu_item;
@@ -26,6 +35,8 @@ typedef struct ak_menu_item ak_menu_item;
 typedef void (* ak_mi_on_picked_proc)  (ak_menu_item* pMI);
 typedef void (* ak_mi_on_measure_proc) (ak_menu_item* pMI, float* pWidthOut, float* pHeightOut);
 typedef void (* ak_mi_on_paint_proc)   (easygui_element* pMenuElement, ak_menu_item* pMI, easygui_rect relativeClippingRect, void* pPaintData);
+typedef void (* ak_menu_on_show_proc)  (ak_window* pMenuWindow, void* pUserData);
+typedef void (* ak_menu_on_hide_proc)  (ak_window* pMenuWindow, unsigned int flags, void* pUserData);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -69,6 +80,33 @@ void ak_menu_set_position(ak_window* pMenuWindow, int posX, int posY);
 void ak_menu_set_size(ak_window* pMenuWindow, unsigned int width, unsigned int height);
 
 
+/// Sets the region of the border to leave undrawn.
+///
+/// @remarks
+///     With menu bars in particular, it is often desirable to leave part of the border of a menu undrawn in order
+///     to create a seamless border effect around the menu and the button. This function allow you to specify the
+///     section of the border to leave undrawn.
+void ak_menu_set_border_mask(ak_window* pMenuWindow, ak_menu_border border, float offset, float length);
+
+/// Sets the color of the border of the menu.
+void ak_menu_set_border_color(ak_window* pMenuWindow, easygui_color color);
+
+/// Retrieves the color of the border of the menu.
+easygui_color ak_menu_get_border_color(ak_window* pMenuWindow);
+
+/// Sets the background color of the menu.
+void ak_menu_set_background_color(ak_window* pMenuWindow, easygui_color color);
+
+/// Retrieves the background color of the menu.
+easygui_color ak_menu_get_background_color(ak_window* pMenuWindow);
+
+/// Sets the background color of highlighted menu items.
+void ak_menu_set_hovered_background_color(ak_window* pMenuWindow, easygui_color color);
+
+/// Retrieves the background color of highlighted menu items.
+easygui_color ak_menu_get_hovered_background_color(ak_window* pMenuWindow);
+
+
 /// Sets the function to call when an item is picked.
 void ak_menu_set_on_item_picked(ak_window* pMenuWindow, ak_mi_on_picked_proc proc);
 
@@ -77,6 +115,12 @@ void ak_menu_set_on_item_measure(ak_window* pMenuWindow, ak_mi_on_measure_proc p
 
 /// Sets the function to call when an item needs to be painted.
 void ak_menu_set_on_item_paint(ak_window* pMenuWindow, ak_mi_on_paint_proc proc);
+
+/// Sets the function to call when a menu window is shown.
+void ak_menu_set_on_show(ak_window* pMenuWindow, ak_menu_on_show_proc proc, void* pUserData);
+
+/// Sets the function to call when a menu window is hidden.
+void ak_menu_set_on_hide(ak_window* pMenuWindow, ak_menu_on_hide_proc proc, void* pUserData);
 
 
 // For the functions below, note how it's the menu's GUI element that's passed as the first agument.
@@ -92,6 +136,12 @@ void ak_menu_on_mouse_button_down(easygui_element* pMenuElement, int mouseButton
 
 /// Called when the paint event needs to be processed for the given tree-view control.
 void ak_menu_on_paint(easygui_element* pMenuElement, easygui_rect relativeClippingRect, void* pPaintData);
+
+/// Called when the show event needs to be handled for the given menu.
+bool ak_menu_on_show(ak_window* pMenuWindow);
+
+/// Called when the hide event needs to be handled for the given menu.
+bool ak_menu_on_hide(ak_window* pMenuWinodw, unsigned int flags);
 
 
 

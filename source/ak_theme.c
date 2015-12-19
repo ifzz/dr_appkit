@@ -63,6 +63,12 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     pTheme->tabPaddingRight  = 4;
     pTheme->tabPaddingBottom = 4;
 
+    
+    //// Menus ////
+    pTheme->menuBarHeight = 22;
+    pTheme->menuBarItemPaddingX = 8;
+
+
 
     //// Fonts ////
     pTheme->pUIFont = easygui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, easy2d_weight_normal, easy2d_slant_none, 0);

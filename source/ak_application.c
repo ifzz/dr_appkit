@@ -559,7 +559,7 @@ ak_delete_tool_proc ak_get_on_delete_tool(ak_application* pApplication)
 }
 
 
-easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, const char* type, const char* attributes)
+easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes)
 {
     if (pApplication == NULL || type == NULL) {
         return false;
@@ -571,7 +571,7 @@ easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplicat
     // At this point we know the tool type is not a built-in so we need to give the host application a chance to
     // instantiate it in case it's a custom tool type.
     if (pApplication->onCreateTool) {
-        return pApplication->onCreateTool(pApplication, type, attributes);
+        return pApplication->onCreateTool(pApplication, pWindow, type, attributes);
     }
 
     return NULL;
@@ -795,7 +795,7 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
         const char* toolAttributes = easyutil_first_non_whitespace(easyutil_next_token(pLayout->attributes, toolType, sizeof(toolType)));
         if (toolAttributes != NULL)
         {
-            easygui_element* pTool = ak_create_tool_by_type_and_attributes(pApplication, toolType, toolAttributes);
+            easygui_element* pTool = ak_create_tool_by_type_and_attributes(pApplication, ak_get_element_window(pWorkingPanel), toolType, toolAttributes);
             if (pTool != NULL) {
                 if (ak_panel_attach_tool(pWorkingPanel, pTool)) {
                     easygui_show(pTool);
@@ -850,20 +850,18 @@ void ak_application_on_window_wants_to_close(ak_window* pWindow)
     }
 }
 
-bool ak_application_on_hide_window(ak_window* pWindow)
+bool ak_application_on_hide_window(ak_window* pWindow, unsigned int flags)
 {
     assert(pWindow != NULL);
 
-    ak_window_on_hide(pWindow);
-    return true;
+    return ak_window_on_hide(pWindow, flags);
 }
 
 bool ak_application_on_show_window(ak_window* pWindow)
 {
     assert(pWindow != NULL);
 
-    ak_window_on_show(pWindow);
-    return true;
+    return ak_window_on_show(pWindow);
 }
 
 void ak_application_on_activate_window(ak_window* pWindow)
@@ -996,7 +994,7 @@ void ak_application_hide_non_ancestor_popups(ak_window* pWindow)
     {
         if (pOtherWindow != pWindow && ak_get_window_type(pOtherWindow) == ak_window_type_popup && !ak_is_window_ancestor(pOtherWindow, pWindow))
         {
-            ak_hide_window(pOtherWindow);
+            ak_hide_window(pOtherWindow, AK_AUTO_HIDE_FROM_OUTSIDE_CLICK);
         }
     }
 }

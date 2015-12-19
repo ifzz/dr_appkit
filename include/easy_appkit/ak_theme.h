@@ -57,6 +57,17 @@ struct ak_theme
 
 
 
+    //// Menus ////
+
+    /// The height of a menu bar.
+    float menuBarHeight;
+
+    /// The padding to apply to menu bar items.
+    float menuBarItemPaddingX;
+
+
+
+
     //// Fonts ////
 
     /// The font to use for normal UI elements, but not text editors.

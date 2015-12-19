@@ -20,7 +20,7 @@ typedef struct easyvfs_context easyvfs_context;
 
 typedef void             (* ak_log_proc)           (ak_application* pApplication, const char* message);
 typedef const char*      (* ak_layout_config_proc) (ak_application* pApplication);
-typedef easygui_element* (* ak_create_tool_proc)   (ak_application* pApplication, const char* type, const char* attributes);
+typedef easygui_element* (* ak_create_tool_proc)   (ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
 typedef void             (* ak_delete_tool_proc)   (easygui_element* pTool);
 
 /// Creates a new application object.
@@ -175,7 +175,7 @@ ak_delete_tool_proc ak_get_on_delete_tool(ak_application* pApplication);
 ///
 /// @remarks
 ///     If the tool type is not a built-in type, it will call the onCreateTool callback.
-easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, const char* type, const char* attributes);
+easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
 
 
 #ifdef __cplusplus

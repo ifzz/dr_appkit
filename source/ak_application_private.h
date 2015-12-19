@@ -22,7 +22,7 @@ void ak_application_on_window_wants_to_close(ak_window* pWindow);
 ///
 /// @remarks
 ///     The window can be prevented from being hidden by returning 0.
-bool ak_application_on_hide_window(ak_window* pWindow);
+bool ak_application_on_hide_window(ak_window* pWindow, unsigned int flags);
 
 /// Called when a window is about to be shown.
 ///
