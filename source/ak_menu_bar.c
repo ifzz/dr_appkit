@@ -115,9 +115,6 @@ struct ak_menu_bar_item
 /// Finds the menu bar item under the given point.
 PRIVATE ak_menu_bar_item* ak_mb_find_item_under_point(easygui_element* pMBElement, float relativePosX, float relativePosY);
 
-/// Finds the position to place the menu of the given menu bar item.
-//PRIVATE bool ak_mb_find_item_menu_position(ak_menu_bar_item* pMBI, float* pPosXOut, float* pPosYOut, float* pPosXRelativeToItemOut, float* pPosYRelativeToItemOut);
-
 /// Finds the metrics of the given menu bar item (position and size).
 PRIVATE bool ak_mb_find_item_metrics(ak_menu_bar_item* pMBI, float* pPosXOut, float* pPosYOut, float* pWidthOut, float* pHeightOut);
 

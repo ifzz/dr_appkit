@@ -2,6 +2,7 @@
 
 #include "../include/easy_appkit/ak_menu.h"
 #include "../include/easy_appkit/ak_window.h"
+#include <easy_util/easy_util.h>
 #include <assert.h>
 
 typedef struct ak_menu ak_menu;
@@ -13,6 +14,10 @@ struct ak_menu
 
     /// The last menu item.
     ak_menu_item* pLastItem;
+
+
+    /// A pointer to the hovered item.
+    ak_menu_item* pHoveredItem;
 
 
     /// The border to mask, if any.
@@ -33,9 +38,44 @@ struct ak_menu
     /// The background color of hovered menu items.
     easygui_color backgroundColorHovered;
 
+    /// The default font to use for menu item text.
+    easygui_font* pFont;
 
-    /// The function to call when an item is picked.
-    ak_mi_on_picked_proc onItemPicked;
+    /// The default color to use for menu item text.
+    easygui_color textColor;
+
+    /// The color of the separator.
+    easygui_color separatorColor;
+
+    /// The thickness of the separator.
+    float separatorWidth;
+
+    /// The width of the border.
+    float borderWidth;
+
+    /// The padding between the top of the menu and the first menu item, and the bottom of the menu and the last menu item.
+    float paddingY;
+
+    /// The amount of padding to apply to each side of a menu item.
+    float itemPadding;
+
+    /// The amount of padding to apply to the left of the main text of menu items.
+    float textPaddingLeft;
+
+    /// The amount of padding to apply to the left of the shortcut text.
+    float shortcutTextPaddingLeft;
+
+    /// The amount of padding to apply to the left of the sub-menu arrow.
+    float arrowPaddingLeft;
+
+    /// The size of icons, assuming they're square.
+    float iconSize;
+
+    /// The size of the sub-menu arrow, assuming it's square.
+    float arrowSize;
+
+    
+
 
     /// The function to call when an item needs to be measured.
     ak_mi_on_measure_proc onItemMeasure;
@@ -55,6 +95,19 @@ struct ak_menu
 
     /// The user data to pass to onHide().
     void* pOnHideData;
+
+
+    /// The position to draw the icon on the x axis.
+    float iconDrawPosX;
+
+    /// The position to draw text on the x axis.
+    float textDrawPosX;
+
+    /// The position to draw the shortcut text on the x axis.
+    float shortcutTextDrawPosX;
+
+    /// The position to draw the sub-menu arrow, on the x axis.
+    float arrowDrawPosX;
 
 
     /// The size of the extra data.
@@ -77,6 +130,20 @@ struct ak_menu_item
     ak_menu_item* pPrevItem;
 
 
+    /// The main text of the item.
+    char text[AK_MAX_MENU_ITEM_TEXT_LENGTH];
+
+    /// The shortcut text of the item.
+    char shortcutText[AK_MAX_MENU_ITEM_TEXT_LENGTH];
+
+    /// Whether or not the item is a separator.
+    bool isSeparator;
+
+
+    /// The function to call when an item is picked.
+    ak_mi_on_picked_proc onPicked;
+
+
     /// The size of the extra data.
     size_t extraDataSize;
 
@@ -91,6 +158,21 @@ struct ak_menu_item
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+/// Default implementation of the item measure event.
+PRIVATE void ak_menu_on_measure_item_default(ak_menu_item* pMI, float* pWidthOut, float* pHeightOut);
+
+/// Paints the given menu item.
+PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_menu_item* pMI, easygui_rect relativeClippingRect, float posX, float posY, float width, float height, void* pPaintData);
+
+/// Updates the layout data for the default menu items.
+PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow);
+
+/// Resizes the menu based on the size of it's menu items.
+PRIVATE void ak_menu_resize_by_items(ak_window* pMenuWindow);
+
+/// Finds the item under the given point.
+PRIVATE ak_menu_item* ak_menu_find_item_under_point(ak_window* pMenuWindow, float relativePosX, float relativePosY);
+
 ak_window* ak_create_menu(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     ak_window* pMenuWindow = ak_create_window(pApplication, ak_window_type_popup, pParent, sizeof(ak_menu) - sizeof(char) + extraDataSize, NULL);
@@ -101,21 +183,40 @@ ak_window* ak_create_menu(ak_application* pApplication, ak_window* pParent, size
     ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
     assert(pMenu != NULL);
 
-    pMenu->pFirstItem             = NULL;
-    pMenu->pLastItem              = NULL;
-    pMenu->borderMask             = ak_menu_border_none;
-    pMenu->borderMaskOffset       = 0;
-    pMenu->borderMaskLength       = 0;
-    pMenu->borderColor            = easygui_rgb(96, 96, 96);
-    pMenu->backgroundColor        = easygui_rgb(48, 48, 48);
-    pMenu->backgroundColorHovered = easygui_rgb(96, 96, 96);
-    pMenu->onItemPicked           = NULL;
-    pMenu->onItemMeasure          = NULL;
-    pMenu->onItemPaint            = NULL;
-    pMenu->onShow                 = NULL;
-    pMenu->pOnShowData            = NULL;
-    pMenu->onHide                 = NULL;
-    pMenu->pOnHideData            = NULL;
+    pMenu->pFirstItem              = NULL;
+    pMenu->pLastItem               = NULL;
+    pMenu->pHoveredItem            = NULL;
+    pMenu->borderMask              = ak_menu_border_none;
+    pMenu->borderMaskOffset        = 0;
+    pMenu->borderMaskLength        = 0;
+    pMenu->borderColor             = easygui_rgb(96, 96, 96);
+    pMenu->backgroundColor         = easygui_rgb(48, 48, 48);
+    pMenu->backgroundColorHovered  = easygui_rgb(96, 96, 96);
+    pMenu->pFont                   = NULL;
+    pMenu->textColor               = easygui_rgb(224, 224, 224);
+    pMenu->separatorColor          = easygui_rgb(64, 64, 64);
+    pMenu->separatorWidth          = 1;
+    pMenu->borderWidth             = 1;
+    pMenu->paddingY                = 2;
+
+    pMenu->itemPadding             = 2;
+    pMenu->textPaddingLeft         = 8;
+    pMenu->shortcutTextPaddingLeft = 32;
+    pMenu->arrowPaddingLeft        = 4;
+    pMenu->iconSize                = 16;
+    pMenu->arrowSize               = 8;
+
+    pMenu->onItemMeasure           = ak_menu_on_measure_item_default;
+    pMenu->onItemPaint             = ak_menu_on_paint_item_default;
+    pMenu->onShow                  = NULL;
+    pMenu->pOnShowData             = NULL;
+    pMenu->onHide                  = NULL;
+    pMenu->pOnHideData             = NULL;
+
+    pMenu->iconDrawPosX            = 0;
+    pMenu->textDrawPosX            = 0;
+    pMenu->shortcutTextDrawPosX    = 0;
+    pMenu->arrowDrawPosX           = 0;
 
     pMenu->extraDataSize = extraDataSize;
     if (pExtraData != NULL) {
@@ -128,6 +229,9 @@ ak_window* ak_create_menu(ak_application* pApplication, ak_window* pParent, size
     ak_window_set_on_show(pMenuWindow, ak_menu_on_show);
 
     // GUI event handlers.
+    easygui_set_on_mouse_leave(ak_get_window_panel(pMenuWindow), ak_menu_on_mouse_leave);
+    easygui_set_on_mouse_move(ak_get_window_panel(pMenuWindow), ak_menu_on_mouse_move);
+    easygui_set_on_mouse_button_up(ak_get_window_panel(pMenuWindow), ak_menu_on_mouse_button_up);
     easygui_set_on_paint(ak_get_window_panel(pMenuWindow), ak_menu_on_paint);
 
 
@@ -271,16 +375,77 @@ easygui_color ak_menu_get_hovered_background_color(ak_window* pMenuWindow)
     return pMenu->backgroundColorHovered;
 }
 
-
-void ak_menu_set_on_item_picked(ak_window* pMenuWindow, ak_mi_on_picked_proc proc)
+void ak_menu_set_font(ak_window* pMenuWindow, easygui_font* pFont)
 {
     ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
     if (pMenu == NULL) {
         return;
     }
 
-    pMenu->onItemPicked = proc;
+    pMenu->pFont = pFont;
 }
+
+easygui_font* ak_menu_get_font(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return NULL;
+    }
+
+    return pMenu->pFont;
+}
+
+void ak_menu_set_text_color(ak_window* pMenuWindow, easygui_color color)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    pMenu->textColor = color;
+}
+
+easygui_color ak_menu_get_text_color(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return easygui_rgb(0, 0, 0);
+    }
+
+    return pMenu->textColor;
+}
+
+void ak_menu_set_separator_style(ak_window* pMenuWindow, easygui_color color, float thickness)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    pMenu->separatorColor = color;
+    pMenu->separatorWidth = thickness;
+}
+
+easygui_color ak_menu_get_separator_color(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return easygui_rgb(0, 0, 0);
+    }
+
+    return pMenu->separatorColor;
+}
+
+float ak_menu_get_separator_thickness(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return 0;
+    }
+
+    return pMenu->separatorWidth;
+}
+
 
 void ak_menu_set_on_item_measure(ak_window* pMenuWindow, ak_mi_on_measure_proc proc)
 {
@@ -332,7 +497,11 @@ void ak_menu_on_mouse_leave(easygui_element* pMenuElement)
         return;
     }
 
-    // TODO: Implement Me.
+    if (pMenu->pHoveredItem != NULL)
+    {
+        pMenu->pHoveredItem = NULL;
+        easygui_dirty(pMenuElement, easygui_get_local_rect(pMenuElement));
+    }
 }
 
 void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX, int relativeMousePosY)
@@ -342,17 +511,29 @@ void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX,
         return;
     }
 
-    // TODO: Implement Me.
+    ak_menu_item* pOldHoveredItem = pMenu->pHoveredItem;
+    ak_menu_item* pNewHoveredItem = ak_menu_find_item_under_point(ak_get_panel_window(pMenuElement), (float)relativeMousePosX, (float)relativeMousePosY);
+
+    if (pOldHoveredItem != pNewHoveredItem)
+    {
+        pMenu->pHoveredItem = pNewHoveredItem;
+        easygui_dirty(pMenuElement, easygui_get_local_rect(pMenuElement));
+    }
 }
 
-void ak_menu_on_mouse_button_down(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+void ak_menu_on_mouse_button_up(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY)
 {
     ak_menu* pMenu = ak_get_window_extra_data(ak_get_panel_window(pMenuElement));
     if (pMenu == NULL) {
         return;
     }
 
-    // TODO: Implement Me.
+    if (mouseButton == EASYGUI_MOUSE_BUTTON_LEFT)
+    {
+        if (pMenu->pHoveredItem != NULL && !pMenu->pHoveredItem->isSeparator) {
+            ak_mi_on_picked(pMenu->pHoveredItem);
+        }
+    }
 }
 
 void ak_menu_on_paint(easygui_element* pMenuElement, easygui_rect relativeClippingRect, void* pPaintData)
@@ -362,21 +543,41 @@ void ak_menu_on_paint(easygui_element* pMenuElement, easygui_rect relativeClippi
         return;
     }
 
-    float borderWidth = 1;
+    // Before painting we need to update the layout information to use when drawing each item. This will calculate things
+    // like th eposition of menu text, shortcut text, the icon and the arrow for sub menus.
+    ak_menu_update_item_layout_info(ak_get_panel_window(pMenuElement));
+
+    const float borderWidth = pMenu->borderWidth;
+
+    // Draw each item, making sure to only include the region inside the border to avoid overdraw when the border is drawn.
+    if (pMenu->onItemMeasure && pMenu->onItemPaint)
+    {
+        float runningPosX = borderWidth;
+        float runningPosY = borderWidth + pMenu->paddingY;
+        for (ak_menu_item* pMI = pMenu->pFirstItem; pMI != NULL; pMI = pMI->pNextItem)
+        {
+            float itemWidth;
+            float itemHeight;
+            pMenu->onItemMeasure(pMI, &itemWidth, &itemHeight);
+            pMenu->onItemPaint(pMenuElement, pMI, relativeClippingRect, runningPosX, runningPosY, itemWidth, itemHeight, pPaintData);
+
+            runningPosY += itemHeight;
+        }
+    }
 
 
-
-    // TODO: Implement Me.
-
-    // TEMP: For now, just draw a outlined rectangle around the element.
-    easygui_draw_rect(pMenuElement, easygui_grow_rect(easygui_get_local_rect(pMenuElement), -borderWidth), pMenu->backgroundColor, pPaintData);
-
-
-    // Border.
+    
+    // Top and bottom padding.
     float menuWidth;
     float menuHeight;
     easygui_get_size(pMenuElement, &menuWidth, &menuHeight);
-    
+
+    easygui_draw_rect(pMenuElement, easygui_make_rect(borderWidth, borderWidth, menuWidth - borderWidth, borderWidth + pMenu->paddingY), pMenu->backgroundColor, pPaintData);
+    easygui_draw_rect(pMenuElement, easygui_make_rect(borderWidth, menuHeight - borderWidth - pMenu->paddingY, menuWidth - borderWidth, menuHeight - borderWidth), pMenu->backgroundColor, pPaintData);
+
+
+    // Border.
+
     // Top.
     {
         easygui_rect borderRect = easygui_make_rect(0, 0, menuWidth, borderWidth);
@@ -478,6 +679,233 @@ bool ak_menu_on_hide(ak_window* pMenuWindow, unsigned int flags)
     return true;
 }
 
+PRIVATE void ak_menu_on_measure_item_default(ak_menu_item* pMI, float* pWidthOut, float* pHeightOut)
+{
+    assert(pMI != NULL);
+
+    ak_menu* pMenu = ak_get_window_extra_data(pMI->pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    // Separators are treated slightly differently.
+    if (pMI->isSeparator)
+    {
+        if (pWidthOut) {
+            *pWidthOut = pMenu->itemPadding*2;
+        }
+        if (pHeightOut) {
+            *pHeightOut = pMenu->itemPadding*2 + pMenu->separatorWidth;
+        }
+    }
+    else
+    {
+        float textWidth  = 0;
+        float textHeight = 0;
+        easygui_measure_string(pMenu->pFont, pMI->text, strlen(pMI->text), &textWidth, &textHeight);
+
+        float shortcutTextWidth  = 0;
+        float shortcutTextHeight = 0;
+        easygui_measure_string(pMenu->pFont, pMI->shortcutText, strlen(pMI->shortcutText), &shortcutTextWidth, &shortcutTextHeight);
+
+
+        if (pWidthOut) {
+            *pWidthOut = pMenu->itemPadding + pMenu->iconSize + pMenu->textPaddingLeft + textWidth + pMenu->shortcutTextPaddingLeft + shortcutTextWidth + pMenu->arrowPaddingLeft + pMenu->arrowSize + pMenu->itemPadding;
+        }
+        if (pHeightOut) {
+            *pHeightOut = easy_max(textHeight, easy_max(shortcutTextHeight, easy_max(pMenu->iconSize, pMenu->arrowSize))) + (pMenu->itemPadding*2);
+        }
+    }
+}
+
+PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_menu_item* pMI, easygui_rect relativeClippingRect, float posX, float posY, float width, float height, void* pPaintData)
+{
+    assert(pMI != NULL);
+
+    ak_menu* pMenu = ak_get_window_extra_data(pMI->pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    const float borderWidth = pMenu->borderWidth;
+    const float padding = pMenu->itemPadding;
+
+    float menuWidth;
+    float menuHeight;
+    easygui_get_size(pMenuElement, &menuWidth, &menuHeight);
+
+    easygui_color bgcolor = pMenu->backgroundColor;
+    
+    // Separators are treated differently to normal items.
+    if (pMI->isSeparator)
+    {
+        // Separator.
+        easygui_draw_rect(pMenuElement, easygui_make_rect(posX + padding, posY + padding, posX + menuWidth - borderWidth - padding, posY + padding + pMenu->separatorWidth), pMenu->separatorColor, pPaintData);
+    }
+    else
+    {
+        // Normal item.
+
+        if (pMI == pMenu->pHoveredItem) {
+            bgcolor = pMenu->backgroundColorHovered;
+        }
+
+
+        // Icon. For now, just a blank rectangle.
+        easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->iconDrawPosX, posY + pMenu->itemPadding, posX + pMenu->iconDrawPosX + pMenu->iconSize, posY + height - pMenu->itemPadding), bgcolor, pPaintData);
+
+        // Space between the icon and the main text.
+        easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->iconDrawPosX + pMenu->iconSize, posY + pMenu->itemPadding, posX + pMenu->textDrawPosX, posY + height - padding), bgcolor, pPaintData);
+
+        // Text.
+        float textWidth = 0;
+        float textHeight = 0;
+        easygui_measure_string(pMenu->pFont, pMI->text, strlen(pMI->text), &textWidth, &textHeight);
+        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->text, (int)strlen(pMI->text), posX + pMenu->textDrawPosX, posY + pMenu->itemPadding, pMenu->textColor, bgcolor, pPaintData);
+
+        // The gap between the bottom padding and the text, if any.
+        if (posY + padding + textHeight < posY + height - padding) {
+            easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->textDrawPosX, posY + padding + textHeight, posX + pMenu->textDrawPosX + textWidth, posY + height - padding), bgcolor, pPaintData);
+        }
+
+
+        // Space between the main text and the shortcut.
+        easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->textDrawPosX + textWidth, posY + pMenu->itemPadding, posX + pMenu->shortcutTextDrawPosX, posY + height - padding), bgcolor, pPaintData);
+    
+
+        // Shortcut text.
+        float shortcutTextWidth = 0;
+        float shortcutTextHeight = 0;
+        easygui_measure_string(pMenu->pFont, pMI->shortcutText, strlen(pMI->shortcutText), &shortcutTextWidth, &shortcutTextHeight);
+        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->shortcutText, (int)strlen(pMI->shortcutText), posX + pMenu->shortcutTextDrawPosX, posY + pMenu->itemPadding, pMenu->textColor, bgcolor, pPaintData);
+
+        // The gap between the bottom padding and the text, if any.
+        if (posY + padding + shortcutTextHeight < posY + height - padding) {
+            easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->shortcutTextDrawPosX, posY + padding + shortcutTextHeight, posX + pMenu->shortcutTextDrawPosX + shortcutTextWidth, posY + height - padding), bgcolor, pPaintData);
+        }
+
+
+        // Space between the shortcut text and the arrow.
+        easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->shortcutTextDrawPosX + shortcutTextWidth, posY + pMenu->itemPadding, posX + pMenu->arrowDrawPosX, posY + height - padding), bgcolor, pPaintData);
+
+        // Arrow.
+        //if (ak_mi_get_sub_menu(pMI) != NULL)
+        //{
+        //}
+        //else
+        {
+            // There is no arrow - just draw a blank rectangle.
+            easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->arrowDrawPosX, posY + pMenu->itemPadding, posX + pMenu->arrowDrawPosX + pMenu->arrowSize, posY + height - padding), bgcolor, pPaintData);
+        }
+    }
+
+
+    // Padding.
+    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY,                    posX + menuWidth - borderWidth, posY + padding),          bgcolor, pPaintData);    // Top.
+    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY + height - padding, posX + menuWidth - borderWidth, posY + height),           bgcolor, pPaintData);    // Bottom.
+    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY + padding,          posX + padding,                 posY + height - padding), bgcolor, pPaintData);    // Left.
+    easygui_draw_rect(pMenuElement, easygui_make_rect(posX + menuWidth - (borderWidth*2) - padding, posY + padding,          posX + menuWidth - borderWidth, posY + height - padding), bgcolor, pPaintData);    // Right.
+}
+
+PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    float maxTextWidth = 0;
+    float maxShortcutTextWidth = 0;
+    if (pMenu->onItemMeasure && pMenu->onItemPaint)
+    {
+        for (ak_menu_item* pMI = pMenu->pFirstItem; pMI != NULL; pMI = pMI->pNextItem)
+        {
+            if (!pMI->isSeparator)
+            {
+                float textWidth  = 0;
+                float textHeight = 0;
+                easygui_measure_string(pMenu->pFont, pMI->text, strlen(pMI->text), &textWidth, &textHeight);
+
+                float shortcutTextWidth  = 0;
+                float shortcutTextHeight = 0;
+                easygui_measure_string(pMenu->pFont, pMI->shortcutText, strlen(pMI->shortcutText), &shortcutTextWidth, &shortcutTextHeight);
+
+                maxTextWidth = easy_max(maxTextWidth, textWidth);
+                maxShortcutTextWidth = easy_max(maxShortcutTextWidth, shortcutTextWidth);
+            }
+        }
+    }
+
+    pMenu->iconDrawPosX         = pMenu->itemPadding;
+    pMenu->textDrawPosX         = pMenu->iconDrawPosX + pMenu->iconSize + pMenu->textPaddingLeft;
+    pMenu->shortcutTextDrawPosX = pMenu->textDrawPosX + maxTextWidth + pMenu->shortcutTextPaddingLeft;
+    pMenu->arrowDrawPosX        = pMenu->shortcutTextDrawPosX + maxShortcutTextWidth + pMenu->arrowPaddingLeft;
+}
+
+PRIVATE void ak_menu_resize_by_items(ak_window* pMenuWindow)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return;
+    }
+
+    const float borderWidth = pMenu->borderWidth;
+
+    float menuWidth = 0;
+    float menuHeight = 0;
+
+    if (pMenu->onItemMeasure)
+    {
+        for (ak_menu_item* pMI = pMenu->pFirstItem; pMI != NULL; pMI = pMI->pNextItem)
+        {
+            float itemWidth = 0;
+            float itemHeight = 0;
+            pMenu->onItemMeasure(pMI, &itemWidth, &itemHeight);
+
+            menuWidth = easy_max(menuWidth, itemWidth);
+            menuHeight += itemHeight;
+        }
+    }
+
+    menuWidth += borderWidth*2;
+    menuHeight += pMenu->paddingY*2 + borderWidth*2;
+
+    ak_menu_set_size(pMenuWindow, (unsigned int)menuWidth, (unsigned int)menuHeight);
+}
+
+PRIVATE ak_menu_item* ak_menu_find_item_under_point(ak_window* pMenuWindow, float relativePosX, float relativePosY)
+{
+    ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
+    if (pMenu == NULL) {
+        return NULL;
+    }
+
+    if (pMenu->onItemMeasure == NULL) {
+        return NULL;
+    }
+
+    unsigned int menuWidth = 0;
+    unsigned int menuHeight = 0;
+    ak_get_window_size(pMenuWindow, &menuWidth, &menuHeight);
+
+    float runningPosY = pMenu->borderWidth + pMenu->paddingY;
+    for (ak_menu_item* pMI = pMenu->pFirstItem; pMI != NULL; pMI = pMI->pNextItem)
+    {
+        float itemWidth = 0;
+        float itemHeight = 0;
+        pMenu->onItemMeasure(pMI, &itemWidth, &itemHeight);
+
+        if (relativePosX >= 0 && relativePosX < (float)menuWidth && relativePosY >= runningPosY && relativePosY < runningPosY + (float)itemHeight)
+        {
+            return pMI;
+        }
+        
+        runningPosY += itemHeight;
+    }
+
+    return NULL;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -499,9 +927,13 @@ ak_menu_item* ak_create_menu_item(ak_window* pMenuWindow, size_t extraDataSize, 
         return NULL;
     }
 
-    pMI->pMenuWindow = NULL;
-    pMI->pNextItem = NULL;
-    pMI->pPrevItem = NULL;
+    pMI->pMenuWindow     = NULL;
+    pMI->pNextItem       = NULL;
+    pMI->pPrevItem       = NULL;
+    pMI->text[0]         = '\0';
+    pMI->shortcutText[0] = '\0';
+    pMI->isSeparator     = false;
+    pMI->onPicked        = NULL;
     
     pMI->extraDataSize = extraDataSize;
     if (pExtraData != NULL) {
@@ -511,6 +943,18 @@ ak_menu_item* ak_create_menu_item(ak_window* pMenuWindow, size_t extraDataSize, 
 
     // Append the item to the end of the list.
     ak_mi_append(pMI, pMenuWindow);
+
+    return pMI;
+}
+
+ak_menu_item* ak_create_separator_menu_item(ak_window* pMenuWindow, size_t extraDataSize, const void* pExtraData)
+{
+    ak_menu_item* pMI = ak_create_menu_item(pMenuWindow, extraDataSize, pExtraData);
+    if (pMI == NULL) {
+        return NULL;
+    }
+
+    pMI->isSeparator = true;
 
     return pMI;
 }
@@ -576,6 +1020,80 @@ ak_menu_item* ak_mi_get_prev_item(ak_menu_item* pMI)
 }
 
 
+bool ak_mi_is_separator(ak_menu_item* pMI)
+{
+    if (pMI == NULL) {
+        return false;
+    }
+
+    return pMI->isSeparator;
+}
+
+
+void ak_mi_set_text(ak_menu_item* pMI, const char* text)
+{
+    if (pMI == NULL) {
+        return;
+    }
+
+    if (text != NULL) {
+        strcpy_s(pMI->text, sizeof(pMI->text), text);
+    } else {
+        pMI->text[0] = '\0';
+    }
+}
+
+const char* ak_mi_get_text(ak_menu_item* pMI)
+{
+    if (pMI == NULL) {
+        return NULL;
+    }
+
+    return pMI->text;
+}
+
+void ak_mi_set_shortcut_text(ak_menu_item* pMI, const char* text)
+{
+    if (pMI == NULL) {
+        return;
+    }
+
+    if (text != NULL) {
+        strcpy_s(pMI->shortcutText, sizeof(pMI->shortcutText), text);
+    } else {
+        pMI->shortcutText[0] = '\0';
+    }
+}
+
+const char* ak_mi_get_shortcut_text(ak_menu_item* pMI)
+{
+    if (pMI == NULL) {
+        return NULL;
+    }
+
+    return pMI->shortcutText;
+}
+
+void ak_mi_set_on_picked(ak_menu_item* pMI, ak_mi_on_picked_proc proc)
+{
+    if (pMI == NULL) {
+        return;
+    }
+
+    pMI->onPicked = proc;
+}
+
+void ak_mi_on_picked(ak_menu_item* pMI)
+{
+    if (pMI == NULL) {
+        return;
+    }
+
+    if (pMI->onPicked) {
+        pMI->onPicked(pMI);
+    }
+}
+
 
 PRIVATE void ak_mi_append(ak_menu_item* pMI, ak_window* pMenuWindow)
 {
@@ -607,6 +1125,8 @@ PRIVATE void ak_mi_append(ak_menu_item* pMI, ak_window* pMenuWindow)
         pMenu->pLastItem = pMI;
     }
 
+    // The window needs to be resized.
+    ak_menu_resize_by_items(pMI->pMenuWindow);
 
     // The content of the menu has changed so we'll need to schedule a redraw.
     easygui_dirty(ak_menu_get_gui_element(pMenuWindow), easygui_get_local_rect(ak_menu_get_gui_element(pMenuWindow)));
@@ -642,7 +1162,9 @@ PRIVATE void ak_mi_detach(ak_menu_item* pMI)
     pMI->pPrevItem = NULL;
     pMI->pMenuWindow = NULL;
 
-    
+    // The window needs to be resized.
+    ak_menu_resize_by_items(pMI->pMenuWindow);
+
     // The content of the menu has changed so we'll need to schedule a redraw.
     easygui_dirty(ak_menu_get_gui_element(pMI->pMenuWindow), easygui_get_local_rect(ak_menu_get_gui_element(pMI->pMenuWindow)));
 }

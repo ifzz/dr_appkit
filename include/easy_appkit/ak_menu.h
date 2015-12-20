@@ -15,6 +15,10 @@
 
 #include <easy_gui/easy_gui.h>
 
+#ifndef AK_MAX_MENU_ITEM_TEXT_LENGTH
+#define AK_MAX_MENU_ITEM_TEXT_LENGTH    64
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,7 +38,7 @@ typedef struct ak_menu_item ak_menu_item;
 
 typedef void (* ak_mi_on_picked_proc)  (ak_menu_item* pMI);
 typedef void (* ak_mi_on_measure_proc) (ak_menu_item* pMI, float* pWidthOut, float* pHeightOut);
-typedef void (* ak_mi_on_paint_proc)   (easygui_element* pMenuElement, ak_menu_item* pMI, easygui_rect relativeClippingRect, void* pPaintData);
+typedef void (* ak_mi_on_paint_proc)   (easygui_element* pMenuElement, ak_menu_item* pMI, easygui_rect relativeClippingRect, float posX, float posY, float width, float height, void* pPaintData);
 typedef void (* ak_menu_on_show_proc)  (ak_window* pMenuWindow, void* pUserData);
 typedef void (* ak_menu_on_hide_proc)  (ak_window* pMenuWindow, unsigned int flags, void* pUserData);
 
@@ -106,9 +110,27 @@ void ak_menu_set_hovered_background_color(ak_window* pMenuWindow, easygui_color 
 /// Retrieves the background color of highlighted menu items.
 easygui_color ak_menu_get_hovered_background_color(ak_window* pMenuWindow);
 
+/// Sets the default font to use for menu items.
+void ak_menu_set_font(ak_window* pMenuWindow, easygui_font* pFont);
 
-/// Sets the function to call when an item is picked.
-void ak_menu_set_on_item_picked(ak_window* pMenuWindow, ak_mi_on_picked_proc proc);
+/// Retrieves the default font to use for menu items.
+easygui_font* ak_menu_get_font(ak_window* pMenuWindow);
+
+/// Sets the default text color to use for menu items.
+void ak_menu_set_text_color(ak_window* pMenuWindow, easygui_color color);
+
+/// Retrieves the default text color to use for menu items.
+easygui_color ak_menu_get_text_color(ak_window* pMenuWindow);
+
+/// Sets the color and thickness of the separator.
+void ak_menu_set_separator_style(ak_window* pMenuWindow, easygui_color color, float thickness);
+
+/// Retrieves the color of separator lines.
+easygui_color ak_menu_get_separator_color(ak_window* pMenuWindow);
+
+/// Retrieves the thickness of separator lines.
+float ak_menu_get_separator_thickness(ak_window* pMenuWindow);
+
 
 /// Sets the function to call when an item needs to be measured.
 void ak_menu_set_on_item_measure(ak_window* pMenuWindow, ak_mi_on_measure_proc proc);
@@ -132,7 +154,7 @@ void ak_menu_on_mouse_leave(easygui_element* pMenuElement);
 void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX, int relativeMousePosY);
 
 /// Called when the mouse button down event needs to be processed for the given tree-view control.
-void ak_menu_on_mouse_button_down(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+void ak_menu_on_mouse_button_up(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY);
 
 /// Called when the paint event needs to be processed for the given tree-view control.
 void ak_menu_on_paint(easygui_element* pMenuElement, easygui_rect relativeClippingRect, void* pPaintData);
@@ -154,6 +176,9 @@ bool ak_menu_on_hide(ak_window* pMenuWinodw, unsigned int flags);
 /// Creates a new menu item.
 ak_menu_item* ak_create_menu_item(ak_window* pMenuWindow, size_t extraDataSize, const void* pExtraData);
 
+/// Creates a separator menu item.
+ak_menu_item* ak_create_separator_menu_item(ak_window* pMenuItem, size_t extraDataSize, const void* pExtraData);
+
 /// Deletes the given menu item.
 void ak_delete_menu_item(ak_menu_item* pMI);
 
@@ -173,6 +198,31 @@ ak_menu_item* ak_mi_get_next_item(ak_menu_item* pMI);
 
 /// Retrieves a pointer to the previous item in the list.
 ak_menu_item* ak_mi_get_prev_item(ak_menu_item* pMI);
+
+
+/// Determines whether or not the given menu item is a separator.
+bool ak_mi_is_separator(ak_menu_item* pMI);
+
+
+/// Sets the text of the given menu item.
+void ak_mi_set_text(ak_menu_item* pMI, const char* text);
+
+/// Retrieves the text of the given menu item.
+const char* ak_mi_get_text(ak_menu_item* pMI);
+
+/// Sets the shortcut text of the given menu item.
+void ak_mi_set_shortcut_text(ak_menu_item* pMI, const char* text);
+
+/// Retrieves the shortcut text of the given menu item.
+const char* ak_mi_get_shortcut_text(ak_menu_item* pMI);
+
+
+/// Sets the function to call when the given menu item is picked.
+void ak_mi_set_on_picked(ak_menu_item* pMI, ak_mi_on_picked_proc proc);
+
+/// Calls the picked event handler for the given menu item.
+void ak_mi_on_picked(ak_menu_item* pMI);
+
 
 
 #ifdef __cplusplus
