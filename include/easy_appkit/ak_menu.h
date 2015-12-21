@@ -204,6 +204,12 @@ ak_menu_item* ak_mi_get_prev_item(ak_menu_item* pMI);
 bool ak_mi_is_separator(ak_menu_item* pMI);
 
 
+/// Sets the image to use as the icon for the given menu item.
+void ak_mi_set_icon(ak_menu_item* pMI, easygui_image* pImage);
+
+/// Retrieves the image being used as the icon for the given menu item.
+easygui_image* ak_mi_get_icon(ak_menu_item* pMI);
+
 /// Sets the text of the given menu item.
 void ak_mi_set_text(ak_menu_item* pMI, const char* text);
 

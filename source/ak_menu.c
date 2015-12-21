@@ -130,6 +130,9 @@ struct ak_menu_item
     ak_menu_item* pPrevItem;
 
 
+    /// The image to use as the menu item's icon.
+    easygui_image* pIcon;
+
     /// The main text of the item.
     char text[AK_MAX_MENU_ITEM_TEXT_LENGTH];
 
@@ -519,6 +522,8 @@ void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX,
         pMenu->pHoveredItem = pNewHoveredItem;
         easygui_dirty(pMenuElement, easygui_get_local_rect(pMenuElement));
     }
+
+    easygui_dirty(pMenuElement, easygui_get_local_rect(pMenuElement));
 }
 
 void ak_menu_on_mouse_button_up(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY)
@@ -751,8 +756,20 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
         }
 
 
-        // Icon. For now, just a blank rectangle.
-        easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->iconDrawPosX, posY + pMenu->itemPadding, posX + pMenu->iconDrawPosX + pMenu->iconSize, posY + height - pMenu->itemPadding), bgcolor, pPaintData);
+        // Icon.
+        if (pMI->pIcon != NULL)
+        {
+            unsigned int iconWidth;
+            unsigned int iconHeight;
+            easygui_get_image_size(pMI->pIcon, &iconWidth, &iconHeight);
+
+            easygui_draw_image_with_bkcolor(pMenuElement, pMI->pIcon, posX + pMenu->iconDrawPosX, posY + pMenu->itemPadding, (float)iconWidth, (float)iconHeight, 0, 0, (float)iconWidth, (float)iconHeight, bgcolor, pPaintData);
+        }
+        else
+        {
+            easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->iconDrawPosX, posY + pMenu->itemPadding, posX + pMenu->iconDrawPosX + pMenu->iconSize, posY + height - pMenu->itemPadding), bgcolor, pPaintData);
+        }
+
 
         // Space between the icon and the main text.
         easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->iconDrawPosX + pMenu->iconSize, posY + pMenu->itemPadding, posX + pMenu->textDrawPosX, posY + height - padding), bgcolor, pPaintData);
@@ -801,10 +818,10 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
 
 
     // Padding.
-    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY,                    posX + menuWidth - borderWidth, posY + padding),          bgcolor, pPaintData);    // Top.
-    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY + height - padding, posX + menuWidth - borderWidth, posY + height),           bgcolor, pPaintData);    // Bottom.
-    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY + padding,          posX + padding,                 posY + height - padding), bgcolor, pPaintData);    // Left.
-    easygui_draw_rect(pMenuElement, easygui_make_rect(posX + menuWidth - (borderWidth*2) - padding, posY + padding,          posX + menuWidth - borderWidth, posY + height - padding), bgcolor, pPaintData);    // Right.
+    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY,                    posX + menuWidth - borderWidth*2, posY + padding),          bgcolor, pPaintData);    // Top.
+    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY + height - padding, posX + menuWidth - borderWidth*2, posY + height),           bgcolor, pPaintData);    // Bottom.
+    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY + padding,          posX + padding,                   posY + height - padding), bgcolor, pPaintData);    // Left.
+    easygui_draw_rect(pMenuElement, easygui_make_rect(posX + menuWidth - (borderWidth*2) - padding, posY + padding,          posX + menuWidth - borderWidth*2, posY + height - padding), bgcolor, pPaintData);    // Right.
 }
 
 PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow)
@@ -930,6 +947,7 @@ ak_menu_item* ak_create_menu_item(ak_window* pMenuWindow, size_t extraDataSize, 
     pMI->pMenuWindow     = NULL;
     pMI->pNextItem       = NULL;
     pMI->pPrevItem       = NULL;
+    pMI->pIcon           = NULL;
     pMI->text[0]         = '\0';
     pMI->shortcutText[0] = '\0';
     pMI->isSeparator     = false;
@@ -1029,6 +1047,24 @@ bool ak_mi_is_separator(ak_menu_item* pMI)
     return pMI->isSeparator;
 }
 
+
+void ak_mi_set_icon(ak_menu_item* pMI, easygui_image* pImage)
+{
+    if (pMI == NULL) {
+        return;
+    }
+
+    pMI->pIcon = pImage;
+}
+
+easygui_image* ak_mi_get_icon(ak_menu_item* pMI)
+{
+    if (pMI == NULL) {
+        return NULL;
+    }
+    
+    return pMI->pIcon;
+}
 
 void ak_mi_set_text(ak_menu_item* pMI, const char* text)
 {
