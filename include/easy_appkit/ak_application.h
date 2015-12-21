@@ -13,6 +13,7 @@ extern "C" {
 typedef struct ak_application ak_application;
 typedef struct ak_window ak_window;
 typedef struct ak_theme ak_theme;
+typedef struct ak_gui_image_manager ak_gui_image_manager;
 typedef struct easygui_context easygui_context;
 typedef struct easygui_element easygui_element;
 typedef struct easy2d_context easy2d_context;
@@ -88,14 +89,19 @@ size_t ak_get_application_extra_data_size(ak_application* pApplication);
 /// Retrieves a pointer to the buffer containing the user-defined data.
 void* ak_get_application_extra_data(ak_application* pApplication);
 
-/// Retrieves a pointer to the GUI context associated with the application.
-easygui_context* ak_get_application_gui(ak_application* pApplication);
-
 /// Retrieves a pointer to the GUI drawing context.
 easy2d_context* ak_get_application_drawing_context(ak_application* pApplication);
 
+/// Retrieves a pointer to the GUI context associated with the application.
+easygui_context* ak_get_application_gui(ak_application* pApplication);
+
+/// Retrieves a pointer to the GUI image manager.
+ak_gui_image_manager* ak_get_application_image_manager(ak_application* pApplication);
+
 /// Retrieves a pointer to the object representing the application's theme.
 ak_theme* ak_get_application_theme(ak_application* pApplication);
+
+
 
 
 /// Posts a log message.

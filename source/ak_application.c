@@ -5,6 +5,7 @@
 #include "../include/easy_appkit/ak_theme.h"
 #include "../include/easy_appkit/ak_window.h"
 #include "../include/easy_appkit/ak_gui.h"
+#include "../include/easy_appkit/ak_gui_image_manager.h"
 #include "ak_application_private.h"
 #include "ak_window_private.h"
 #include "ak_config.h"
@@ -32,11 +33,14 @@ struct ak_application
     ak_log_proc onLog;
     
 
+    /// The drawing context.
+    easy2d_context* pDrawingContext;
+
     /// A pointer to the GUI context.
     easygui_context* pGUI;
 
-    /// The drawing context.
-    easy2d_context* pDrawingContext;
+    /// A pointer to the GUI image manager.
+    ak_gui_image_manager* pGUIImageManager;
 
     /// The application's theme.
     ak_theme theme;
@@ -141,13 +145,21 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         pApplication->pDrawingContext = easy2d_create_context_cairo();
 #endif
         if (pApplication->pDrawingContext == NULL) {
-            easygui_delete_context(pApplication->pGUI);
             free(pApplication);
             return NULL;
         }
 
         pApplication->pGUI = easygui_create_context_easy_draw(pApplication->pDrawingContext);
         if (pApplication->pGUI == NULL) {
+            easy2d_delete_context(pApplication->pDrawingContext);
+            free(pApplication);
+            return NULL;
+        }
+
+        pApplication->pGUIImageManager = ak_create_gui_image_manager(pApplication->pVFS, pApplication->pGUI);
+        if (pApplication->pGUIImageManager == NULL) {
+            easygui_delete_context(pApplication->pGUI);
+            easy2d_delete_context(pApplication->pDrawingContext);
             free(pApplication);
             return NULL;
         }
@@ -195,6 +207,7 @@ void ak_delete_application(ak_application* pApplication)
     }
 
     // GUI.
+    ak_delete_gui_image_manager(pApplication->pGUIImageManager);
     easygui_delete_context(pApplication->pGUI);
     easy2d_delete_context(pApplication->pDrawingContext);
 
@@ -285,6 +298,15 @@ void* ak_get_application_extra_data(ak_application* pApplication)
     return pApplication->pExtraData;
 }
 
+easy2d_context* ak_get_application_drawing_context(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->pDrawingContext;
+}
+
 easygui_context* ak_get_application_gui(ak_application* pApplication)
 {
     if (pApplication == NULL) {
@@ -294,13 +316,13 @@ easygui_context* ak_get_application_gui(ak_application* pApplication)
     return pApplication->pGUI;
 }
 
-easy2d_context* ak_get_application_drawing_context(ak_application* pApplication)
+ak_gui_image_manager* ak_get_application_image_manager(ak_application* pApplication)
 {
     if (pApplication == NULL) {
         return NULL;
     }
 
-    return pApplication->pDrawingContext;
+    return pApplication->pGUIImageManager;
 }
 
 ak_theme* ak_get_application_theme(ak_application* pApplication)
