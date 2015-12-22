@@ -654,7 +654,6 @@ PRIVATE void ak_on_mmbi_paint_default(easygui_element* pMBElement, ak_menu_bar_i
         easygui_draw_rect(pMBElement, easygui_make_rect(offsetX + 0,                   offsetY + 0, offsetX + borderWidth,         offsetY + height),      pMB->borderColorExpanded, pPaintData);
         easygui_draw_rect(pMBElement, easygui_make_rect(offsetX + width - borderWidth, offsetY + 0, offsetX + width,               offsetY + height),      pMB->borderColorExpanded, pPaintData);
     }
-
 }
 
 PRIVATE void ak_mb_on_menu_hide(ak_window* pMenu, unsigned int flags, void* pUserData)

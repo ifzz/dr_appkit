@@ -522,8 +522,6 @@ void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX,
         pMenu->pHoveredItem = pNewHoveredItem;
         easygui_dirty(pMenuElement, easygui_get_local_rect(pMenuElement));
     }
-
-    easygui_dirty(pMenuElement, easygui_get_local_rect(pMenuElement));
 }
 
 void ak_menu_on_mouse_button_up(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY)
@@ -763,7 +761,24 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
             unsigned int iconHeight;
             easygui_get_image_size(pMI->pIcon, &iconWidth, &iconHeight);
 
-            easygui_draw_image_with_bkcolor(pMenuElement, pMI->pIcon, posX + pMenu->iconDrawPosX, posY + pMenu->itemPadding, (float)iconWidth, (float)iconHeight, 0, 0, (float)iconWidth, (float)iconHeight, bgcolor, pPaintData);
+            easygui_draw_image_args args;
+            args.dstX            = posX + pMenu->iconDrawPosX;
+            args.dstY            = posY + pMenu->itemPadding;
+            args.dstWidth        = (float)iconWidth;
+            args.dstHeight       = (float)iconHeight;
+            args.srcX            = 0;
+            args.srcY            = 0;
+            args.srcWidth        = (float)iconWidth;
+            args.srcHeight       = (float)iconHeight;
+            args.dstBoundsX      = args.dstX;
+            args.dstBoundsY      = args.dstY;
+            args.dstBoundsWidth  = pMenu->iconSize;
+            args.dstBoundsHeight = pMenu->iconSize;
+            args.foregroundTint  = easygui_rgb(255, 255, 255);
+            args.backgroundColor = bgcolor;
+            args.boundsColor     = bgcolor;
+            args.options         = EASYGUI_IMAGE_DRAW_BACKGROUND | EASYGUI_IMAGE_DRAW_BOUNDS | EASYGUI_IMAGE_CLIP_BOUNDS | EASYGUI_IMAGE_ALIGN_CENTER;
+            easygui_draw_image(pMenuElement, pMI->pIcon, &args, pPaintData);
         }
         else
         {
@@ -818,10 +833,7 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
 
 
     // Padding.
-    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY,                    posX + menuWidth - borderWidth*2, posY + padding),          bgcolor, pPaintData);    // Top.
-    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY + height - padding, posX + menuWidth - borderWidth*2, posY + height),           bgcolor, pPaintData);    // Bottom.
-    easygui_draw_rect(pMenuElement, easygui_make_rect(posX,                                         posY + padding,          posX + padding,                   posY + height - padding), bgcolor, pPaintData);    // Left.
-    easygui_draw_rect(pMenuElement, easygui_make_rect(posX + menuWidth - (borderWidth*2) - padding, posY + padding,          posX + menuWidth - borderWidth*2, posY + height - padding), bgcolor, pPaintData);    // Right.
+    easygui_draw_rect_outline(pMenuElement, easygui_make_rect(posX, posY, posX + menuWidth - borderWidth*2, posY + height), bgcolor, padding, pPaintData);
 }
 
 PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow)
