@@ -33,6 +33,16 @@ easygui_image* ak_load_vector_image_from_file(ak_gui_image_manager* pIM, const c
 void ak_unload_image(ak_gui_image_manager* pIM, easygui_image* image);
 
 
+/// Retrieves a pointer to the right-facing arrow for use with sub-menus and tree-view controls.
+easygui_image* ak_get_arrow_right_image(ak_gui_image_manager* pIM);
+
+/// Retrieves a pointer to the right-down facing arrow for use with tree-view controls.
+easygui_image* ak_get_arrow_right_down_image(ak_gui_image_manager* pIM);
+
+/// Retrieves a pointer to the red cross image for close buttons.
+easygui_image* ak_get_red_cross_image(ak_gui_image_manager* pIM);
+
+
 #ifdef __cplusplus
 }
 #endif
