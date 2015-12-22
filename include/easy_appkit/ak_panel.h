@@ -20,8 +20,8 @@
 //   disassociated with the relevant parts of the application.
 // 
 
-#ifndef ak_gui_h
-#define ak_gui_h
+#ifndef ak_panel_h
+#define ak_panel_h
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -32,46 +32,6 @@ extern "C" {
 
 typedef struct easygui_element easygui_element;
 typedef struct ak_application ak_application;
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// Tool
-//
-///////////////////////////////////////////////////////////////////////////////
-
-/// Creates a tool.
-///
-/// @remarks
-///     Specific types of tools will call this inside their own creation function.
-easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* pParent, size_t extraDataSize, const void* pExtraData);
-
-/// Retrieves a pointer to the application that owns the given tool.
-ak_application* ak_get_tool_application(easygui_element* pTool);
-
-/// Retrieves the size of the extra data.
-size_t ak_get_tool_extra_data_size(easygui_element* pTool);
-
-/// Retrieves a pointer to the extra data.
-void* ak_get_tool_extra_data(easygui_element* pTool);
-
-
-/// Sets the title of the tool.
-///
-/// @remarks
-///     This is what will be shown on the tab.
-void ak_set_tool_title(easygui_element* pTool, const char* title);
-
-/// Retrieves the title of the tool.
-const char* ak_get_tool_title(easygui_element* pTool);
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// Panel
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #define AK_PANEL_OPTION_SHOW_TOOL_TABS             1
 #define AK_PANEL_OPTION_SHOW_CLOSE_BUTTON_ON_TABS  2

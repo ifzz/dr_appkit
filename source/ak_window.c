@@ -3,7 +3,7 @@
 #include "../include/easy_appkit/ak_window.h"
 #include "../include/easy_appkit/ak_application.h"
 #include "../include/easy_appkit/ak_build_config.h"
-#include "../include/easy_appkit/ak_gui.h"
+#include "../include/easy_appkit/ak_panel.h"
 #include "ak_window_private.h"
 #include "ak_application_private.h"
 #include <easy_gui/easy_gui.h>

@@ -4,7 +4,7 @@
 #include "../include/easy_appkit/ak_build_config.h"
 #include "../include/easy_appkit/ak_theme.h"
 #include "../include/easy_appkit/ak_window.h"
-#include "../include/easy_appkit/ak_gui.h"
+#include "../include/easy_appkit/ak_panel.h"
 #include "../include/easy_appkit/ak_gui_image_manager.h"
 #include "ak_application_private.h"
 #include "ak_window_private.h"
