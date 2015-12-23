@@ -57,7 +57,11 @@ void ak_delete_gui_image_manager(ak_gui_image_manager* pIM)
         return;
     }
 
-    // TODO: Unload every image.
+    // TODO: Unload every image that was loaded from a file.
+
+    ak_unload_image(pIM, pIM->pArrowRight);
+    ak_unload_image(pIM, pIM->pArrowRightDown);
+    ak_unload_image(pIM, pIM->pRedCross);
 
     free(pIM);
 }
@@ -556,7 +560,10 @@ PRIVATE easygui_image* ak_load_svg_from_string(ak_gui_image_manager* pIM, char* 
 
 
     // At this point we have the rasterized image and we can create the easy_gui image resource.
-    return easygui_create_image(pIM->pGUI, width, height, svgWidth*4, pImageData);
+    easygui_image* pImage = easygui_create_image(pIM->pGUI, width, height, svgWidth*4, pImageData);
+
+    free(pImageData);
+    return pImage;
 }
 
 

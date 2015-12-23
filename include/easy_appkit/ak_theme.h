@@ -98,6 +98,9 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme);
 /// Loads a theme config file.
 void ak_theme_load_from_file(ak_application* pApplication, ak_theme* pTheme, const char* absolutePath);
 
+/// Unloads the given theme.
+void ak_theme_unload(ak_theme* pTheme);
+
 
 #ifdef __cplusplus
 }

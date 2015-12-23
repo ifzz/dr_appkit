@@ -212,6 +212,8 @@ void ak_delete_application(ak_application* pApplication)
     // Windows need to be deleted.
     ak_delete_all_application_windows(pApplication);
 
+    // Theme.
+    ak_theme_unload(&pApplication->theme);
 
     // GUI.
     ak_delete_gui_image_manager(pApplication->pGUIImageManager);
@@ -278,7 +280,7 @@ void ak_delete_all_application_windows(ak_application* pApplication)
     // All tools need to be deleted first before any windows.
     for (ak_window* pWindow = ak_get_application_first_window(pApplication); pWindow != NULL; pWindow = ak_get_application_next_window(pApplication, pWindow))
     {
-        ak_delete_tools_recursive(ak_get_window_application(pApplication->pFirstWindow), ak_get_window_panel(pApplication->pFirstWindow));
+        ak_delete_tools_recursive(ak_get_window_application(pWindow), ak_get_window_panel(pWindow));
     }
 
 
@@ -731,10 +733,10 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
             ak_config config;
             if (ak_parse_config_from_file(&config, pConfigFile, ak_on_config_error, pApplication))
             {
-                if (ak_apply_config(pApplication, &config))
-                {
-                    return true;
-                }
+                bool result = ak_apply_config(pApplication, &config);
+                
+                ak_uninit_config(&config);
+                return result;
             }
         }
     }
@@ -746,7 +748,10 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
         ak_config config;
         if (ak_parse_config_from_string(&config, pApplication->onGetDefaultConfig(pApplication), ak_on_config_error, pApplication))
         {
-            return ak_apply_config(pApplication, &config);
+            bool result = ak_apply_config(pApplication, &config);
+
+            ak_uninit_config(&config);
+            return result;
         }
     }
 

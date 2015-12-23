@@ -23,6 +23,11 @@ ak_text_theme ak_init_text_theme(ak_application* pApplication, const char* famil
     return result;
 }
 
+void ak_uninit_text_theme(ak_text_theme theme)
+{
+    easygui_delete_font(theme.pFont);
+}
+
 
 void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
 {
@@ -91,6 +96,18 @@ void ak_theme_load_from_file(ak_application* pApplication, ak_theme* pTheme, con
 
     (void)absolutePath;
     ak_theme_load_defaults(pApplication, pTheme);
+}
+
+void ak_theme_unload(ak_theme* pTheme)
+{
+    if (pTheme == NULL) {
+        return;
+    }
+
+    ak_uninit_text_theme(pTheme->defaultText);
+
+    easygui_delete_font(pTheme->pUIFont);
+    pTheme->pUIFont = NULL;
 }
 
 

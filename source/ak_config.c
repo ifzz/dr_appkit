@@ -78,7 +78,7 @@ static size_t ak_config_on_read_from_string_proc(void* pUserData, void* pDataOut
 
 static void ak_config_on_pair(void* pUserData, const char* key, const char* value)
 {
-    printf("PAIR: [%s] [%s]\n", key, value);
+    //printf("PAIR: [%s] [%s]\n", key, value);
 
     ak_config_parse_context* pContext = pUserData;
     assert(pContext != NULL);
