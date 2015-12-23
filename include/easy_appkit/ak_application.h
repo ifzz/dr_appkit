@@ -73,6 +73,10 @@ int ak_run_application(ak_application* pApplication);
 void ak_post_quit_message(ak_application* pApplication, int exitCode);
 
 
+/// Destroys every window in the application.
+void ak_delete_all_application_windows(ak_application* pApplication);
+
+
 /// Retrieves the name of the application.
 ///
 /// @remarks
@@ -100,8 +104,6 @@ ak_gui_image_manager* ak_get_application_image_manager(ak_application* pApplicat
 
 /// Retrieves a pointer to the object representing the application's theme.
 ak_theme* ak_get_application_theme(ak_application* pApplication);
-
-
 
 
 /// Posts a log message.
@@ -159,6 +161,15 @@ ak_window* ak_get_element_window(easygui_element* pElement);
 ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName);
 
 
+/// Retrieves a pointer to the panel with the given name.
+///
+/// @remarks
+///     This is a slow recursive function and should only be called once at initialization time.
+///     @par
+///     This will only find panels that were created by the layout config.
+easygui_element* ak_find_panel_by_name(ak_application* pApplication, const char* pPanelName);
+
+
 /// Sets the callback function to call when a custom tool needs to be instantiated.
 ///
 /// @remarks
@@ -182,6 +193,9 @@ ak_delete_tool_proc ak_get_on_delete_tool(ak_application* pApplication);
 /// @remarks
 ///     If the tool type is not a built-in type, it will call the onCreateTool callback.
 easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
+
+/// Deletes the given tool.
+void ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool);
 
 
 #ifdef __cplusplus

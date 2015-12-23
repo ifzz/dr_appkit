@@ -76,6 +76,19 @@ size_t ak_panel_get_extra_data_size(easygui_element* pPanel);
 void* ak_panel_get_extra_data(easygui_element* pPanel);
 
 
+/// Sets the name of the panel.
+void ak_panel_set_name(easygui_element* pPanel, const char* name);
+
+/// Retrieves the name of the panel.
+///
+/// @remarks
+///     If the panel does not have a name, an empty string will be returned. Null will be returned on error.
+const char* ak_panel_get_name(easygui_element* pPanel);
+
+/// Recursively searches for a panel with the given name, including <pPanel>.
+easygui_element* ak_panel_find_by_name_recursive(easygui_element* pPanel, const char* name);
+
+
 /// Splits the given panel along the given axis at the given position.
 ///
 /// @remarks
@@ -87,6 +100,9 @@ bool ak_panel_split(easygui_element* pPanel, ak_panel_split_axis splitAxis, floa
 /// @remarks
 ///     This will delete any child elements, so ensure everything has been cleaned up appropriately beforehand.
 void ak_panel_unsplit(easygui_element* pPanel);
+
+/// Retrieves the axis that the given panel is split along.
+ak_panel_split_axis ak_panel_get_split_axis(easygui_element* pPanel);
 
 /// Retrieves the first child panel of the given split panel.
 ///
@@ -130,6 +146,13 @@ bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool);
 
 /// Deactivates the currently active tool on the given panel.
 void ak_panel_deactivate_tool(easygui_element* pPanel);
+
+
+/// Retrieves a pointer to the first tool that's attached to the given panel, if any.
+easygui_element* ak_panel_get_first_tool(easygui_element* pPanel);
+
+/// Retrieves a pointer to the next tool that's attached to the given panel.
+easygui_element* ak_panel_get_next_tool(easygui_element* pPanel, easygui_element* pTool);
 
 
 /// Sets the option flags to use for the tab bar.

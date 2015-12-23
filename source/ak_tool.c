@@ -1,7 +1,9 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
 #include "../include/easy_appkit/ak_panel.h"
+#include "../include/easy_appkit/ak_tool.h"
 #include "../include/easy_appkit/ak_application.h"
+#include "../include/easy_appkit/ak_build_config.h"
 #include <easy_gui/easy_gui.h>
 #include <assert.h>
 
@@ -9,6 +11,10 @@ typedef struct
 {
     /// A pointer to the application that owns this tool.
     ak_application* pApplication;
+
+    /// The tools type.
+    char type[AK_MAX_TOOL_TYPE_LENGTH];
+
 
     /// The tool's title. This is what will show up on the tool's tab.
     char title[256];
@@ -23,7 +29,7 @@ typedef struct
 } ak_tool_data;
 
 
-easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* pParent, size_t extraDataSize, const void* pExtraData)
+easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* pParent, const char* type, size_t extraDataSize, const void* pExtraData)
 {
     easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_tool_data) - sizeof(char) + extraDataSize);
     if (pElement != NULL)
@@ -35,7 +41,13 @@ easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* p
         assert(pToolData != NULL);
 
         pToolData->pApplication = pApplication;
-        memset(pToolData->title, 0, sizeof(pToolData->title));
+        pToolData->type[0]      = '\0';
+        pToolData->title[0]     = '\0';
+
+        if (type != NULL) {
+            strcpy_s(pToolData->type, sizeof(pToolData->type), type);
+        }
+
 
         pToolData->extraDataSize = extraDataSize;
         if (pExtraData != NULL) {
@@ -54,6 +66,16 @@ ak_application* ak_get_tool_application(easygui_element* pTool)
     }
 
     return pToolData->pApplication;
+}
+
+const char* ak_get_tool_type(easygui_element* pTool)
+{
+    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    if (pToolData == NULL) {
+        return NULL;
+    }
+
+    return pToolData->type;
 }
 
 

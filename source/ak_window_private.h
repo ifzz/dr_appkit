@@ -40,17 +40,24 @@ void ak_win32_post_quit_message(int resultCode);
 void ak_connect_gui_to_window_system(easygui_context* pGUI);
 
 
+/// Retrieves a pointer to the first child window.
+ak_window* ak_get_first_child_window(ak_window* pWindow);
+
+/// Retrieves a pointer to the last child window.
+ak_window* ak_get_last_child_window(ak_window* pWindow);
+
+
 /// Sets the next window in the main linked list that's controlled by the application.
-void ak_set_next_window(ak_window* pWindow, ak_window* pNextWindow);
+void ak_set_next_sibling_window(ak_window* pWindow, ak_window* pNextWindow);
 
 /// Retrieves the next window in the main linked list that's controlled by the application.
-ak_window* ak_get_next_window(ak_window* pWindow);
+ak_window* ak_get_next_sibling_window(ak_window* pWindow);
 
 /// Sets the previous window in the main linked list that's controlled by the application.
-void ak_set_prev_window(ak_window* pWindow, ak_window* pPrevWindow);
+void ak_set_prev_sibling_window(ak_window* pWindow, ak_window* pPrevWindow);
 
 /// Retrieves the previous window in the main linked list that's controlled by the application.
-ak_window* ak_get_prev_window(ak_window* pWindow);
+ak_window* ak_get_prev_sibling_window(ak_window* pWindow);
 
 
 

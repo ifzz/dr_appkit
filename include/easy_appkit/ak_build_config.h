@@ -27,6 +27,16 @@
 #define AK_MAX_LAYOUT_ATTRIB_LENGTH     256
 #endif
 
+#ifndef AK_MAX_PANEL_NAME_LENGTH
+#define AK_MAX_PANEL_NAME_LENGTH        64
+#endif
+
+#ifndef AK_MAX_TOOL_TYPE_LENGTH
+#define AK_MAX_TOOL_TYPE_LENGTH         64
+#endif
+
+
+
 
 
 

@@ -82,11 +82,20 @@ struct ak_window
     ak_window_on_mouse_wheel_proc onMouseWheel;
 
 
+    /// A pointer to the parent window.
+    ak_window* pParent;
+
+    /// The first child window.
+    ak_window* pFirstChild;
+
+    /// The last child window.
+    ak_window* pLastChild;
+
     /// [Internal Use Only] The next window in the linked list of windows that were created by this application. This is not necessarily a related window.
-    ak_window* pNextWindow;
+    ak_window* pNextSibling;
 
     /// [Internal Use Only] The previous window in the linked list of windows that were created by this application. This is not necessarily a related window.
-    ak_window* pPrevWindow;
+    ak_window* pPrevSibling;
 
 
     /// The size of the extra data in bytes.
@@ -198,13 +207,63 @@ PRIVATE easygui_element* ak_create_window_panel(ak_application* pApplication, ak
     return pElement;
 }
 
-void ak_delete_window_panel(easygui_element* pTopLevelElement)
+PRIVATE void ak_delete_window_panel(easygui_element* pTopLevelElement)
 {
     easygui_delete_element(pTopLevelElement);
 }
 
 
-ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_window_type type, HWND hWnd, size_t extraDataSize, const void* pExtraData)
+PRIVATE void ak_detach_window(ak_window* pWindow)
+{
+    if (pWindow->pParent != NULL)
+    {
+        if (pWindow->pParent->pFirstChild == pWindow) {
+            pWindow->pParent->pFirstChild = pWindow->pNextSibling;
+        }
+
+        if (pWindow->pParent->pLastChild == pWindow) {
+            pWindow->pParent->pLastChild = pWindow->pPrevSibling;
+        }
+
+
+        if (pWindow->pPrevSibling != NULL) {
+            pWindow->pPrevSibling->pNextSibling = pWindow->pNextSibling;
+        }
+
+        if (pWindow->pNextSibling != NULL) {
+            pWindow->pNextSibling->pPrevSibling = pWindow->pPrevSibling;
+        }
+    }
+
+    pWindow->pParent      = NULL;
+    pWindow->pPrevSibling = NULL;
+    pWindow->pNextSibling = NULL;
+}
+
+PRIVATE void ak_append_window(ak_window* pWindow, ak_window* pParent)
+{
+    // Detach the child from it's current parent first.
+    ak_detach_window(pWindow);
+
+    pWindow->pParent = pParent;
+    assert(pWindow->pParent != NULL);
+
+    if (pWindow->pParent->pLastChild != NULL) {
+        pWindow->pPrevSibling = pWindow->pParent->pLastChild;
+        pWindow->pPrevSibling->pNextSibling = pWindow;
+    }
+
+    if (pWindow->pParent->pFirstChild == NULL) {
+        pWindow->pParent->pFirstChild = pWindow;
+    }
+
+    pWindow->pParent->pLastChild = pWindow;
+}
+
+
+
+
+ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_window* pParent, ak_window_type type, HWND hWnd, size_t extraDataSize, const void* pExtraData)
 {
     ak_window* pWindow = malloc(sizeof(*pWindow) + extraDataSize - sizeof(pWindow->pExtraData));
     if (pWindow == NULL)
@@ -262,8 +321,11 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     pWindow->onMouseButtonUp       = NULL;
     pWindow->onMouseButtonDblClick = NULL;
     pWindow->onMouseWheel          = NULL;
-    pWindow->pNextWindow           = NULL;
-    pWindow->pPrevWindow           = NULL;
+    pWindow->pParent               = NULL;
+    pWindow->pFirstChild           = NULL;
+    pWindow->pLastChild            = NULL;
+    pWindow->pNextSibling          = NULL;
+    pWindow->pPrevSibling          = NULL;
     pWindow->extraDataSize         = extraDataSize;
 
     if (pExtraData != NULL) {
@@ -276,18 +338,30 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
 
 
     // The application needs to track this window.
-    ak_application_track_window(pWindow);
+    if (pWindow->pParent == NULL) {
+        ak_application_track_top_level_window(pWindow);
+    } else {
+        ak_append_window(pWindow, pParent);
+    }
+    
 
     return pWindow;
 }
 
 void ak_uninit_and_free_window_win32(ak_window* pWindow)
 {
-    ak_application_untrack_window(pWindow);
+    if (pWindow->pParent == NULL) {
+        ak_application_untrack_top_level_window(pWindow);
+    } else {
+        ak_detach_window(pWindow);
+    }
+    
 
 
     SetWindowLongPtrA(pWindow->hWnd, 0, (LONG_PTR)NULL);
 
+
+    ak_application_on_delete_window(pWindow);
 
     ak_delete_window_panel(pWindow->pPanel);
     pWindow->pPanel = NULL;
@@ -645,7 +719,8 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 BOOL keepActive = (BOOL)wParam;
                 BOOL syncOthers = TRUE;
 
-                for (ak_window* pTrackedWindow = ak_get_application_first_window(pWindow->pApplication); pTrackedWindow != NULL; pTrackedWindow = pTrackedWindow->pNextWindow)
+                ak_application* pApplication = pWindow->pApplication;
+                for (ak_window* pTrackedWindow = ak_get_application_first_window(pApplication); pTrackedWindow != NULL; pTrackedWindow = ak_get_application_next_window(pApplication, pTrackedWindow))
                 {
                     if (pTrackedWindow->hWnd == (HWND)lParam)
                     {
@@ -663,7 +738,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
                 if (syncOthers)
                 {
-                    for (ak_window* pTrackedWindow = ak_get_application_first_window(pWindow->pApplication); pTrackedWindow != NULL; pTrackedWindow = pTrackedWindow->pNextWindow)
+                    for (ak_window* pTrackedWindow = ak_get_application_first_window(pApplication); pTrackedWindow != NULL; pTrackedWindow = ak_get_application_next_window(pApplication, pTrackedWindow))
                     {
                         if (hWnd != pTrackedWindow->hWnd && hWnd != (HWND)lParam)
                         {
@@ -790,7 +865,7 @@ PRIVATE ak_window* ak_create_application_window(ak_application* pApplication, ak
 
     // This is deleted in the WM_DESTROY event. The reason for this is that deleting a window should be recursive and we can just
     // let Windows tell us when a child window is deleted.
-    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, ak_window_type_application, hWnd, extraDataSize, pExtraData);
+    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, pParent, ak_window_type_application, hWnd, extraDataSize, pExtraData);
     if (pWindow == NULL)
     {
         ak_errorf(pApplication, "Failed to allocate and initialize application window.");
@@ -827,7 +902,7 @@ PRIVATE ak_window* ak_create_child_window(ak_application* pApplication, ak_windo
     }
 
 
-    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, ak_window_type_child, hWnd, extraDataSize, pExtraData);
+    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, pParent, ak_window_type_child, hWnd, extraDataSize, pExtraData);
     if (pWindow == NULL)
     {
         ak_errorf(pApplication, "Failed to allocate and initialize child window.");
@@ -863,7 +938,7 @@ PRIVATE ak_window* ak_create_dialog_window(ak_application* pApplication, ak_wind
     }
 
 
-    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, ak_window_type_dialog, hWnd, extraDataSize, pExtraData);
+    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, pParent, ak_window_type_dialog, hWnd, extraDataSize, pExtraData);
     if (pWindow == NULL)
     {
         ak_errorf(pApplication, "Failed to allocate and initialize dialog window.");
@@ -899,7 +974,7 @@ PRIVATE ak_window* ak_create_popup_window(ak_application* pApplication, ak_windo
     }
 
 
-    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, ak_window_type_popup, hWnd, extraDataSize, pExtraData);
+    ak_window* pWindow = ak_alloc_and_init_window_win32(pApplication, pParent, ak_window_type_popup, hWnd, extraDataSize, pExtraData);
     if (pWindow == NULL)
     {
         ak_errorf(pApplication, "Failed to allocate and initialize popup window.");
@@ -989,13 +1064,7 @@ ak_window* ak_get_parent_window(ak_window* pWindow)
         return NULL;
     }
 
-    HWND hParentWnd = GetParent(pWindow->hWnd);
-    if (hParentWnd != NULL)
-    {
-        return (ak_window*)GetWindowLongPtr(hParentWnd, 0);
-    }
-
-    return NULL;
+    return pWindow->pParent;
 }
 
 size_t ak_get_window_extra_data_size(ak_window* pWindow)
@@ -1542,28 +1611,41 @@ void ak_connect_gui_to_window_system(easygui_context* pGUI)
 }
 
 
-void ak_set_next_window(ak_window* pWindow, ak_window* pNextWindow)
+ak_window* ak_get_first_child_window(ak_window* pWindow)
 {
     assert(pWindow != NULL);
-    pWindow->pNextWindow = pNextWindow;
+    return pWindow->pFirstChild;
 }
 
-ak_window* ak_get_next_window(ak_window* pWindow)
+ak_window* ak_get_last_child_window(ak_window* pWindow)
 {
     assert(pWindow != NULL);
-    return pWindow->pNextWindow;
+    return pWindow->pLastChild;
 }
 
-void ak_set_prev_window(ak_window* pWindow, ak_window* pPrevWindow)
+
+void ak_set_next_sibling_window(ak_window* pWindow, ak_window* pNextWindow)
 {
     assert(pWindow != NULL);
-    pWindow->pPrevWindow = pPrevWindow;
+    pWindow->pNextSibling = pNextWindow;
 }
 
-ak_window* ak_get_prev_window(ak_window* pWindow)
+ak_window* ak_get_next_sibling_window(ak_window* pWindow)
 {
     assert(pWindow != NULL);
-    return pWindow->pPrevWindow;
+    return pWindow->pNextSibling;
+}
+
+void ak_set_prev_sibling_window(ak_window* pWindow, ak_window* pPrevWindow)
+{
+    assert(pWindow != NULL);
+    pWindow->pPrevSibling = pPrevWindow;
+}
+
+ak_window* ak_get_prev_sibling_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+    return pWindow->pPrevSibling;
 }
 
 

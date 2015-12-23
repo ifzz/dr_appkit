@@ -14,9 +14,18 @@ typedef struct ak_window ak_window;
 /// Retrieves the first window in the main linked list.
 ak_window* ak_get_application_first_window(ak_application* pApplication);
 
+/// Retrieves the next window of every created window.
+ak_window* ak_get_application_next_window(ak_application* pApplication, ak_window* pWindow);
+
 
 /// Called by the main application loop when a window want's to close.
 void ak_application_on_window_wants_to_close(ak_window* pWindow);
+
+/// Called when a window is being deleted.
+///
+/// @remarks
+///     This will delete every tool and panel tied to the window.
+void ak_application_on_delete_window(ak_window* pWindow);
 
 /// Called when a window is about to be hidden.
 ///
@@ -59,13 +68,13 @@ void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMo
 ///
 /// @remarks
 ///     This is called by the create_*_window() family of functions.
-void ak_application_track_window(ak_window* pWindow);
+void ak_application_track_top_level_window(ak_window* pWindow);
 
 /// Untracks the given window.
 ///
 /// @remarks
 ///     This is called by delete_window().
-void ak_application_untrack_window(ak_window* pWindow);
+void ak_application_untrack_top_level_window(ak_window* pWindow);
 
 
 /// Hides every popup window that is not an ancestor of the given window.

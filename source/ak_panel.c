@@ -814,6 +814,16 @@ void ak_panel_unsplit(easygui_element* pPanel)
     pPanelData->splitPos  = 0;
 }
 
+ak_panel_split_axis ak_panel_get_split_axis(easygui_element* pPanel)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return ak_panel_split_axis_none;
+    }
+
+    return pPanelData->splitAxis;
+}
+
 easygui_element* ak_panel_get_split_panel_1(easygui_element* pPanel)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
@@ -931,7 +941,7 @@ PRIVATE void ak_panel_deactivate_tool_no_redraw(easygui_element* pPanel)
 bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
-    if (pPanelData != NULL) {
+    if (pPanelData == NULL) {
         return false;
     }
 
@@ -961,7 +971,7 @@ bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool)
 void ak_panel_deactivate_tool(easygui_element* pPanel)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
-    if (pPanelData != NULL) {
+    if (pPanelData == NULL) {
         return;
     }
 
@@ -970,6 +980,39 @@ void ak_panel_deactivate_tool(easygui_element* pPanel)
         ak_panel_deactivate_tool_no_redraw(pPanel);
         ak_panel_mark_tab_bar_as_dirty(pPanel);
     }
+}
+
+
+easygui_element* ak_panel_get_first_tool(easygui_element* pPanel)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return NULL;
+    }
+
+    if (pPanelData->pToolContainer == NULL) {
+        return NULL;
+    }
+
+    return pPanelData->pToolContainer->pFirstChild;
+}
+
+easygui_element* ak_panel_get_next_tool(easygui_element* pPanel, easygui_element* pTool)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData != NULL) {
+        return NULL;
+    }
+
+    if (pTool == NULL) {
+        return NULL;
+    }
+
+    if (pTool->pParent != pPanelData->pToolContainer) {
+        return NULL;
+    }
+
+    return pTool->pNextSibling;
 }
 
 

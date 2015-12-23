@@ -81,6 +81,9 @@ PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig);
 /// Applies the given layout object to the given application object.
 PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, easygui_element* pElement);
 
+/// Recursively deletes the tools that are within the given panel.
+PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, easygui_element* pPanel);
+
 
 ak_application* ak_create_application(const char* pName, size_t extraDataSize, const void* pExtraData)
 {
@@ -206,6 +209,10 @@ void ak_delete_application(ak_application* pApplication)
         return;
     }
 
+    // Windows need to be deleted.
+    ak_delete_all_application_windows(pApplication);
+
+
     // GUI.
     ak_delete_gui_image_manager(pApplication->pGUIImageManager);
     easygui_delete_context(pApplication->pGUI);
@@ -259,6 +266,27 @@ void ak_post_quit_message(ak_application* pApplication, int exitCode)
 #ifdef AK_USE_GTK
     ak_gtk_post_quit_message(exitCode);
 #endif
+}
+
+
+void ak_delete_all_application_windows(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    // All tools need to be deleted first before any windows.
+    for (ak_window* pWindow = ak_get_application_first_window(pApplication); pWindow != NULL; pWindow = ak_get_application_next_window(pApplication, pWindow))
+    {
+        ak_delete_tools_recursive(ak_get_window_application(pApplication->pFirstWindow), ak_get_window_panel(pApplication->pFirstWindow));
+    }
+
+
+    while (pApplication->pFirstWindow != NULL)
+    {
+        // Delete the window after the tools.
+        ak_delete_window(pApplication->pFirstWindow);
+    }
 }
 
 
@@ -532,7 +560,7 @@ ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName
         return NULL;
     }
 
-    for (ak_window* pWindow = pApplication->pFirstWindow; pWindow != NULL; pWindow = ak_get_next_window(pWindow))
+    for (ak_window* pWindow = pApplication->pFirstWindow; pWindow != NULL; pWindow = ak_get_next_sibling_window(pWindow))
     {
         if (strcmp(ak_get_window_name(pWindow), pName) == 0) {
             return pWindow;
@@ -550,7 +578,7 @@ easygui_element* ak_find_panel_by_name(ak_application* pApplication, const char*
     }
 
     // We need to search each window.
-    for (ak_window* pWindow = pApplication->pFirstWindow; pWindow != NULL; pWindow = ak_get_next_window(pWindow))
+    for (ak_window* pWindow = pApplication->pFirstWindow; pWindow != NULL; pWindow = ak_get_next_sibling_window(pWindow))
     {
         easygui_element* pResult = ak_panel_find_by_name_recursive(ak_get_window_panel(pWindow), pPanelName);
         if (pResult != NULL) {
@@ -616,6 +644,22 @@ easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplicat
     }
 
     return NULL;
+}
+
+void ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool)
+{
+    if (pApplication == NULL || pTool == NULL) {
+        return;
+    }
+
+    // First check for built-in tools.
+
+
+    // At this point we know the tool type is not a built-in so we need to give the host application a chance to
+    // delete it in case it's a custom tool type.
+    if (pApplication->onDeleteTool) {
+        pApplication->onDeleteTool(pTool);
+    }
 }
 
 
@@ -847,10 +891,28 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
         }
     }
 
-
-    
-
     return true;
+}
+
+PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, easygui_element* pPanel)
+{
+    if (pApplication == NULL || pPanel == NULL) {
+        return;
+    }
+
+    // If it's split, we call this recursively.
+    if (ak_panel_get_split_axis(pPanel) != ak_panel_split_axis_none)
+    {
+        ak_delete_tools_recursive(pApplication, ak_panel_get_split_panel_1(pPanel));
+        ak_delete_tools_recursive(pApplication, ak_panel_get_split_panel_2(pPanel));
+    }
+    else
+    {
+        for (easygui_element* pTool = ak_panel_get_first_tool(pPanel); pTool != NULL; pTool = ak_panel_get_next_tool(pPanel, pTool))
+        {
+            ak_application_delete_tool(pApplication, pTool);
+        }
+    }
 }
 
 
@@ -869,6 +931,39 @@ ak_window* ak_get_application_first_window(ak_application* pApplication)
     return pApplication->pFirstWindow;
 }
 
+ak_window* ak_get_application_next_non_child_window(ak_application* pApplication, ak_window* pWindow)
+{
+    if (pApplication == NULL || pWindow == NULL) {
+        return NULL;
+    }
+
+    ak_window* pNextSibling = ak_get_next_sibling_window(pWindow);
+    if (pNextSibling != NULL) {
+        return pNextSibling;
+    }
+
+    return ak_get_application_next_non_child_window(pApplication, ak_get_parent_window(pWindow));
+}
+
+ak_window* ak_get_application_next_window(ak_application* pApplication, ak_window* pWindow)
+{
+    assert(pApplication != NULL);
+    assert(pWindow != NULL);
+
+    ak_window* pFirstChild = ak_get_first_child_window(pWindow);
+    if (pFirstChild != NULL) {
+        return pFirstChild;
+    }
+
+    return ak_get_application_next_non_child_window(pApplication, pWindow);
+}
+
+void ak_application_on_delete_window(ak_window* pWindow)
+{
+    // Tools need to be deleted.
+    //ak_delete_tools_recursive(ak_get_window_application(pWindow), ak_get_window_panel(pWindow));
+}
+
 void ak_application_on_window_wants_to_close(ak_window* pWindow)
 {
     assert(pWindow != NULL);
@@ -883,8 +978,10 @@ void ak_application_on_window_wants_to_close(ak_window* pWindow)
     //
     // Later on what we'll want to do is just pass this off the program by just calling a callback function and letting it handle things however
     // it would like.
-    if (ak_get_next_window(pWindow) == NULL)
+    if (ak_get_next_sibling_window(pWindow) == NULL)
     {
+        ak_delete_all_application_windows(pApplication);
+
         ak_post_quit_message(pApplication, 0);
     }
     else
@@ -983,7 +1080,7 @@ void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMo
 }
 
 
-void ak_application_track_window(ak_window* pWindow)
+void ak_application_track_top_level_window(ak_window* pWindow)
 {
     assert(pWindow != NULL);
 
@@ -992,14 +1089,14 @@ void ak_application_track_window(ak_window* pWindow)
 
     if (pApplication->pFirstWindow != NULL)
     {
-        ak_set_prev_window(pApplication->pFirstWindow, pWindow);
-        ak_set_next_window(pWindow, pApplication->pFirstWindow);
+        ak_set_prev_sibling_window(pApplication->pFirstWindow, pWindow);
+        ak_set_next_sibling_window(pWindow, pApplication->pFirstWindow);
     }
 
     pApplication->pFirstWindow = pWindow;
 }
 
-void ak_application_untrack_window(ak_window* pWindow)
+void ak_application_untrack_top_level_window(ak_window* pWindow)
 {
     assert(pWindow != NULL);
 
@@ -1009,19 +1106,19 @@ void ak_application_untrack_window(ak_window* pWindow)
     if (pApplication->pFirstWindow != NULL)
     {
         if (pApplication->pFirstWindow == pWindow) {
-            pApplication->pFirstWindow = ak_get_next_window(pWindow);
+            pApplication->pFirstWindow = ak_get_next_sibling_window(pWindow);
         }
 
-        if (ak_get_next_window(pWindow) != NULL) {
-            ak_set_prev_window(ak_get_next_window(pWindow), ak_get_prev_window(pWindow));
+        if (ak_get_next_sibling_window(pWindow) != NULL) {
+            ak_set_prev_sibling_window(ak_get_next_sibling_window(pWindow), ak_get_prev_sibling_window(pWindow));
         }
 
-        if (ak_get_prev_window(pWindow) != NULL) {
-            ak_set_next_window(ak_get_prev_window(pWindow), ak_get_next_window(pWindow));
+        if (ak_get_prev_sibling_window(pWindow) != NULL) {
+            ak_set_next_sibling_window(ak_get_prev_sibling_window(pWindow), ak_get_next_sibling_window(pWindow));
         }
 
-        ak_set_next_window(pWindow, NULL);
-        ak_set_prev_window(pWindow, NULL);
+        ak_set_next_sibling_window(pWindow, NULL);
+        ak_set_prev_sibling_window(pWindow, NULL);
     }
 }
 
@@ -1033,7 +1130,7 @@ void ak_application_hide_non_ancestor_popups(ak_window* pWindow)
     ak_application* pApplication = ak_get_window_application(pWindow);
     assert(pApplication != NULL);
 
-    for (ak_window* pOtherWindow = pApplication->pFirstWindow; pOtherWindow != NULL; pOtherWindow = ak_get_next_window(pOtherWindow))
+    for (ak_window* pOtherWindow = pApplication->pFirstWindow; pOtherWindow != NULL; pOtherWindow = ak_get_next_sibling_window(pOtherWindow))
     {
         if (pOtherWindow != pWindow && ak_get_window_type(pOtherWindow) == ak_window_type_popup && !ak_is_window_ancestor(pOtherWindow, pWindow))
         {
