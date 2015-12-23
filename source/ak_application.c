@@ -543,6 +543,25 @@ ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName
 }
 
 
+easygui_element* ak_find_panel_by_name(ak_application* pApplication, const char* pPanelName)
+{
+    if (pApplication == NULL || pPanelName == NULL) {
+        return NULL;
+    }
+
+    // We need to search each window.
+    for (ak_window* pWindow = pApplication->pFirstWindow; pWindow != NULL; pWindow = ak_get_next_window(pWindow))
+    {
+        easygui_element* pResult = ak_panel_find_by_name_recursive(ak_get_window_panel(pWindow), pPanelName);
+        if (pResult != NULL) {
+            return pResult;
+        }
+    }
+
+    return NULL;
+}
+
+
 void ak_set_on_create_tool(ak_application* pApplication, ak_create_tool_proc proc)
 {
     if (pApplication == NULL) {
@@ -772,6 +791,8 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
         if (!ak_parse_panel_layout_attributes(pLayout->attributes, &attr)) {
             return false;
         }
+
+        ak_panel_set_name(pWorkingPanel, attr.name);
 
         if (attr.splitAxis == ak_panel_split_axis_none)
         {

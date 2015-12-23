@@ -4,6 +4,7 @@
 #include "../include/easy_appkit/ak_application.h"
 #include "../include/easy_appkit/ak_theme.h"
 #include "../include/easy_appkit/ak_tool.h"
+#include "../include/easy_appkit/ak_build_config.h"
 #include <easy_gui/easy_gui.h>
 #include <easy_util/easy_util.h>
 #include <assert.h>
@@ -12,6 +13,11 @@ typedef struct
 {
     /// A pointer to the main application.
     ak_application* pApplication;
+
+
+    /// The name of the panel.
+    char name[AK_MAX_PANEL_NAME_LENGTH];
+
 
     /// The axis the two child panels are split along, if any. When this is not ak_panel_split_axis_none, it is assumed
     /// the panel has two child elements, both of which should be panels.
@@ -627,6 +633,7 @@ easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* 
         assert(pPanelData != NULL);
 
         pPanelData->pApplication       = pApplication;
+        pPanelData->name[0]            = '\0';
         pPanelData->splitAxis          = ak_panel_split_axis_none;
         pPanelData->splitPos           = 0;
         pPanelData->pToolContainer     = NULL;
@@ -682,6 +689,66 @@ void* ak_panel_get_extra_data(easygui_element* pPanel)
     }
 
     return pPanelData->pExtraData;
+}
+
+
+void ak_panel_set_name(easygui_element* pPanel, const char* name)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return;
+    }
+
+    if (name == NULL) {
+        pPanelData->name[0] = '\0';
+    } else {
+        strcpy_s(pPanelData->name, sizeof(pPanelData->name), name);
+    }
+}
+
+const char* ak_panel_get_name(easygui_element* pPanel)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return NULL;
+    }
+
+    return pPanelData->name;
+}
+
+easygui_element* ak_panel_find_by_name_recursive(easygui_element* pPanel, const char* name)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return NULL;
+    }
+
+    if (name == NULL) {
+        return NULL;
+    }
+
+
+    if (strcmp(pPanelData->name, name) == 0) {
+        return pPanel;
+    }
+
+    // If it's a split panel we need to check those. If it's not split, we just return NULL;
+    if (pPanelData->splitAxis != ak_panel_split_axis_none)
+    {
+        easygui_element* pResult = NULL;
+        
+        pResult = ak_panel_find_by_name_recursive(ak_panel_get_split_panel_1(pPanel), name);
+        if (pResult != NULL) {
+            return pResult;
+        }
+
+        pResult = ak_panel_find_by_name_recursive(ak_panel_get_split_panel_2(pPanel), name);
+        if (pResult != NULL) {
+            return pResult;
+        }
+    }
+
+    return NULL;
 }
 
 

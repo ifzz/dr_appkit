@@ -228,35 +228,50 @@ bool ak_parse_panel_layout_attributes(const char* attributesStr, ak_panel_layout
         return false;
     }
 
+    char name[AK_MAX_PANEL_NAME_LENGTH];
+    name[0] = '\0';
+
     ak_panel_split_axis splitAxis = ak_panel_split_axis_none;
     float splitPos = 0;
 
 
     // The first token is the split axis.
-    char splitAxisStr[8];
-    attributesStr = easyutil_next_token(attributesStr, splitAxisStr, sizeof(splitAxisStr));
+    char splitAxisOrNameStr[AK_MAX_PANEL_NAME_LENGTH];
+    attributesStr = easyutil_next_token(attributesStr, splitAxisOrNameStr, sizeof(splitAxisOrNameStr));
     if (attributesStr != NULL)
     {
-        if (strcmp(splitAxisStr, "hsplit") == 0) {
+        if (strcmp(splitAxisOrNameStr, "hsplit") == 0) {
             splitAxis = ak_panel_split_axis_horizontal;
-        } else if (strcmp(splitAxisStr, "vsplit") == 0) {
+        } else if (strcmp(splitAxisOrNameStr, "vsplit") == 0) {
             splitAxis = ak_panel_split_axis_vertical;
         } else {
-            return false;
+            // It's not "hsplit" or "vsplit", so assume it's the name.
+            strcpy_s(name, sizeof(name), splitAxisOrNameStr);
         }
 
 
-        // The second token 
-        char splitPosStr[8];
-        attributesStr = easyutil_next_token(attributesStr, splitPosStr, sizeof(splitPosStr));
-        if (attributesStr == NULL) {
-            return false;
-        }
+        // The second token is the position of the split.
+        if (splitAxis != ak_panel_split_axis_none)
+        {
+            char splitPosStr[8];
+            attributesStr = easyutil_next_token(attributesStr, splitPosStr, sizeof(splitPosStr));
+            if (attributesStr == NULL) {
+                return false;
+            }
 
-        splitPos = (float)atof(splitPosStr);
+            splitPos = (float)atof(splitPosStr);
+
+
+            // The third argument on a split panel will be the name which is optional.
+            attributesStr = easyutil_next_token(attributesStr, splitAxisOrNameStr, sizeof(splitAxisOrNameStr));
+            if (attributesStr != NULL) {
+                strcpy_s(name, sizeof(name), splitAxisOrNameStr);
+            }
+        }
     }
 
 
+    strcpy_s(pAttributesOut->name, sizeof(pAttributesOut->name), name);
     pAttributesOut->splitAxis = splitAxis;
     pAttributesOut->splitPos  = splitPos;
 
