@@ -31,6 +31,10 @@ struct ak_window
     bool isCursorOver;
 
 
+    /// Keeps track of whether or not the window is marked as deleted.
+    bool isMarkedAsDeleted;
+
+
 
     /// A pointer to the application that owns this window.
     ak_application* pApplication;
@@ -306,6 +310,7 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     pWindow->popupRelativePosX     = 0;
     pWindow->popupRelativePosY     = 0;
     pWindow->isCursorOver          = false;
+    pWindow->isMarkedAsDeleted     = false;
 
     pWindow->pApplication          = pApplication;
     pWindow->type                  = type;
@@ -446,7 +451,24 @@ PRIVATE void ak_win32_track_mouse_leave_event(HWND hWnd)
 LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     ak_window* pWindow = (ak_window*)GetWindowLongPtrA(hWnd, 0);
-    if (pWindow != NULL)
+    if (pWindow == NULL) {
+        return DefWindowProcA(hWnd, msg, wParam, lParam);
+    }
+
+    if (pWindow->isMarkedAsDeleted)
+    {
+        switch (msg)
+        {
+            case WM_DESTROY:
+            {
+                ak_uninit_and_free_window_win32(pWindow);
+                break;
+            }
+
+            default: break;
+        }
+    }
+    else
     {
         switch (msg)
         {
@@ -1034,6 +1056,9 @@ void ak_delete_window(ak_window* pWindow)
     if (pWindow == NULL) {
         return;
     }
+
+    assert(pWindow->isMarkedAsDeleted == false);        // <-- If you've hit this assert it means you're trying to delete a window multiple times.
+    pWindow->isMarkedAsDeleted = true;
 
     // We just destroy the HWND. This will post a WM_DESTROY message which is where we delete our own window data structure.
     DestroyWindow(pWindow->hWnd);
