@@ -1089,6 +1089,8 @@ void ak_mi_set_text(ak_menu_item* pMI, const char* text)
     } else {
         pMI->text[0] = '\0';
     }
+
+    ak_menu_resize_by_items(pMI->pMenuWindow);
 }
 
 const char* ak_mi_get_text(ak_menu_item* pMI)
@@ -1111,6 +1113,8 @@ void ak_mi_set_shortcut_text(ak_menu_item* pMI, const char* text)
     } else {
         pMI->shortcutText[0] = '\0';
     }
+
+    ak_menu_resize_by_items(pMI->pMenuWindow);
 }
 
 const char* ak_mi_get_shortcut_text(ak_menu_item* pMI)
