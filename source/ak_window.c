@@ -1405,6 +1405,54 @@ bool ak_is_cursor_over_window(ak_window* pWindow)
 }
 
 
+typedef enum MONITOR_DPI_TYPE {
+    MDT_EFFECTIVE_DPI = 0,
+    MDT_ANGULAR_DPI = 1,
+    MDT_RAW_DPI = 2,
+    MDT_DEFAULT = MDT_EFFECTIVE_DPI
+} MONITOR_DPI_TYPE;
+
+typedef HRESULT (__stdcall * PFN_GetDpiForMonitor) (HMONITOR hmonitor, MONITOR_DPI_TYPE dpiType, UINT *dpiX, UINT *dpiY);
+
+void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut)
+{
+    // If multi-monitor DPI awareness is not supported we will need to fall back to system DPI.
+    HMODULE hSHCoreDLL = LoadLibraryW(L"shcore.dll");
+    if (hSHCoreDLL == NULL)
+    {
+        win32_get_system_dpi(pDPIXOut, pDPIYOut);
+        return;
+    }
+
+    PFN_GetDpiForMonitor _GetDpiForMonitor = (PFN_GetDpiForMonitor)GetProcAddress(hSHCoreDLL, "GetDpiForMonitor");
+    if (_GetDpiForMonitor == NULL)
+    {
+        win32_get_system_dpi(pDPIXOut, pDPIYOut);
+        FreeLibrary(hSHCoreDLL);
+        return;
+    }
+
+
+    UINT dpiX;
+    UINT dpiY;
+    if (_GetDpiForMonitor(MonitorFromWindow(pWindow->hWnd, MONITOR_DEFAULTTOPRIMARY), MDT_EFFECTIVE_DPI, &dpiX, &dpiY) == S_OK)
+    {
+        if (pDPIXOut) {
+            *pDPIXOut = (int)dpiX;
+        }
+        if (pDPIYOut) {
+            *pDPIYOut = (int)dpiY;
+        }
+    }
+    else
+    {
+        win32_get_system_dpi(pDPIXOut, pDPIYOut);
+    }
+
+    FreeLibrary(hSHCoreDLL);
+}
+
+
 void ak_window_set_on_hide(ak_window* pWindow, ak_window_on_hide_proc proc)
 {
     if (pWindow == NULL) {
