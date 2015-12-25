@@ -1354,7 +1354,7 @@ ak_window* ak_get_panel_window(easygui_element* pPanel)
 {
     assert(pPanel != NULL);
     assert(pPanel->pParent == NULL);                                                // Must be a top-level element.
-    assert(ak_panel_get_extra_data_size(pPanel) == sizeof(element_user_data));       // A loose check to help ensure we're working with the right kind of panel. 
+    assert(ak_panel_get_extra_data_size(pPanel) == sizeof(element_user_data));      // A loose check to help ensure we're working with the right kind of panel. 
 
     element_user_data* pWindowData = ak_panel_get_extra_data(pPanel);
     assert(pWindowData != NULL);
