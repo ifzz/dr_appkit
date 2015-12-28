@@ -100,7 +100,7 @@ struct ak_menu
     /// The position to draw the icon on the x axis.
     float iconDrawPosX;
 
-    /// The position to draw text on the x axis.
+    /// The position to draw the text on the x axis.
     float textDrawPosX;
 
     /// The position to draw the shortcut text on the x axis.
@@ -808,15 +808,24 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
         // Space between the icon and the main text.
         easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->iconDrawPosX + pMenu->iconSize, posY + pMenu->itemPadding, posX + pMenu->textDrawPosX, posY + height - padding), bgcolor, pPaintData);
 
+
         // Text.
         float textWidth = 0;
         float textHeight = 0;
         easygui_measure_string(pMenu->pFont, pMI->text, strlen(pMI->text), scaleX, scaleY, &textWidth, &textHeight);
-        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->text, (int)strlen(pMI->text), posX + pMenu->textDrawPosX, posY + pMenu->itemPadding, pMenu->textColor, bgcolor, pPaintData);
+
+        float textPosX = posX + pMenu->textDrawPosX;
+        float textPosY = posY + ((height - textHeight) / 2);
+        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->text, (int)strlen(pMI->text), textPosX, textPosY, pMenu->textColor, bgcolor, pPaintData);
 
         // The gap between the bottom padding and the text, if any.
-        if (posY + padding + textHeight < posY + height - padding) {
-            easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->textDrawPosX, posY + padding + textHeight, posX + pMenu->textDrawPosX + textWidth, posY + height - padding), bgcolor, pPaintData);
+        if (textPosY + textHeight < posY + height - padding) {
+            easygui_draw_rect(pMenuElement, easygui_make_rect(textPosX, textPosY + textHeight, textPosX + textWidth, posY + height - padding), bgcolor, pPaintData);
+        }
+
+        // The gap between the top padding and the text, if any.
+        if (textPosY > posY + padding) {
+            easygui_draw_rect(pMenuElement, easygui_make_rect(textPosX, posY + padding, textPosX + textWidth, textPosY), bgcolor, pPaintData);
         }
 
 
@@ -828,11 +837,19 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
         float shortcutTextWidth = 0;
         float shortcutTextHeight = 0;
         easygui_measure_string(pMenu->pFont, pMI->shortcutText, strlen(pMI->shortcutText), scaleX, scaleY, &shortcutTextWidth, &shortcutTextHeight);
-        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->shortcutText, (int)strlen(pMI->shortcutText), posX + pMenu->shortcutTextDrawPosX, posY + pMenu->itemPadding, pMenu->textColor, bgcolor, pPaintData);
+
+        float shortcutTextPosX = posX + pMenu->shortcutTextDrawPosX;
+        float shortcutTextPosY = posY + ((height - shortcutTextHeight) / 2);
+        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->shortcutText, (int)strlen(pMI->shortcutText), shortcutTextPosX, shortcutTextPosY, pMenu->textColor, bgcolor, pPaintData);
 
         // The gap between the bottom padding and the text, if any.
-        if (posY + padding + shortcutTextHeight < posY + height - padding) {
-            easygui_draw_rect(pMenuElement, easygui_make_rect(posX + pMenu->shortcutTextDrawPosX, posY + padding + shortcutTextHeight, posX + pMenu->shortcutTextDrawPosX + shortcutTextWidth, posY + height - padding), bgcolor, pPaintData);
+        if (shortcutTextPosY + shortcutTextHeight < posY + height - padding) {
+            easygui_draw_rect(pMenuElement, easygui_make_rect(shortcutTextPosX, shortcutTextPosY + shortcutTextHeight, shortcutTextPosX + shortcutTextWidth, posY + height - padding), bgcolor, pPaintData);
+        }
+
+        // The gap between the top padding and the text, if any.
+        if (shortcutTextPosY > posY + padding) {
+            easygui_draw_rect(pMenuElement, easygui_make_rect(shortcutTextPosX, posY + padding, shortcutTextPosX + shortcutTextWidth, shortcutTextPosY), bgcolor, pPaintData);
         }
 
 
@@ -862,7 +879,7 @@ PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow)
         return;
     }
 
-    float maxTextWidth = 0;
+    float maxTextWidth  = 0;
     float maxShortcutTextWidth = 0;
     if (pMenu->onItemMeasure && pMenu->onItemPaint)
     {
@@ -882,7 +899,7 @@ PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow)
                 float shortcutTextHeight = 0;
                 easygui_measure_string(pMenu->pFont, pMI->shortcutText, strlen(pMI->shortcutText), innerScaleX, innerScaleY, &shortcutTextWidth, &shortcutTextHeight);
 
-                maxTextWidth = easy_max(maxTextWidth, textWidth);
+                maxTextWidth  = easy_max(maxTextWidth, textWidth);
                 maxShortcutTextWidth = easy_max(maxShortcutTextWidth, shortcutTextWidth);
             }
         }
