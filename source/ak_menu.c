@@ -833,7 +833,7 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
         easygui_measure_string(pMenu->pFont, pMI->text, strlen(pMI->text), scaleX, scaleY, &textWidth, &textHeight);
 
         float textPosX = posX + pMenu->textDrawPosX;
-        float textPosY = posY + ((height - textHeight) / 2);
+        float textPosY = posY + ((height - textHeight) / 2) - 1;
         easygui_draw_text(pMenuElement, pMenu->pFont, pMI->text, (int)strlen(pMI->text), textPosX, textPosY, textColor, bgcolor, pPaintData);
 
         // The gap between the bottom padding and the text, if any.
@@ -857,7 +857,7 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
         easygui_measure_string(pMenu->pFont, pMI->shortcutText, strlen(pMI->shortcutText), scaleX, scaleY, &shortcutTextWidth, &shortcutTextHeight);
 
         float shortcutTextPosX = posX + pMenu->shortcutTextDrawPosX;
-        float shortcutTextPosY = posY + ((height - shortcutTextHeight) / 2);
+        float shortcutTextPosY = posY + ((height - shortcutTextHeight) / 2) - 1;
         easygui_draw_text(pMenuElement, pMenu->pFont, pMI->shortcutText, (int)strlen(pMI->shortcutText), shortcutTextPosX, shortcutTextPosY, textColor, bgcolor, pPaintData);
 
         // The gap between the bottom padding and the text, if any.
