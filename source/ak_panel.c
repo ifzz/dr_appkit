@@ -289,6 +289,12 @@ PRIVATE void ak_panel_iterate_tool_tabs(easygui_element* pPanel, ak_panel_tab_it
     ak_theme* pTheme = ak_get_application_theme(pApplication);
     assert(pTheme != NULL);
 
+    // No need to do anything if we don't have any tools.
+    if (pPanelData->pToolContainer == NULL) {
+        return;
+    }
+
+
     float innerScaleX;
     float innerScaleY;
     easygui_get_inner_scale(pPanel, &innerScaleX, &innerScaleY);
