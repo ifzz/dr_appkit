@@ -206,11 +206,13 @@ PRIVATE easygui_element* ak_create_window_panel(ak_application* pApplication, ak
     float dpiScaleY;
     ak_get_window_dpi_scale(pWindow, &dpiScaleX, &dpiScaleY);
 
+#if 0
     // TESTING. DELETE THIS BLOCK LATER.
     {
-        dpiScaleX = 1;
-        dpiScaleY = 1;
+        dpiScaleX = 2;
+        dpiScaleY = 2;
     }
+#endif
     
     easygui_set_inner_scale(pElement, dpiScaleX, dpiScaleY);
 

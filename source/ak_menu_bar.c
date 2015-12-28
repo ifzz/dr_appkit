@@ -519,7 +519,7 @@ void ak_mb_on_paint(easygui_element* pMBElement, easygui_rect relativeClippingRe
     }
 
     // The rest of the background needs to be drawn using the default background color.
-    easygui_draw_rect_with_outline(pMBElement, easygui_make_rect(runningPosX, 0, easygui_get_width(pMBElement), easygui_get_height(pMBElement)), pMB->backgroundColor, 1, easygui_rgb(255, 128, 128), pPaintData);
+    easygui_draw_rect(pMBElement, easygui_make_rect(runningPosX, 0, easygui_get_width(pMBElement), easygui_get_height(pMBElement)), pMB->backgroundColor, pPaintData);
 }
 
 
