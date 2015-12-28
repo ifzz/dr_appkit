@@ -295,7 +295,9 @@ PRIVATE void ak_panel_iterate_tool_tabs(easygui_element* pPanel, ak_panel_tab_it
 
 
     easygui_font* pFont = pTheme->pUIFont;
-    const easygui_font_metrics fontMetrics = pTheme->uiFontMetrics;
+    
+    easygui_font_metrics fontMetrics;
+    easygui_get_font_metrics(pFont, 1, 1, &fontMetrics);
 
     float paddingLeft   = pTheme->tabPaddingLeft;
     float paddingTop    = pTheme->tabPaddingTop;
@@ -505,11 +507,14 @@ PRIVATE void ak_panel_refresh_tabs(easygui_element* pPanel)
     bool didTabBarChange = false;
     ak_panel_refresh_tool_container_layout(pPanel, &didTabBarChange);
 
+    easygui_font_metrics fontMetrics;
+    easygui_get_font_metrics(pTheme->pUIFont, 1, 1, &fontMetrics);
+
 
     // If we are showing the tab bar we will need to redo the hit-test and redraw it.
     if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_TOOL_TABS) != 0)
     {
-        pPanelData->tabBarSize = pTheme->tabPaddingTop + pTheme->tabPaddingBottom + pTheme->uiFontMetrics.lineHeight;
+        pPanelData->tabBarSize = pTheme->tabPaddingTop + pTheme->tabPaddingBottom + fontMetrics.lineHeight;
 
         // The tab-bar hit test needs to be refreshed so things like mouse-over styling can be updated.
         easygui_element* pPrevHoveredElement = pPanelData->pHoveredTool;
@@ -1012,7 +1017,7 @@ easygui_element* ak_panel_get_first_tool(easygui_element* pPanel)
 easygui_element* ak_panel_get_next_tool(easygui_element* pPanel, easygui_element* pTool)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
-    if (pPanelData != NULL) {
+    if (pPanelData == NULL) {
         return NULL;
     }
 
@@ -1031,7 +1036,7 @@ easygui_element* ak_panel_get_next_tool(easygui_element* pPanel, easygui_element
 void ak_panel_set_tab_options(easygui_element* pPanel, unsigned int options)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
-    if (pPanelData != NULL) {
+    if (pPanelData == NULL) {
         return;
     }
 

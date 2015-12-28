@@ -73,9 +73,6 @@ struct ak_theme
     /// The color to use for the normal UI elements, but not text editor.
     easygui_color uiFontColor;
 
-    /// The metrics of the UI font.
-    easygui_font_metrics uiFontMetrics;
-
     /// The metrics of the cross glyph.
     easygui_glyph_metrics uiCrossMetrics;
 

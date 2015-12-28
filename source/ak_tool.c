@@ -107,7 +107,7 @@ void ak_set_tool_title(easygui_element* pTool, const char* title)
         return;
     }
 
-    strcpy_s(pToolData->title, sizeof(pToolData->title), title);
+    strcpy_s(pToolData->title, sizeof(pToolData->title), (title != NULL) ? title : "");
 }
 
 const char* ak_get_tool_title(easygui_element* pTool)

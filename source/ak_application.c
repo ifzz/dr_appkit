@@ -46,6 +46,9 @@ struct ak_application
     ak_theme theme;
 
 
+    /// The function to call just before the application enters into it's main loop.
+    ak_run_proc onRun;
+
     /// A pointer to the function to call when the default layout config is required. This will be called when
     /// layout config file could not be found.
     ak_layout_config_proc onGetDefaultConfig;
@@ -173,8 +176,10 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
 
         // Callbacks.
+        pApplication->onRun              = NULL;
         pApplication->onGetDefaultConfig = NULL;
         pApplication->onCreateTool       = NULL;
+        pApplication->onDeleteTool       = NULL;
 
 
         // Windows.
@@ -249,6 +254,12 @@ int ak_run_application(ak_application* pApplication)
     // and an error code will be returned.
     if (!ak_load_and_apply_config(pApplication)) {
         return -2;
+    }
+
+    // After we've loaded and applied the config, but before entering the main loop, we need to let the host application
+    // do some custom initialization which we'll achieve via a callback function.
+    if (pApplication->onRun) {
+        pApplication->onRun(pApplication);
     }
 
     // At this point the config should be loaded. Now we just enter the main loop.
@@ -589,6 +600,25 @@ easygui_element* ak_find_panel_by_name(ak_application* pApplication, const char*
     }
 
     return NULL;
+}
+
+
+void ak_set_on_run(ak_application* pApplication, ak_run_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onRun = proc;
+}
+
+ak_run_proc ak_get_on_run(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->onRun;
 }
 
 

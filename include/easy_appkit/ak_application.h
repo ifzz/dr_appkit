@@ -19,6 +19,7 @@ typedef struct easygui_element easygui_element;
 typedef struct easy2d_context easy2d_context;
 typedef struct easyvfs_context easyvfs_context;
 
+typedef bool             (* ak_run_proc)           (ak_application* pApplication);
 typedef void             (* ak_log_proc)           (ak_application* pApplication, const char* message);
 typedef const char*      (* ak_layout_config_proc) (ak_application* pApplication);
 typedef easygui_element* (* ak_create_tool_proc)   (ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
@@ -169,6 +170,15 @@ ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName
 ///     This will only find panels that were created by the layout config.
 easygui_element* ak_find_panel_by_name(ak_application* pApplication, const char* pPanelName);
 
+
+/// Sets the function to call just before the application enters into the main loop.
+///
+/// @remarks
+///     If the callback returns true, running will continue like normal. If it returns false, the application will be terminated.
+void ak_set_on_run(ak_application* pApplication, ak_run_proc proc);
+
+/// Retrieves the function to call just before the application enters into the main loop.
+ak_run_proc ak_get_on_run(ak_application* pApplication);
 
 /// Sets the callback function to call when a custom tool needs to be instantiated.
 ///
