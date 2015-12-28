@@ -2,6 +2,7 @@
 
 #include "../include/easy_appkit/ak_menu_bar.h"
 #include "../include/easy_appkit/ak_window.h"
+#include <math.h>
 #include <assert.h>
 
 typedef struct ak_menu_bar ak_menu_bar;
@@ -379,10 +380,10 @@ void ak_mb_show_item_menu(easygui_element* pMBElement, ak_menu_bar_item* pMBI)
         // TODO: If the menu would fall outside the container window, clamp the position such that it does not overhang.
         float menuPosX = itemPosX;
         float menuPosY = itemPosY;
-        ak_menu_set_position(pMBI->pMenu, (int)(menuPosX * scaleX), (int)(menuPosY * scaleY));
+        ak_menu_set_position(pMBI->pMenu, (int)roundf(menuPosX * scaleX), (int)roundf(menuPosY * scaleY));
 
         // The mask is based on the position of the menu relative to the position of the menu bar item.
-        ak_menu_set_border_mask(pMBI->pMenu, ak_menu_border_top, itemPosX - menuPosX + pMB->borderWidthExpanded, itemWidth - pMB->borderWidthExpanded*2);
+        ak_menu_set_border_mask(pMBI->pMenu, ak_menu_border_top, itemPosX - menuPosX + pMB->borderWidthExpanded, (itemWidth - pMB->borderWidthExpanded*2));
     }
 
     ak_menu_show(pMBI->pMenu);

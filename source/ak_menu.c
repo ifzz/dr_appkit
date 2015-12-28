@@ -3,6 +3,7 @@
 #include "../include/easy_appkit/ak_menu.h"
 #include "../include/easy_appkit/ak_window.h"
 #include <easy_util/easy_util.h>
+#include <math.h>
 #include <assert.h>
 
 typedef struct ak_menu ak_menu;
@@ -43,6 +44,9 @@ struct ak_menu
 
     /// The default color to use for menu item text.
     easygui_color textColor;
+
+    /// The color to use for the text of disabled menu items.
+    easygui_color textColorDisabled;
 
     /// The color of the separator.
     easygui_color separatorColor;
@@ -133,6 +137,9 @@ struct ak_menu_item
     /// The image to use as the menu item's icon.
     easygui_image* pIcon;
 
+    /// The tint color of the icon.
+    easygui_color iconTintColor;
+
     /// The main text of the item.
     char text[AK_MAX_MENU_ITEM_TEXT_LENGTH];
 
@@ -141,6 +148,10 @@ struct ak_menu_item
 
     /// Whether or not the item is a separator.
     bool isSeparator;
+
+    
+    /// Whether or not the item is disabled.
+    bool isDisabled;
 
 
     /// The function to call when an item is picked.
@@ -197,6 +208,7 @@ ak_window* ak_create_menu(ak_application* pApplication, ak_window* pParent, size
     pMenu->backgroundColorHovered  = easygui_rgb(96, 96, 96);
     pMenu->pFont                   = NULL;
     pMenu->textColor               = easygui_rgb(224, 224, 224);
+    pMenu->textColorDisabled       = easygui_rgb(112, 112, 112);
     pMenu->separatorColor          = easygui_rgb(64, 64, 64);
     pMenu->separatorWidth          = 1;
     pMenu->borderWidth             = 1;
@@ -533,7 +545,7 @@ void ak_menu_on_mouse_button_up(easygui_element* pMenuElement, int mouseButton, 
 
     if (mouseButton == EASYGUI_MOUSE_BUTTON_LEFT)
     {
-        if (pMenu->pHoveredItem != NULL && !pMenu->pHoveredItem->isSeparator) {
+        if (pMenu->pHoveredItem != NULL && !pMenu->pHoveredItem->isSeparator && ak_mi_is_enabled(pMenu->pHoveredItem)) {
             ak_mi_on_picked(pMenu->pHoveredItem);
         }
     }
@@ -578,8 +590,8 @@ void ak_menu_on_paint(easygui_element* pMenuElement, easygui_rect relativeClippi
     float menuHeight;
     easygui_get_size(pMenuElement, &menuWidth, &menuHeight);
 
-    menuWidth  /= scaleX;
-    menuHeight /= scaleY;
+    menuWidth  = roundf(menuWidth / scaleX);
+    menuHeight = roundf(menuHeight / scaleY);
 
     easygui_draw_rect(pMenuElement, easygui_make_rect(borderWidth, borderWidth, menuWidth - borderWidth, borderWidth + pMenu->paddingY), pMenu->backgroundColor, pPaintData);
     easygui_draw_rect(pMenuElement, easygui_make_rect(borderWidth, menuHeight - borderWidth - pMenu->paddingY, menuWidth - borderWidth, menuHeight - borderWidth), pMenu->backgroundColor, pPaintData);
@@ -756,7 +768,8 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
     menuHeight /= scaleY;
 
 
-    easygui_color bgcolor = pMenu->backgroundColor;
+    easygui_color bgcolor   = pMenu->backgroundColor;
+    easygui_color textColor = pMenu->textColor;
     
     // Separators are treated differently to normal items.
     if (pMI->isSeparator)
@@ -772,6 +785,11 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
             bgcolor = pMenu->backgroundColorHovered;
         }
 
+        if (!ak_mi_is_enabled(pMI)) {
+            bgcolor   = pMenu->backgroundColor;
+            textColor = pMenu->textColorDisabled;
+        }
+
 
         // Icon.
         if (pMI->pIcon != NULL)
@@ -783,8 +801,8 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
             easygui_draw_image_args args;
             args.dstX            = posX + pMenu->iconDrawPosX;
             args.dstY            = posY + pMenu->itemPadding;
-            args.dstWidth        = (float)iconWidth;
-            args.dstHeight       = (float)iconHeight;
+            args.dstWidth        = (float)16;
+            args.dstHeight       = (float)16;
             args.srcX            = 0;
             args.srcY            = 0;
             args.srcWidth        = (float)iconWidth;
@@ -793,7 +811,7 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
             args.dstBoundsY      = args.dstY;
             args.dstBoundsWidth  = pMenu->iconSize;
             args.dstBoundsHeight = pMenu->iconSize;
-            args.foregroundTint  = easygui_rgb(255, 255, 255);
+            args.foregroundTint  = pMI->iconTintColor;
             args.backgroundColor = bgcolor;
             args.boundsColor     = bgcolor;
             args.options         = EASYGUI_IMAGE_DRAW_BACKGROUND | EASYGUI_IMAGE_DRAW_BOUNDS | EASYGUI_IMAGE_CLIP_BOUNDS | EASYGUI_IMAGE_ALIGN_CENTER;
@@ -816,7 +834,7 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
 
         float textPosX = posX + pMenu->textDrawPosX;
         float textPosY = posY + ((height - textHeight) / 2);
-        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->text, (int)strlen(pMI->text), textPosX, textPosY, pMenu->textColor, bgcolor, pPaintData);
+        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->text, (int)strlen(pMI->text), textPosX, textPosY, textColor, bgcolor, pPaintData);
 
         // The gap between the bottom padding and the text, if any.
         if (textPosY + textHeight < posY + height - padding) {
@@ -840,10 +858,10 @@ PRIVATE void ak_menu_on_paint_item_default(easygui_element* pMenuElement, ak_men
 
         float shortcutTextPosX = posX + pMenu->shortcutTextDrawPosX;
         float shortcutTextPosY = posY + ((height - shortcutTextHeight) / 2);
-        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->shortcutText, (int)strlen(pMI->shortcutText), shortcutTextPosX, shortcutTextPosY, pMenu->textColor, bgcolor, pPaintData);
+        easygui_draw_text(pMenuElement, pMenu->pFont, pMI->shortcutText, (int)strlen(pMI->shortcutText), shortcutTextPosX, shortcutTextPosY, textColor, bgcolor, pPaintData);
 
         // The gap between the bottom padding and the text, if any.
-        if (shortcutTextPosY + shortcutTextHeight < posY + height - padding) {
+        if (roundf(shortcutTextPosY + shortcutTextHeight) < roundf(posY + height - padding)) {
             easygui_draw_rect(pMenuElement, easygui_make_rect(shortcutTextPosX, shortcutTextPosY + shortcutTextHeight, shortcutTextPosX + shortcutTextWidth, posY + height - padding), bgcolor, pPaintData);
         }
 
@@ -918,6 +936,11 @@ PRIVATE void ak_menu_resize_by_items(ak_window* pMenuWindow)
         return;
     }
 
+    float scaleX;
+    float scaleY;
+    easygui_get_inner_scale(ak_get_window_panel(pMenuWindow), &scaleX, &scaleY);
+
+
     const float borderWidth = pMenu->borderWidth;
 
     float menuWidth = 0;
@@ -935,13 +958,9 @@ PRIVATE void ak_menu_resize_by_items(ak_window* pMenuWindow)
             menuHeight += itemHeight;
         }
     }
-
+    
     menuWidth  += borderWidth*2;
     menuHeight += pMenu->paddingY*2 + borderWidth*2;
-
-    float scaleX;
-    float scaleY;
-    easygui_get_inner_scale(ak_get_window_panel(pMenuWindow), &scaleX, &scaleY);
 
     ak_menu_set_size(pMenuWindow, (unsigned int)(menuWidth * scaleX), (unsigned int)(menuHeight * scaleY));
 }
@@ -1004,9 +1023,11 @@ ak_menu_item* ak_create_menu_item(ak_window* pMenuWindow, size_t extraDataSize, 
     pMI->pNextItem       = NULL;
     pMI->pPrevItem       = NULL;
     pMI->pIcon           = NULL;
+    pMI->iconTintColor   = easygui_rgb(255, 255, 255);
     pMI->text[0]         = '\0';
     pMI->shortcutText[0] = '\0';
     pMI->isSeparator     = false;
+    pMI->isDisabled      = false;
     pMI->onPicked        = NULL;
     
     pMI->extraDataSize = extraDataSize;
@@ -1122,6 +1143,25 @@ easygui_image* ak_mi_get_icon(ak_menu_item* pMI)
     return pMI->pIcon;
 }
 
+void ak_mi_set_icon_tint(ak_menu_item* pMI, easygui_color tint)
+{
+    if (pMI == NULL) {
+        return;
+    }
+
+    pMI->iconTintColor = tint;
+}
+
+easygui_color ak_mi_get_icon_tint(ak_menu_item* pMI)
+{
+    if (pMI == NULL) {
+        return easygui_rgb(0, 0, 0);
+    }
+
+    return pMI->iconTintColor;
+}
+
+
 void ak_mi_set_text(ak_menu_item* pMI, const char* text)
 {
     if (pMI == NULL) {
@@ -1169,6 +1209,43 @@ const char* ak_mi_get_shortcut_text(ak_menu_item* pMI)
 
     return pMI->shortcutText;
 }
+
+
+void ak_mi_disable(ak_menu_item* pMI)
+{
+    if (pMI == NULL) {
+        return;
+    }
+
+    if (!pMI->isDisabled)
+    {
+        pMI->isDisabled = true;
+        easygui_dirty(ak_get_window_panel(pMI->pMenuWindow), easygui_get_local_rect(ak_get_window_panel(pMI->pMenuWindow)));
+    }
+}
+
+void ak_mi_enable(ak_menu_item* pMI)
+{
+    if (pMI == NULL) {
+        return;
+    }
+
+    if (pMI->isDisabled)
+    {
+        pMI->isDisabled = false;
+        easygui_dirty(ak_get_window_panel(pMI->pMenuWindow), easygui_get_local_rect(ak_get_window_panel(pMI->pMenuWindow)));
+    }
+}
+
+bool ak_mi_is_enabled(ak_menu_item* pMI)
+{
+    if (pMI == NULL) {
+        return false;
+    }
+
+    return !pMI->isDisabled;
+}
+
 
 void ak_mi_set_on_picked(ak_menu_item* pMI, ak_mi_on_picked_proc proc)
 {

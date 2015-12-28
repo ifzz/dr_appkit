@@ -210,6 +210,12 @@ void ak_mi_set_icon(ak_menu_item* pMI, easygui_image* pImage);
 /// Retrieves the image being used as the icon for the given menu item.
 easygui_image* ak_mi_get_icon(ak_menu_item* pMI);
 
+/// Sets the tint color of the icon.
+void ak_mi_set_icon_tint(ak_menu_item* pMI, easygui_color tint);
+
+/// Retrieves the tint color of the icon.
+easygui_color ak_mi_get_icon_tint(ak_menu_item* pMI);
+
 /// Sets the text of the given menu item.
 void ak_mi_set_text(ak_menu_item* pMI, const char* text);
 
@@ -221,6 +227,16 @@ void ak_mi_set_shortcut_text(ak_menu_item* pMI, const char* text);
 
 /// Retrieves the shortcut text of the given menu item.
 const char* ak_mi_get_shortcut_text(ak_menu_item* pMI);
+
+
+/// Disables the given menu item.
+void ak_mi_disable(ak_menu_item* pMI);
+
+/// Enables the given menu item.
+void ak_mi_enable(ak_menu_item* pMI);
+
+/// Determines whether or not the menu item is enabled.
+bool ak_mi_is_enabled(ak_menu_item* pMI);
 
 
 /// Sets the function to call when the given menu item is picked.

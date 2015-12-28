@@ -208,8 +208,8 @@ PRIVATE easygui_element* ak_create_window_panel(ak_application* pApplication, ak
 
     // TESTING. DELETE THIS BLOCK LATER.
     {
-        dpiScaleX = 2;
-        dpiScaleY = 2;
+        dpiScaleX = 1;
+        dpiScaleY = 1;
     }
     
     easygui_set_inner_scale(pElement, dpiScaleX, dpiScaleY);
