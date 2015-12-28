@@ -132,6 +132,10 @@ PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
     assert(pPanel->pFirstChild != NULL);
     assert(pPanel->pFirstChild->pNextSibling != NULL);
 
+    float innerScaleX;
+    float innerScaleY;
+    easygui_get_inner_scale(pPanel, &innerScaleX, &innerScaleY);
+
     easygui_element* pChildPanel1 = pPanel->pFirstChild;
     easygui_element* pChildPanel2 = pPanel->pFirstChild->pNextSibling;
 
@@ -141,19 +145,19 @@ PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
     {
         // Horizontal.
         easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
-        easygui_set_size(pChildPanel1, pPanelData->splitPos - borderWidth, pPanel->height - (borderWidth*2));
+        easygui_set_size(pChildPanel1, (pPanelData->splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
 
         easygui_set_relative_position(pChildPanel2, pPanelData->splitPos, borderWidth);
-        easygui_set_size(pChildPanel2, pPanel->width - pPanelData->splitPos - borderWidth, pPanel->height - (borderWidth*2));
+        easygui_set_size(pChildPanel2, (pPanel->width - pPanelData->splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
     }
     else
     {
         // Vertical.
         easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
-        easygui_set_size(pChildPanel1, pPanel->width - (borderWidth*2), pPanelData->splitPos - borderWidth);
+        easygui_set_size(pChildPanel1, (pPanel->width / innerScaleX) - (borderWidth*2), pPanelData->splitPos - borderWidth);
 
         easygui_set_relative_position(pChildPanel2, borderWidth, pPanelData->splitPos);
-        easygui_set_size(pChildPanel2, pPanel->width - (borderWidth*2), pPanel->height - pPanelData->splitPos - borderWidth);
+        easygui_set_size(pChildPanel2, (pPanel->width / innerScaleX) - (borderWidth*2), (pPanel->height / innerScaleY) - pPanelData->splitPos - borderWidth);
     }
 }
 
@@ -253,15 +257,19 @@ PRIVATE void ak_panel_refresh_tool_container_layout(easygui_element* pPanel, OUT
         default: break;
     }
 
+    float innerScaleX;
+    float innerScaleY;
+    easygui_get_inner_scale(pPanel, &innerScaleX, &innerScaleY);
+
 
     if (easygui_get_relative_position_x(pPanelData->pToolContainer) != posX || easygui_get_relative_position_y(pPanelData->pToolContainer) != posY) {
         didLayoutChange = true;
-        easygui_set_relative_position(pPanelData->pToolContainer, posX, posY);
+        easygui_set_relative_position(pPanelData->pToolContainer, posX / innerScaleX, posY / innerScaleY);
     }
     
     if (easygui_get_width(pPanelData->pToolContainer) != width || easygui_get_height(pPanelData->pToolContainer) != height) {
         didLayoutChange = true;
-        easygui_set_size(pPanelData->pToolContainer, width, height);
+        easygui_set_size(pPanelData->pToolContainer, width / innerScaleX, height / innerScaleY);
     }
     
     if (pDidLayoutChangeOut != NULL) {
@@ -281,6 +289,10 @@ PRIVATE void ak_panel_iterate_tool_tabs(easygui_element* pPanel, ak_panel_tab_it
     ak_theme* pTheme = ak_get_application_theme(pApplication);
     assert(pTheme != NULL);
 
+    float innerScaleX;
+    float innerScaleY;
+    easygui_get_inner_scale(pPanel, &innerScaleX, &innerScaleY);
+
 
     easygui_font* pFont = pTheme->pUIFont;
     const easygui_font_metrics fontMetrics = pTheme->uiFontMetrics;
@@ -299,7 +311,7 @@ PRIVATE void ak_panel_iterate_tool_tabs(easygui_element* pPanel, ak_panel_tab_it
 
         float titleWidth  = 0;
         float titleHeight = (float)fontMetrics.lineHeight;
-        easygui_measure_string(pFont, text, textLength, &titleWidth, NULL);   // NULL as last argument (pHeightOut) is intentional - want to use the line height instead.
+        easygui_measure_string(pFont, text, textLength, innerScaleX, innerScaleY, &titleWidth, NULL);   // NULL as last argument (pHeightOut) is intentional - want to use the line height instead.
 
         
         ak_panel_tab_info info;
@@ -534,7 +546,7 @@ PRIVATE void ak_panel_on_paint(easygui_element* pPanel, easygui_rect relativeRec
     // Only draw the background if we have no children.
     if (pPanel->pFirstChild == NULL || (pPanelData->pToolContainer != NULL && pPanelData->pToolContainer->pFirstChild == NULL))
     {
-        easygui_draw_rect(pPanel, relativeRect, pTheme->baseColor, pPaintData);
+        easygui_draw_rect_with_outline(pPanel, relativeRect, pTheme->baseColor, 1, easygui_rgb(128, 255, 128), pPaintData);
     }
 
     ak_panel_paint_tab_bar(pPanel, pPaintData);

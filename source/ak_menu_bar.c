@@ -361,6 +361,10 @@ void ak_mb_show_item_menu(easygui_element* pMBElement, ak_menu_bar_item* pMBI)
         return;
     }
 
+    float scaleX;
+    float scaleY;
+    easygui_get_absolute_inner_scale(pMBElement, &scaleX, &scaleY);
+
 
     // Hide the currently visible menu first, if any.
     ak_mb_hide_item_menu(pMBElement);
@@ -375,7 +379,7 @@ void ak_mb_show_item_menu(easygui_element* pMBElement, ak_menu_bar_item* pMBI)
         // TODO: If the menu would fall outside the container window, clamp the position such that it does not overhang.
         float menuPosX = itemPosX;
         float menuPosY = itemPosY;
-        ak_menu_set_position(pMBI->pMenu, (int)menuPosX, (int)menuPosY);
+        ak_menu_set_position(pMBI->pMenu, (int)(menuPosX * scaleX), (int)(menuPosY * scaleY));
 
         // The mask is based on the position of the menu relative to the position of the menu bar item.
         ak_menu_set_border_mask(pMBI->pMenu, ak_menu_border_top, itemPosX - menuPosX + pMB->borderWidthExpanded, itemWidth - pMB->borderWidthExpanded*2);
@@ -514,7 +518,7 @@ void ak_mb_on_paint(easygui_element* pMBElement, easygui_rect relativeClippingRe
     }
 
     // The rest of the background needs to be drawn using the default background color.
-    easygui_draw_rect(pMBElement, easygui_make_rect(runningPosX, 0, easygui_get_width(pMBElement), easygui_get_height(pMBElement)), pMB->backgroundColor, pPaintData);
+    easygui_draw_rect_with_outline(pMBElement, easygui_make_rect(runningPosX, 0, easygui_get_width(pMBElement), easygui_get_height(pMBElement)), pMB->backgroundColor, 1, easygui_rgb(255, 128, 128), pPaintData);
 }
 
 
@@ -599,9 +603,13 @@ PRIVATE void ak_on_mmbi_measure_default(ak_menu_bar_item* pMBI, float* pWidthOut
         return;
     }
 
+    float innerScaleX;
+    float innerScaleY;
+    easygui_get_absolute_inner_scale(pMBI->pMBElement, &innerScaleX, &innerScaleY);
+
 
     float textWidth;
-    if (!easygui_measure_string(pMB->pFont, pMBI->text, strlen(pMBI->text), &textWidth, NULL)) {
+    if (!easygui_measure_string(pMB->pFont, pMBI->text, strlen(pMBI->text), innerScaleX, innerScaleY, &textWidth, NULL)) {
         textWidth = 0;
     }
 
@@ -616,9 +624,13 @@ PRIVATE void ak_on_mmbi_paint_default(easygui_element* pMBElement, ak_menu_bar_i
         return;
     }
 
+    float innerScaleX;
+    float innerScaleY;
+    easygui_get_absolute_inner_scale(pMBElement, &innerScaleX, &innerScaleY);
+
     float textWidth;
     float textHeight;
-    if (!easygui_measure_string(pMB->pFont, pMBI->text, strlen(pMBI->text), &textWidth, &textHeight)) {
+    if (!easygui_measure_string(pMB->pFont, pMBI->text, strlen(pMBI->text), innerScaleX, innerScaleY, &textWidth, &textHeight)) {
         textWidth  = 0;
         textHeight = 0;
     }

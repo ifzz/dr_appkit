@@ -176,12 +176,15 @@ void ak_set_window_cursor(ak_window* pWindow, ak_cursor_type cursor);
 bool ak_is_cursor_over_window(ak_window* pWindow);
 
 
-/// Retrieves the DPI of the current window.
+/// Retrieves the DPI of the given window.
 ///
 /// @remarks
 ///     If multi-monitor DPI awareness is supported, it will use that, otherwise it will use
 ///     the system-wide DPI setting.
 void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut);
+
+/// Retrieves the DPI of the given window as scale.
+void ak_get_window_dpi_scale(ak_window* pWindow, float* pDPIScaleXOut, float* pDPIScaleYOut);
 
 
 /// Sets the function to call when the on_hide event is received.

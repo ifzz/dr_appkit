@@ -202,6 +202,18 @@ PRIVATE easygui_element* ak_create_window_panel(ak_application* pApplication, ak
         return NULL;
     }
 
+    float dpiScaleX;
+    float dpiScaleY;
+    ak_get_window_dpi_scale(pWindow, &dpiScaleX, &dpiScaleY);
+
+    // TESTING. DELETE THIS BLOCK LATER.
+    {
+        dpiScaleX = 2;
+        dpiScaleY = 2;
+    }
+    
+    easygui_set_inner_scale(pElement, dpiScaleX, dpiScaleY);
+
     element_user_data* pUserData = ak_panel_get_extra_data(pElement);
     assert(pUserData != NULL);
 
@@ -1450,6 +1462,42 @@ void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut)
     }
 
     FreeLibrary(hSHCoreDLL);
+}
+
+void ak_get_window_dpi_scale(ak_window* pWindow, float* pDPIScaleXOut, float* pDPIScaleYOut)
+{
+    float scaleX = 1;
+    float scaleY = 1;
+
+    if (pWindow != NULL)
+    {
+#if defined(AK_USE_WIN32)
+        int baseDPIX;
+        int baseDPIY;
+        win32_get_base_dpi(&baseDPIX, &baseDPIY);
+
+        int windowDPIX = baseDPIX;
+        int windowDPIY = baseDPIY;
+        ak_get_window_dpi(pWindow, &windowDPIX, &windowDPIY);
+
+        scaleX = (float)windowDPIX / baseDPIX;
+        scaleY = (float)windowDPIY / baseDPIY;
+#endif
+
+
+#if defined(AK_USE_GTK)
+        // TODO: Add support for scaling to GTK.
+        scaleX = 1;
+        scaleY = 1;
+#endif
+    }
+
+    if (pDPIScaleXOut) {
+        *pDPIScaleXOut = scaleX;
+    }
+    if (pDPIScaleYOut) {
+        *pDPIScaleYOut = scaleY;
+    }
 }
 
 
