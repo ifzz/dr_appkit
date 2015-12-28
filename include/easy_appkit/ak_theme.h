@@ -24,9 +24,6 @@ struct ak_text_theme
 
     /// The background color.
     easygui_color backgroundColor;
-
-    /// The font metrics for efficient and easy access.
-    easygui_font_metrics fontMetrics;
 };
 
 struct ak_theme
