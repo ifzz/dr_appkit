@@ -124,7 +124,22 @@ PRIVATE void ak_panel_refresh_tool_container_layout(easygui_element* pPanel)
         if (pPanelData->tabBarOrientation == tabbar_orientation_top)
         {
             posY    = easygui_get_height(pPanelData->pTabBar);
-            height -= posY;
+            height -= easygui_get_height(pPanelData->pTabBar);
+        }
+        else if (pPanelData->tabBarOrientation == tabbar_orientation_bottom)
+        {
+            posY    = easygui_get_height(pPanel) - easygui_get_height(pPanelData->pTabBar);
+            height -= easygui_get_height(pPanelData->pTabBar);
+        }
+        else if (pPanelData->tabBarOrientation == tabbar_orientation_left)
+        {
+            posX   = easygui_get_width(pPanelData->pTabBar);
+            width -= easygui_get_width(pPanelData->pTabBar);
+        }
+        else if (pPanelData->tabBarOrientation == tabbar_orientation_right)
+        {
+            posX   = easygui_get_width(pPanel) - easygui_get_width(pPanelData->pTabBar);
+            width -= easygui_get_width(pPanelData->pTabBar);
         }
     }
 
@@ -254,6 +269,39 @@ PRIVATE void ak_panel_on_tab_bar_size(easygui_element* pTBElement, float newWidt
     // TODO: Make sure the tab bar is pinned in the correct position for right and bottom alignments.
 
     ak_panel_refresh_tool_container_layout(pPanel);
+}
+
+PRIVATE void ak_panel_on_tab_deactivated(easygui_element* pTBElement, easygui_tab* pTab)
+{
+    easygui_element* pPanel = *(easygui_element**)tabbar_get_extra_data(pTBElement);
+    assert(pPanel != NULL);
+
+    easygui_element* pTool = *(easygui_element**)tab_get_extra_data(pTab);
+    assert(pTool != NULL);
+
+
+    // The tool needs to be hidden.
+    easygui_hide(pTool);
+
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    pPanelData->pActiveTool = NULL;
+}
+
+PRIVATE void ak_panel_on_tab_activated(easygui_element* pTBElement, easygui_tab* pTab)
+{
+    easygui_element* pPanel = *(easygui_element**)tabbar_get_extra_data(pTBElement);
+    assert(pPanel != NULL);
+
+    easygui_element* pTool = *(easygui_element**)tab_get_extra_data(pTab);
+    assert(pTool != NULL);
+
+
+    // The tool needs to be shown.
+    easygui_show(pTool);
+
+
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    pPanelData->pActiveTool = pTool;
 }
 
 
@@ -550,6 +598,8 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
         tabbar_set_font(pPanelData->pTabBar, pTheme->pUIFont);
         tabbar_enable_auto_size(pPanelData->pTabBar);
         easygui_set_on_size(pPanelData->pTabBar, ak_panel_on_tab_bar_size);
+        tabbar_set_on_tab_deactivated(pPanelData->pTabBar, ak_panel_on_tab_deactivated);
+        tabbar_set_on_tab_activated(pPanelData->pTabBar, ak_panel_on_tab_activated);
 
         if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_TOOL_TABS) == 0) {
             easygui_hide(pPanelData->pTabBar);
@@ -579,7 +629,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
 
 
     // We need to create and prepend a tab for the tool.
-    easygui_tab* pToolTab = tabbar_create_and_prepend_tab(pPanelData->pTabBar, ak_get_tool_title(pTool), 0, NULL);
+    easygui_tab* pToolTab = tabbar_create_and_prepend_tab(pPanelData->pTabBar, ak_get_tool_title(pTool), sizeof(&pTool), &pTool);
     ak_set_tool_tab(pTool, pToolTab);
 
 
@@ -621,14 +671,6 @@ void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool)
     ak_panel_refresh_tabs(pPanel);
 }
 
-PRIVATE void ak_panel_deactivate_tool_no_redraw(easygui_element* pPanel)
-{
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
-    assert(pPanelData != NULL);
-
-    easygui_hide(pPanelData->pActiveTool);
-    pPanelData->pActiveTool = NULL;
-}
 
 bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool)
 {
@@ -642,31 +684,11 @@ bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool)
     }
 
 
-    if (pPanelData->pActiveTool != pTool)
-    {
-        // The previous tool needs to be deactivated.
-        ak_panel_deactivate_tool_no_redraw(pPanel);
-
-        
-        // The new active tool needs to be shown.
-        pPanelData->pActiveTool = pTool;
-        easygui_show(pTool);
-    }
+    // To activate a tool we just activate the associated tab on the tab bar control which will in turn post
+    // activate and deactivate events which is where the actual swith will occur.
+    tabbar_activate_tab(pPanelData->pTabBar, ak_get_tool_tab(pTool));
 
     return true;
-}
-
-void ak_panel_deactivate_tool(easygui_element* pPanel)
-{
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
-    if (pPanelData == NULL) {
-        return;
-    }
-
-    if (pPanelData->pActiveTool != NULL)
-    {
-        ak_panel_deactivate_tool_no_redraw(pPanel);
-    }
 }
 
 
