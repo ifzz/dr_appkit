@@ -117,12 +117,10 @@ PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
     }
 }
 
-PRIVATE void ak_panel_refresh_tool_container_layout(easygui_element* pPanel, OUT bool* pDidLayoutChangeOut)
+PRIVATE void ak_panel_refresh_tool_container_layout(easygui_element* pPanel)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
     assert(pPanelData != NULL);
-
-    bool didLayoutChange = false;
 
     float width  = easygui_get_width(pPanel);
     float height = easygui_get_height(pPanel);
@@ -146,17 +144,11 @@ PRIVATE void ak_panel_refresh_tool_container_layout(easygui_element* pPanel, OUT
     easygui_get_inner_scale(pPanel, &innerScaleX, &innerScaleY);
 
     if (easygui_get_relative_position_x(pPanelData->pToolContainer) != posX || easygui_get_relative_position_y(pPanelData->pToolContainer) != posY) {
-        didLayoutChange = true;
         easygui_set_relative_position(pPanelData->pToolContainer, posX / innerScaleX, posY / innerScaleY);
     }
     
     if (easygui_get_width(pPanelData->pToolContainer) != width || easygui_get_height(pPanelData->pToolContainer) != height) {
-        didLayoutChange = true;
         easygui_set_size(pPanelData->pToolContainer, width / innerScaleX, height / innerScaleY);
-    }
-    
-    if (pDidLayoutChangeOut != NULL) {
-        *pDidLayoutChangeOut = didLayoutChange;
     }
 }
 
@@ -178,8 +170,7 @@ PRIVATE void ak_panel_refresh_tabs(easygui_element* pPanel)
 
 
     // The layout of the tool container needs to be updated first.
-    bool didTabBarChange = false;
-    ak_panel_refresh_tool_container_layout(pPanel, &didTabBarChange);
+    ak_panel_refresh_tool_container_layout(pPanel);
 }
 
 
@@ -216,7 +207,7 @@ PRIVATE void ak_panel_on_size(easygui_element* pElement, float newWidth, float n
     {
         // It's not a split panel. We need to resize the tool container, and then each tool.
         if (pPanelData->pToolContainer != NULL) {
-            ak_panel_refresh_tool_container_layout(pElement, NULL);
+            ak_panel_refresh_tool_container_layout(pElement);
         }
     }
     else
@@ -272,7 +263,7 @@ PRIVATE void ak_panel_on_tab_bar_size(easygui_element* pTBElement, float newWidt
 
     // TODO: Make sure the tab bar is pinned in the correct position for right and bottom alignments.
 
-    ak_panel_refresh_tool_container_layout(pPanel, NULL);
+    ak_panel_refresh_tool_container_layout(pPanel);
 }
 
 
