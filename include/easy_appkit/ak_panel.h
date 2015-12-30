@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <easy_gui/wip/easygui_tab_bar.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,14 +46,6 @@ typedef enum
     ak_panel_split_axis_horizontal,
     ak_panel_split_axis_vertical
 } ak_panel_split_axis;
-
-typedef enum
-{
-    ak_panel_tab_orientation_top,
-    ak_panel_tab_orientation_bottom,
-    ak_panel_tab_orientation_left,
-    ak_panel_tab_orientation_right
-} ak_panel_tab_orientation;
 
 
 /// Creates an empty panel.

@@ -5,6 +5,7 @@
 #include "../include/easy_appkit/ak_application.h"
 #include "../include/easy_appkit/ak_build_config.h"
 #include <easy_gui/easy_gui.h>
+#include <easy_gui/wip/easygui_tab_bar.h>
 #include <assert.h>
 
 typedef struct
@@ -18,6 +19,9 @@ typedef struct
 
     /// The tool's title. This is what will show up on the tool's tab.
     char title[256];
+
+    /// The tool's tab that will be shown on the tab bar.
+    easygui_tab* pTab;
 
 
     /// The size of the tool's extra data, in bytes.
@@ -43,6 +47,7 @@ easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* p
         pToolData->pApplication = pApplication;
         pToolData->type[0]      = '\0';
         pToolData->title[0]     = '\0';
+        pToolData->pTab         = NULL;
 
         if (type != NULL) {
             strcpy_s(pToolData->type, sizeof(pToolData->type), type);
@@ -100,6 +105,27 @@ void* ak_get_tool_extra_data(easygui_element* pTool)
 }
 
 
+void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab)
+{
+    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    if (pToolData == NULL) {
+        return;
+    }
+
+    pToolData->pTab = pTab;
+}
+
+easygui_tab* ak_get_tool_tab(easygui_element* pTool)
+{
+    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    if (pToolData == NULL) {
+        return NULL;
+    }
+
+    return pToolData->pTab;
+}
+
+
 void ak_set_tool_title(easygui_element* pTool, const char* title)
 {
     ak_tool_data* pToolData = easygui_get_extra_data(pTool);
@@ -107,7 +133,9 @@ void ak_set_tool_title(easygui_element* pTool, const char* title)
         return;
     }
 
-    strcpy_s(pToolData->title, sizeof(pToolData->title), (title != NULL) ? title : "");
+    strncpy_s(pToolData->title, sizeof(pToolData->title), (title != NULL) ? title : "", _TRUNCATE);
+
+    tab_set_text(pToolData->pTab, title);
 }
 
 const char* ak_get_tool_title(easygui_element* pTool)

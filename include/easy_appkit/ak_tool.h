@@ -12,6 +12,7 @@ extern "C" {
 
 typedef struct easygui_element easygui_element;
 typedef struct ak_application ak_application;
+typedef struct easygui_tab easygui_tab;
 
 /// Creates a tool.
 ///
@@ -30,6 +31,13 @@ size_t ak_get_tool_extra_data_size(easygui_element* pTool);
 
 /// Retrieves a pointer to the extra data.
 void* ak_get_tool_extra_data(easygui_element* pTool);
+
+
+/// Sets the tab to associate with the given tool.
+void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab);
+
+/// Retrieves the tab associated with the given tool.
+easygui_tab* ak_get_tool_tab(easygui_element* pTool);
 
 
 /// Sets the title of the tool.
