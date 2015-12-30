@@ -4,6 +4,7 @@
 #include "../include/easy_appkit/ak_application.h"
 #include "../include/easy_appkit/ak_theme.h"
 #include "../include/easy_appkit/ak_tool.h"
+#include "../include/easy_appkit/ak_gui_image_manager.h"
 #include "../include/easy_appkit/ak_build_config.h"
 #include <easy_gui/easy_gui.h>
 #include <easy_util/easy_util.h>
@@ -173,6 +174,12 @@ PRIVATE void ak_panel_refresh_tabs(easygui_element* pPanel)
         easygui_show(pPanelData->pTabBar);
     }
 
+    if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_CLOSE_BUTTON_ON_TABS) == 0) {
+        tabbar_hide_close_buttons(pPanelData->pTabBar);
+    } else {
+        tabbar_show_close_buttons(pPanelData->pTabBar);
+    }
+
 
     // The layout of the tool container needs to be updated first.
     ak_panel_refresh_tool_container_layout(pPanel);
@@ -195,9 +202,6 @@ PRIVATE void ak_panel_on_paint(easygui_element* pPanel, easygui_rect relativeRec
     {
         easygui_draw_rect(pPanel, relativeRect, pTheme->baseColor, pPaintData);
     }
-
-    // TESTING
-    easygui_draw_rect_outline(pPanel, easygui_get_local_rect(pPanel), easygui_rgb(255, 128, 128), 2, pPaintData);
 }
 
 PRIVATE void ak_panel_on_size(easygui_element* pElement, float newWidth, float newHeight)
@@ -598,6 +602,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
         tabbar_set_font(pPanelData->pTabBar, pTheme->pUIFont);
         tabbar_enable_auto_size(pPanelData->pTabBar);
         easygui_set_on_size(pPanelData->pTabBar, ak_panel_on_tab_bar_size);
+        tabbar_set_close_button_image(pPanelData->pTabBar, ak_get_red_cross_image(ak_get_application_image_manager(pPanelData->pApplication)));
         tabbar_set_on_tab_deactivated(pPanelData->pTabBar, ak_panel_on_tab_deactivated);
         tabbar_set_on_tab_activated(pPanelData->pTabBar, ak_panel_on_tab_activated);
 
