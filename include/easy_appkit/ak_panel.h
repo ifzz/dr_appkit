@@ -137,9 +137,6 @@ void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool);
 ///     This will fail is <pTool> is not attached to <pPanel>.
 bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool);
 
-/// Deactivates the currently active tool on the given panel.
-void ak_panel_deactivate_tool(easygui_element* pPanel);
-
 
 /// Retrieves a pointer to the first tool that's attached to the given panel, if any.
 easygui_element* ak_panel_get_first_tool(easygui_element* pPanel);
