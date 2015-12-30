@@ -27,7 +27,7 @@ typedef struct
     float splitPos;
 
     /// The tab bar orientation.
-    tb_orientation tabBarOrientation;
+    tabbar_orientation tabBarOrientation;
 
     /// The tab bar for tool tabs.
     easygui_element* pTabBar;
@@ -131,7 +131,7 @@ PRIVATE void ak_panel_refresh_tool_container_layout(easygui_element* pPanel)
     // The layout of the container is based on the the layout of the tab bar and the tab bar's orientation.
     if (easygui_is_visible(pPanelData->pTabBar))
     {
-        if (pPanelData->tabBarOrientation == tb_orientation_top)
+        if (pPanelData->tabBarOrientation == tabbar_orientation_top)
         {
             posY    = easygui_get_height(pPanelData->pTabBar);
             height -= posY;
@@ -258,7 +258,7 @@ PRIVATE void ak_panel_on_mouse_button_down(easygui_element* pElement, int button
 
 PRIVATE void ak_panel_on_tab_bar_size(easygui_element* pTBElement, float newWidth, float newHeight)
 {
-    easygui_element* pPanel = *(easygui_element**)tb_get_extra_data(pTBElement);
+    easygui_element* pPanel = *(easygui_element**)tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
 
     // TODO: Make sure the tab bar is pinned in the correct position for right and bottom alignments.
@@ -280,7 +280,7 @@ easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* 
         pPanelData->name[0]            = '\0';
         pPanelData->splitAxis          = ak_panel_split_axis_none;
         pPanelData->splitPos           = 0;
-        pPanelData->tabBarOrientation  = tb_orientation_top;
+        pPanelData->tabBarOrientation  = tabbar_orientation_top;
         pPanelData->pTabBar            = NULL;
         pPanelData->pToolContainer     = NULL;
         pPanelData->optionFlags        = 0;
@@ -530,34 +530,34 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
         assert(pPanel->pFirstChild == NULL);            // Assume the panel does not have any children.
 
         // Tab bar first.
-        pPanelData->pTabBar = eg_create_tab_bar(pPanel->pContext, pPanel, pPanelData->tabBarOrientation, sizeof(&pPanel), &pPanel);
+        pPanelData->pTabBar = easygui_create_tab_bar(pPanel->pContext, pPanel, pPanelData->tabBarOrientation, sizeof(&pPanel), &pPanel);
         if (pPanelData->pTabBar == NULL) {
             return false;
         }
 
         // Make sure the size of the tab bar is set such that it extends across the entire panel.
-        if (pPanelData->tabBarOrientation == tb_orientation_top)
+        if (pPanelData->tabBarOrientation == tabbar_orientation_top)
         {
             easygui_set_relative_position(pPanelData->pTabBar, 0, 0);
             easygui_set_size(pPanelData->pTabBar, easygui_get_width(pPanel) / innerScaleX, 0);
         }
-        else if (pPanelData->tabBarOrientation == tb_orientation_bottom)
+        else if (pPanelData->tabBarOrientation == tabbar_orientation_bottom)
         {
             easygui_set_relative_position(pPanelData->pTabBar, 0, easygui_get_height(pPanel) / innerScaleY);
             easygui_set_size(pPanelData->pTabBar, easygui_get_width(pPanel) / innerScaleX, 0);
         }
-        else if (pPanelData->tabBarOrientation == tb_orientation_left)
+        else if (pPanelData->tabBarOrientation == tabbar_orientation_left)
         {
             easygui_set_relative_position(pPanelData->pTabBar, 0, 0);
             easygui_set_size(pPanelData->pTabBar, 0, easygui_get_height(pPanel) / innerScaleY);
         }
-        else if (pPanelData->tabBarOrientation == tb_orientation_right)
+        else if (pPanelData->tabBarOrientation == tabbar_orientation_right)
         {
             easygui_set_relative_position(pPanelData->pTabBar, easygui_get_width(pPanel) / innerScaleX, 0);
             easygui_set_size(pPanelData->pTabBar, 0, easygui_get_height(pPanel) / innerScaleY);
         }
 
-        tb_set_font(pPanelData->pTabBar, pTheme->pUIFont);
+        tabbar_set_font(pPanelData->pTabBar, pTheme->pUIFont);
         tabbar_enable_auto_size(pPanelData->pTabBar);
         easygui_set_on_size(pPanelData->pTabBar, ak_panel_on_tab_bar_size);
 
@@ -589,7 +589,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
 
 
     // We need to create and prepend a tab for the tool.
-    easygui_tab* pToolTab = tb_create_and_prepend_tab(pPanelData->pTabBar, ak_get_tool_title(pTool), 0, NULL);
+    easygui_tab* pToolTab = tabbar_create_and_prepend_tab(pPanelData->pTabBar, ak_get_tool_title(pTool), 0, NULL);
     ak_set_tool_tab(pTool, pToolTab);
 
 
