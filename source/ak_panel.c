@@ -64,16 +64,6 @@ typedef struct
 
 } ak_panel_data;
 
-typedef struct
-{
-    /// A pointer to the paint data to pass to the easygui paint functions.
-    void* pPaintData;
-
-    /// The rectangle region of the drawn tabs. This is used to determine that non-tabbed area that needs redrawing.
-    //easygui_rect tabsRect;
-
-} ak_panel_paint_context;
-
 
 ////////////////////////////////////////////////
 // Private API
