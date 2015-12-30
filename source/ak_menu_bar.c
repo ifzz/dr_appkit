@@ -150,9 +150,9 @@ easygui_element* ak_create_menu_bar(easygui_context* pContext, easygui_element* 
     pMB->relativeMousePosY       = 0;
     pMB->pFont                   = NULL;
     pMB->textColor               = easygui_rgb(224, 224, 224);
-    pMB->backgroundColor         = easygui_rgb(64, 64, 64);
+    pMB->backgroundColor         = easygui_rgb(40, 40, 40);
     pMB->backgroundColorHovered  = easygui_rgb(96, 96, 96);
-    pMB->backgroundColorExpanded = easygui_rgb(48, 48, 48);
+    pMB->backgroundColorExpanded = easygui_rgb(32, 32, 32);
     pMB->borderColorExpanded     = easygui_rgb(96, 96, 96);
     pMB->borderWidthExpanded     = 1;
     pMB->itemPaddingX            = 8;
