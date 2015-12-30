@@ -176,8 +176,10 @@ PRIVATE void ak_panel_refresh_tabs(easygui_element* pPanel)
 
     if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_CLOSE_BUTTON_ON_TABS) == 0) {
         tabbar_hide_close_buttons(pPanelData->pTabBar);
+        tabbar_disable_close_on_middle_click(pPanelData->pTabBar);
     } else {
         tabbar_show_close_buttons(pPanelData->pTabBar);
+        tabbar_enable_close_on_middle_click(pPanelData->pTabBar);
     }
 
 
