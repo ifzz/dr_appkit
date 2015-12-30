@@ -308,6 +308,17 @@ PRIVATE void ak_panel_on_tab_activated(easygui_element* pTBElement, easygui_tab*
     pPanelData->pActiveTool = pTool;
 }
 
+PRIVATE void ak_panel_on_tab_close(easygui_element* pTBElement, easygui_tab* pTab)
+{
+    easygui_element* pPanel = *(easygui_element**)tabbar_get_extra_data(pTBElement);
+    assert(pPanel != NULL);
+
+    easygui_element* pTool = *(easygui_element**)tab_get_extra_data(pTab);
+    assert(pTool != NULL);
+
+    ak_panel_detach_tool(pPanel, pTool);
+}
+
 
 
 easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* pParent, size_t extraDataSize, const void* pExtraData)
@@ -605,6 +616,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
         tabbar_set_close_button_image(pPanelData->pTabBar, ak_get_red_cross_image(ak_get_application_image_manager(pPanelData->pApplication)));
         tabbar_set_on_tab_deactivated(pPanelData->pTabBar, ak_panel_on_tab_deactivated);
         tabbar_set_on_tab_activated(pPanelData->pTabBar, ak_panel_on_tab_activated);
+        tabbar_set_on_tab_closed(pPanelData->pTabBar, ak_panel_on_tab_close);
 
         if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_TOOL_TABS) == 0) {
             easygui_hide(pPanelData->pTabBar);
@@ -669,7 +681,23 @@ void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool)
     }
 
 
+    // If the tab is the active one we need to switch to another.
+    easygui_tab* pTab = ak_get_tool_tab(pTool);
+    if (tabbar_get_active_tab(pPanelData->pTabBar) == pTab)
+    {
+        easygui_tab* pNextTab = tab_get_next_tab(pTab);
+        if (pNextTab == NULL) {
+            pNextTab = tab_get_prev_tab(pTab);
+        }
+
+        tabbar_activate_tab(pPanelData->pTabBar, pNextTab);
+    }
+
+
     easygui_detach(pTool);
+
+    tab_delete(ak_get_tool_tab(pTool));
+    ak_set_tool_tab(pTool, NULL);
 
 
     // The tab bar might need to be refreshed.
