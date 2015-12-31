@@ -23,7 +23,7 @@ typedef bool             (* ak_run_proc)           (ak_application* pApplication
 typedef void             (* ak_log_proc)           (ak_application* pApplication, const char* message);
 typedef const char*      (* ak_layout_config_proc) (ak_application* pApplication);
 typedef easygui_element* (* ak_create_tool_proc)   (ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
-typedef void             (* ak_delete_tool_proc)   (easygui_element* pTool);
+typedef bool             (* ak_delete_tool_proc)   (easygui_element* pTool);
 
 /// Creates a new application object.
 ///
@@ -205,7 +205,14 @@ ak_delete_tool_proc ak_get_on_delete_tool(ak_application* pApplication);
 easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
 
 /// Deletes the given tool.
-void ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool);
+///
+/// @return True if the tool was deleted; false if not.
+///
+/// @remarks
+///     This may return false if the tool contains something like a text editor or whatnot and a confirmation dialog needs
+///     to be shown before deleting the tool. In this case, false would be returned so that the tool is not deleted immediately,
+///     and instead tool will be attempted to be deleted later on in response to the dialog.
+bool ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool);
 
 
 #ifdef __cplusplus

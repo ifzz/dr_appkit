@@ -678,10 +678,10 @@ easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplicat
     return NULL;
 }
 
-void ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool)
+bool ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool)
 {
     if (pApplication == NULL || pTool == NULL) {
-        return;
+        return false;
     }
 
     // First check for built-in tools.
@@ -690,8 +690,10 @@ void ak_application_delete_tool(ak_application* pApplication, easygui_element* p
     // At this point we know the tool type is not a built-in so we need to give the host application a chance to
     // delete it in case it's a custom tool type.
     if (pApplication->onDeleteTool) {
-        pApplication->onDeleteTool(pTool);
+        return pApplication->onDeleteTool(pTool);
     }
+
+    return false;
 }
 
 
