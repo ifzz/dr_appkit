@@ -1,5 +1,13 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
+//
+// QUICK NOTES
+//
+// - A type of a tool is defined by a string, which can be in a format such as "Editor.Text.CPP". The function
+//   ak_is_tool_of_type() can be used to determine whether or not the given tool is of a particular type. With
+//   the example above, true will be returned for a call such as ak_is_tool_of_type(pMyTool, "Editor.Text").
+//
+
 #ifndef ak_tool_h
 #define ak_tool_h
 
@@ -31,6 +39,14 @@ size_t ak_get_tool_extra_data_size(easygui_element* pTool);
 
 /// Retrieves a pointer to the extra data.
 void* ak_get_tool_extra_data(easygui_element* pTool);
+
+
+/// Determines whether or not the tool is of the given type.
+///
+/// @remarks
+///     This returns true for sub-types. For example, if the type of a tool is "Editor.Text.CPP", true will be returned
+///     if this function is called with a type of "Editor.Text".
+bool ak_is_tool_of_type(easygui_element* pTool, const char* type);
 
 
 /// Sets the tab to associate with the given tool.
