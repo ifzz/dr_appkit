@@ -50,7 +50,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
 
 
     //// Colors ////
-    pTheme->baseColor = easygui_rgb(64, 64, 64);
+    pTheme->baseColor = easygui_rgb(52, 52, 52);
 
 
     //// Tabs ////
