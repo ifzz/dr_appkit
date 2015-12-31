@@ -169,6 +169,42 @@ PRIVATE void ak_panel_refresh_tabs(easygui_element* pPanel)
     ak_theme* pTheme = ak_get_application_theme(ak_get_panel_application(pPanel));
     assert(pTheme != NULL);
 
+
+    // The layout of the tab bar needs to be refreshed. We only adjust the width OR height, which depends on the orientation.
+    float panelWidth   = easygui_get_width(pPanel);
+    float panelHeight  = easygui_get_height(pPanel);
+    float tabbarWidth  = easygui_get_width(pPanelData->pTabBar);
+    float tabbarHeight = easygui_get_height(pPanelData->pTabBar);
+    float tabbarPosX   = 0;
+    float tabbarPosY   = 0;
+
+    if (easygui_is_visible(pPanelData->pTabBar))
+    {
+        if (pPanelData->tabBarOrientation == tabbar_orientation_top)
+        {
+            tabbarWidth = panelWidth;
+        }
+        else if (pPanelData->tabBarOrientation == tabbar_orientation_bottom)
+        {
+            tabbarWidth = panelWidth;
+            tabbarPosY  = panelHeight - tabbarHeight;
+        }
+        else if (pPanelData->tabBarOrientation == tabbar_orientation_left)
+        {
+            tabbarHeight = panelHeight;
+        }
+        else if (pPanelData->tabBarOrientation == tabbar_orientation_right)
+        {
+            tabbarHeight = panelHeight;
+            tabbarPosX   = panelWidth - tabbarWidth;
+        }
+    }
+
+    easygui_set_size(pPanelData->pTabBar, tabbarWidth, tabbarHeight);
+    easygui_set_relative_position(pPanelData->pTabBar, tabbarPosX, tabbarPosY);
+
+
+
     if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_TOOL_TABS) == 0) {
         easygui_hide(pPanelData->pTabBar);
     } else {
@@ -219,7 +255,7 @@ PRIVATE void ak_panel_on_size(easygui_element* pElement, float newWidth, float n
     {
         // It's not a split panel. We need to resize the tool container, and then each tool.
         if (pPanelData->pToolContainer != NULL) {
-            ak_panel_refresh_tool_container_layout(pElement);
+            ak_panel_refresh_tabs(pElement);
         }
     }
     else
