@@ -118,6 +118,8 @@ easygui_element* ak_panel_get_split_panel_2(easygui_element* pPanel);
 ///
 /// @remarks
 ///     This will fail if the given panel is a split panel.
+///     @par
+///     If the tool is already attached to another tool it will be detached first.
 bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool);
 
 /// Detaches the given tool from the given panel.

@@ -678,7 +678,7 @@ easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplicat
     return NULL;
 }
 
-bool ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool)
+bool ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool, bool force)
 {
     if (pApplication == NULL || pTool == NULL) {
         return false;
@@ -690,7 +690,7 @@ bool ak_application_delete_tool(ak_application* pApplication, easygui_element* p
     // At this point we know the tool type is not a built-in so we need to give the host application a chance to
     // delete it in case it's a custom tool type.
     if (pApplication->onDeleteTool) {
-        return pApplication->onDeleteTool(pTool);
+        return pApplication->onDeleteTool(pApplication, pTool, force);
     }
 
     return false;
@@ -945,9 +945,15 @@ PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, easygui_ele
     }
     else
     {
-        for (easygui_element* pTool = ak_panel_get_first_tool(pPanel); pTool != NULL; pTool = ak_panel_get_next_tool(pPanel, pTool))
+        easygui_element* pFirstTool = NULL;
+        while ((pFirstTool = ak_panel_get_first_tool(pPanel)) != NULL)
         {
-            ak_application_delete_tool(pApplication, pTool);
+            ak_application_delete_tool(pApplication, pFirstTool, true);    // "true" means to force deletion of the tool.
+
+            // As a safety precaution to avoid an infinite loop, if the first tool was not detached we'll forcefully detach it.
+            if (pFirstTool == ak_panel_get_first_tool(pPanel)) {
+                ak_panel_detach_tool(pPanel, pFirstTool);
+            }
         }
     }
 }

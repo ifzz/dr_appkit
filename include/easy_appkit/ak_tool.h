@@ -49,11 +49,11 @@ void* ak_get_tool_extra_data(easygui_element* pTool);
 bool ak_is_tool_of_type(easygui_element* pTool, const char* type);
 
 
-/// Sets the tab to associate with the given tool.
-void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab);
-
 /// Retrieves the tab associated with the given tool.
 easygui_tab* ak_get_tool_tab(easygui_element* pTool);
+
+/// Retrieves the panel the tool is attached to, if any.
+easygui_element* ak_get_tool_panel(easygui_element* pTool);
 
 
 /// Sets the title of the tool.

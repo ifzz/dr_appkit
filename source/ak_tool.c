@@ -4,6 +4,7 @@
 #include "../include/easy_appkit/ak_tool.h"
 #include "../include/easy_appkit/ak_application.h"
 #include "../include/easy_appkit/ak_build_config.h"
+#include "ak_tool_private.h"
 #include <easy_gui/easy_gui.h>
 #include <easy_gui/wip/easygui_tab_bar.h>
 #include <assert.h>
@@ -22,6 +23,9 @@ typedef struct
 
     /// The tool's tab that will be shown on the tab bar.
     easygui_tab* pTab;
+
+    /// The panel the tab is attached to, if any.
+    easygui_element* pPanel;
 
 
     /// The size of the tool's extra data, in bytes.
@@ -48,6 +52,7 @@ easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* p
         pToolData->type[0]      = '\0';
         pToolData->title[0]     = '\0';
         pToolData->pTab         = NULL;
+        pToolData->pPanel       = NULL;
 
         if (type != NULL) {
             strcpy_s(pToolData->type, sizeof(pToolData->type), type);
@@ -116,16 +121,6 @@ bool ak_is_tool_of_type(easygui_element* pTool, const char* type)
 }
 
 
-void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab)
-{
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
-    if (pToolData == NULL) {
-        return;
-    }
-
-    pToolData->pTab = pTab;
-}
-
 easygui_tab* ak_get_tool_tab(easygui_element* pTool)
 {
     ak_tool_data* pToolData = easygui_get_extra_data(pTool);
@@ -134,6 +129,16 @@ easygui_tab* ak_get_tool_tab(easygui_element* pTool)
     }
 
     return pToolData->pTab;
+}
+
+easygui_element* ak_get_tool_panel(easygui_element* pTool)
+{
+    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    if (pToolData == NULL) {
+        return NULL;
+    }
+
+    return pToolData->pPanel;
 }
 
 
@@ -158,6 +163,29 @@ const char* ak_get_tool_title(easygui_element* pTool)
 
     return pToolData->title;
 }
+
+
+
+PRIVATE void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab)
+{
+    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    if (pToolData == NULL) {
+        return;
+    }
+
+    pToolData->pTab = pTab;
+}
+
+PRIVATE void ak_set_tool_panel(easygui_element* pTool, easygui_element* pPanel)
+{
+    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    if (pToolData == NULL) {
+        return;
+    }
+
+    pToolData->pPanel = pPanel;
+}
+
 
 
 /*

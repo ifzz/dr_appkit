@@ -6,6 +6,7 @@
 #include "../include/easy_appkit/ak_tool.h"
 #include "../include/easy_appkit/ak_gui_image_manager.h"
 #include "../include/easy_appkit/ak_build_config.h"
+#include "ak_tool_private.h"
 #include <easy_gui/easy_gui.h>
 #include <easy_util/easy_util.h>
 #include <assert.h>
@@ -318,7 +319,7 @@ PRIVATE void ak_panel_on_tab_close(easygui_element* pTBElement, easygui_tab* pTa
     easygui_element* pTool = *(easygui_element**)tab_get_extra_data(pTab);
     assert(pTool != NULL);
 
-    ak_panel_detach_tool(pPanel, pTool);
+    ak_application_delete_tool(ak_get_panel_application(pPanel), pTool, false);     // "false" means that the tool should not be forced to be deleted - we may want to show a confirmation dialog.
 }
 
 
@@ -573,6 +574,13 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
         return false;
     }
 
+
+    // If the tool is already attached to a panel it will need to be detached first.
+    if (ak_get_tool_panel(pTool) != NULL) {
+        ak_panel_detach_tool(ak_get_tool_panel(pTool), pTool);
+    }
+
+
     float innerScaleX;
     float innerScaleY;
     easygui_get_absolute_inner_scale(pPanel, &innerScaleX, &innerScaleY);
@@ -641,6 +649,8 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
     assert(pPanelData->pToolContainer != NULL);
 
     easygui_prepend(pTool, pPanelData->pToolContainer);
+    ak_set_tool_panel(pTool, pPanel);
+
 
     // Initial size and position.
     easygui_set_relative_position(pTool, 0, 0);
@@ -697,6 +707,7 @@ void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool)
 
 
     easygui_detach(pTool);
+    ak_set_tool_panel(pTool, NULL);
 
     tab_delete(ak_get_tool_tab(pTool));
     ak_set_tool_tab(pTool, NULL);
