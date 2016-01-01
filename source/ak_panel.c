@@ -773,6 +773,16 @@ bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool)
     return true;
 }
 
+easygui_element* ak_panel_get_active_tool(easygui_element* pPanel)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return false;
+    }
+
+    return pPanelData->pActiveTool;
+}
+
 
 easygui_element* ak_panel_get_first_tool(easygui_element* pPanel)
 {

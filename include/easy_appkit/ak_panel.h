@@ -131,6 +131,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool);
 ///     it from this one.
 void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool);
 
+
 /// Activates the given tool by deactivating the previously active tool and then activating this one.
 ///
 /// @remarks
@@ -138,6 +139,9 @@ void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool);
 ///     @par
 ///     This will fail is <pTool> is not attached to <pPanel>.
 bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool);
+
+/// Retrieves a pointer to the active tool in the given panel, if any.
+easygui_element* ak_panel_get_active_tool(easygui_element* pPanel);
 
 
 /// Retrieves a pointer to the first tool that's attached to the given panel, if any.
