@@ -17,8 +17,8 @@ typedef struct
     ak_application* pApplication;
 
 
-    /// The name of the panel.
-    char name[AK_MAX_PANEL_NAME_LENGTH];
+    /// The type of the panel.
+    char type[AK_MAX_PANEL_TYPE_LENGTH];
 
 
     /// The axis the two child panels are split along, if any. When this is not ak_panel_split_axis_none, it is assumed
@@ -369,7 +369,7 @@ easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* 
         assert(pPanelData != NULL);
 
         pPanelData->pApplication       = pApplication;
-        pPanelData->name[0]            = '\0';
+        pPanelData->type[0]            = '\0';
         pPanelData->splitAxis          = ak_panel_split_axis_none;
         pPanelData->splitPos           = 0;
         pPanelData->tabBarOrientation  = tabbar_orientation_top;
@@ -428,43 +428,43 @@ void* ak_panel_get_extra_data(easygui_element* pPanel)
 }
 
 
-void ak_panel_set_name(easygui_element* pPanel, const char* name)
+void ak_panel_set_type(easygui_element* pPanel, const char* type)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return;
     }
 
-    if (name == NULL) {
-        pPanelData->name[0] = '\0';
+    if (type == NULL) {
+        pPanelData->type[0] = '\0';
     } else {
-        strcpy_s(pPanelData->name, sizeof(pPanelData->name), name);
+        strcpy_s(pPanelData->type, sizeof(pPanelData->type), type);
     }
 }
 
-const char* ak_panel_get_name(easygui_element* pPanel)
+const char* ak_panel_get_type(easygui_element* pPanel)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
 
-    return pPanelData->name;
+    return pPanelData->type;
 }
 
-easygui_element* ak_panel_find_by_name_recursive(easygui_element* pPanel, const char* name)
+easygui_element* ak_panel_find_by_type_recursive(easygui_element* pPanel, const char* type)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
 
-    if (name == NULL) {
+    if (type == NULL) {
         return NULL;
     }
 
 
-    if (strcmp(pPanelData->name, name) == 0) {
+    if (strcmp(pPanelData->type, type) == 0) {
         return pPanel;
     }
 
@@ -473,18 +473,28 @@ easygui_element* ak_panel_find_by_name_recursive(easygui_element* pPanel, const 
     {
         easygui_element* pResult = NULL;
         
-        pResult = ak_panel_find_by_name_recursive(ak_panel_get_split_panel_1(pPanel), name);
+        pResult = ak_panel_find_by_type_recursive(ak_panel_get_split_panel_1(pPanel), type);
         if (pResult != NULL) {
             return pResult;
         }
 
-        pResult = ak_panel_find_by_name_recursive(ak_panel_get_split_panel_2(pPanel), name);
+        pResult = ak_panel_find_by_type_recursive(ak_panel_get_split_panel_2(pPanel), type);
         if (pResult != NULL) {
             return pResult;
         }
     }
 
     return NULL;
+}
+
+bool ak_panel_is_of_type(easygui_element* pPanel, const char* type)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return false;
+    }
+
+    return strncmp(pPanelData->type, type, strlen(type)) == 0;
 }
 
 

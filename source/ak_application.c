@@ -593,7 +593,7 @@ easygui_element* ak_find_panel_by_name(ak_application* pApplication, const char*
     // We need to search each window.
     for (ak_window* pWindow = pApplication->pFirstWindow; pWindow != NULL; pWindow = ak_get_next_sibling_window(pWindow))
     {
-        easygui_element* pResult = ak_panel_find_by_name_recursive(ak_get_window_panel(pWindow), pPanelName);
+        easygui_element* pResult = ak_panel_find_by_type_recursive(ak_get_window_panel(pWindow), pPanelName);
         if (pResult != NULL) {
             return pResult;
         }
@@ -873,7 +873,7 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
             return false;
         }
 
-        ak_panel_set_name(pWorkingPanel, attr.name);
+        ak_panel_set_type(pWorkingPanel, attr.type);
 
         if (attr.splitAxis == ak_panel_split_axis_none)
         {

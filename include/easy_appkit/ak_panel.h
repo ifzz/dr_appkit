@@ -8,6 +8,8 @@
 // - Each top-level element is made up of a collection of panels, with each panel able to be split a
 //   maximum of 1 time, either horizontally or vertically.
 // - Each unsplit panel can have any number of "tools" attached to it.
+// - Each panel can be assigned a type which is defined as a string, and is optional. The type is mainly
+//   used to allow an application to make use of special panels for serving a specific type of task.
 // - A tool is a GUI element that has 1 particular task. Examples could include text editors, log output
 //   windows, project explorer's, etc.
 // - When multiple tools are attached to a single panel, the panel uses tabs to allow the user to switch
@@ -70,16 +72,23 @@ void* ak_panel_get_extra_data(easygui_element* pPanel);
 
 
 /// Sets the name of the panel.
-void ak_panel_set_name(easygui_element* pPanel, const char* name);
+void ak_panel_set_type(easygui_element* pPanel, const char* type);
 
-/// Retrieves the name of the panel.
+/// Retrieves the type of the panel.
 ///
 /// @remarks
-///     If the panel does not have a name, an empty string will be returned. Null will be returned on error.
-const char* ak_panel_get_name(easygui_element* pPanel);
+///     If the panel does not have a type, an empty string will be returned. Null will be returned on error.
+const char* ak_panel_get_type(easygui_element* pPanel);
 
-/// Recursively searches for a panel with the given name, including <pPanel>.
-easygui_element* ak_panel_find_by_name_recursive(easygui_element* pPanel, const char* name);
+/// Recursively searches for a panel with the given type, including <pPanel>.
+easygui_element* ak_panel_find_by_type_recursive(easygui_element* pPanel, const char* type);
+
+/// Determines if the given panel is of the given type.
+///
+/// @remarks
+///     This returns true for sub-types. For example, if the type of a panel is "My.Panel.Type", true will be returned
+///     if this function is called with a type of "My.Panel".
+bool ak_panel_is_of_type(easygui_element* pPanel, const char* type);
 
 
 /// Splits the given panel along the given axis at the given position.

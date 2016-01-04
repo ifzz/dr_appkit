@@ -102,7 +102,7 @@ bool ak_parse_window_layout_attributes(const char* attributesStr, ak_window_layo
 typedef struct
 {
     /// The name of the panel.
-    char name[AK_MAX_PANEL_NAME_LENGTH];
+    char type[AK_MAX_PANEL_TYPE_LENGTH];
 
     /// The split axis.
     ak_panel_split_axis splitAxis;
