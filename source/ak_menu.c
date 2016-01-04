@@ -203,13 +203,13 @@ ak_window* ak_create_menu(ak_application* pApplication, ak_window* pParent, size
     pMenu->borderMask              = ak_menu_border_none;
     pMenu->borderMaskOffset        = 0;
     pMenu->borderMaskLength        = 0;
-    pMenu->borderColor             = easygui_rgb(96, 96, 96);
+    pMenu->borderColor             = easygui_rgb(64, 64, 64);
     pMenu->backgroundColor         = easygui_rgb(32, 32, 32);
-    pMenu->backgroundColorHovered  = easygui_rgb(96, 96, 96);
+    pMenu->backgroundColorHovered  = easygui_rgb(64, 64, 64);
     pMenu->pFont                   = NULL;
     pMenu->textColor               = easygui_rgb(224, 224, 224);
     pMenu->textColorDisabled       = easygui_rgb(112, 112, 112);
-    pMenu->separatorColor          = easygui_rgb(64, 64, 64);
+    pMenu->separatorColor          = easygui_rgb(48, 48, 48);
     pMenu->separatorWidth          = 1;
     pMenu->borderWidth             = 1;
     pMenu->paddingY                = 2;

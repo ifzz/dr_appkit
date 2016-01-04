@@ -81,7 +81,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     //// Default Text Editor ///
 
     // Default text editor.
-    pTheme->defaultText = ak_init_text_theme(pApplication, defaultMonospaceFontFamily, defaultMonospaceFontSize, easy2d_weight_default, easy2d_slant_none, easygui_rgb(224, 224, 224), easygui_rgb(80, 80, 80));
+    pTheme->defaultText = ak_init_text_theme(pApplication, defaultMonospaceFontFamily, defaultMonospaceFontSize, easy2d_weight_default, easy2d_slant_none, easygui_rgb(224, 224, 224), easygui_rgb(48, 48, 48));
 }
 
 void ak_theme_load_from_file(ak_application* pApplication, ak_theme* pTheme, const char* absolutePath)
