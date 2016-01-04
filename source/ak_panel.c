@@ -28,6 +28,13 @@ typedef struct
     /// The position of the split.
     float splitPos;
 
+    /// The split ratio. Only used if maintainSplitRatio is true.
+    float splitRatio;
+
+    /// Whether or not the split position should be based on splitRatio.
+    bool maintainSplitRatio;
+
+
     /// The tab bar orientation.
     tabbar_orientation tabBarOrientation;
 
@@ -88,24 +95,33 @@ PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
     easygui_element* pChildPanel2 = pPanel->pFirstChild->pNextSibling;
 
     float borderWidth = 0;
+    float splitPos = pPanelData->splitPos;
 
     if (pPanelData->splitAxis == ak_panel_split_axis_horizontal)
     {
         // Horizontal.
-        easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
-        easygui_set_size(pChildPanel1, (pPanelData->splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
+        if (pPanelData->maintainSplitRatio) {
+            splitPos = pPanel->height * pPanelData->splitRatio;
+        }
 
-        easygui_set_relative_position(pChildPanel2, pPanelData->splitPos, borderWidth);
-        easygui_set_size(pChildPanel2, (pPanel->width - pPanelData->splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
+        easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
+        easygui_set_size(pChildPanel1, (pPanel->width / innerScaleX) - (borderWidth*2), splitPos - borderWidth);
+
+        easygui_set_relative_position(pChildPanel2, borderWidth, splitPos);
+        easygui_set_size(pChildPanel2, (pPanel->width / innerScaleX) - (borderWidth*2), (pPanel->height / innerScaleY) - splitPos - borderWidth);
     }
     else
     {
         // Vertical.
-        easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
-        easygui_set_size(pChildPanel1, (pPanel->width / innerScaleX) - (borderWidth*2), pPanelData->splitPos - borderWidth);
+        if (pPanelData->maintainSplitRatio) {
+            splitPos = pPanel->width * pPanelData->splitRatio;
+        }
 
-        easygui_set_relative_position(pChildPanel2, borderWidth, pPanelData->splitPos);
-        easygui_set_size(pChildPanel2, (pPanel->width / innerScaleX) - (borderWidth*2), (pPanel->height / innerScaleY) - pPanelData->splitPos - borderWidth);
+        easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
+        easygui_set_size(pChildPanel1, (splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
+
+        easygui_set_relative_position(pChildPanel2, splitPos, borderWidth);
+        easygui_set_size(pChildPanel2, (pPanel->width - splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
     }
 }
 
@@ -372,6 +388,8 @@ easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* 
         pPanelData->type[0]            = '\0';
         pPanelData->splitAxis          = ak_panel_split_axis_none;
         pPanelData->splitPos           = 0;
+        pPanelData->splitRatio         = 0;
+        pPanelData->maintainSplitRatio = false;
         pPanelData->tabBarOrientation  = tabbar_orientation_top;
         pPanelData->pTabBar            = NULL;
         pPanelData->pToolContainer     = NULL;
@@ -594,7 +612,6 @@ easygui_element* ak_panel_get_split_panel_1(easygui_element* pPanel)
     return pPanel->pFirstChild;
 }
 
-
 easygui_element* ak_panel_get_split_panel_2(easygui_element* pPanel)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
@@ -608,6 +625,34 @@ easygui_element* ak_panel_get_split_panel_2(easygui_element* pPanel)
 
     return pPanel->pFirstChild->pNextSibling;
 }
+
+void ak_panel_enable_ratio_split(easygui_element* pPanel)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return;
+    }
+
+    pPanelData->maintainSplitRatio = true;
+
+    if (pPanelData->splitAxis == ak_panel_split_axis_vertical) {
+        pPanelData->splitRatio = pPanelData->splitPos / easygui_get_width(pPanel);
+    } else {
+        pPanelData->splitRatio = pPanelData->splitPos / easygui_get_height(pPanel);
+    }
+}
+
+void ak_panel_disable_ratio_split(easygui_element* pPanel)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return;
+    }
+
+    pPanelData->maintainSplitRatio = false;
+    pPanelData->splitRatio = 0;
+}
+
 
 bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
 {

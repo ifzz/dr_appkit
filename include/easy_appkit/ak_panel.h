@@ -128,6 +128,12 @@ easygui_element* ak_panel_get_split_panel_1(easygui_element* pPanel);
 ///     The second split panel is the right one in the case of a horizontal split, and the bottom one for vertical splits.
 easygui_element* ak_panel_get_split_panel_2(easygui_element* pPanel);
 
+/// Enables ratio-based splitting based on the ratio at the time this function is called.
+void ak_panel_enable_ratio_split(easygui_element* pPanel);
+
+/// Disables ratio-based splitting.
+void ak_panel_disable_ratio_split(easygui_element* pPanel);
+
 
 /// Attaches a tool to the given panel.
 ///
