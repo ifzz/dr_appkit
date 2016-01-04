@@ -165,10 +165,10 @@ ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName
 /// Retrieves a pointer to the panel with the given name.
 ///
 /// @remarks
-///     This is a slow recursive function and should only be called once at initialization time.
+///     This is a slow recursive function.
 ///     @par
 ///     This will only find panels that were created by the layout config.
-easygui_element* ak_find_panel_by_name(ak_application* pApplication, const char* pPanelName);
+easygui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelName);
 
 
 /// Sets the function to call just before the application enters into the main loop.

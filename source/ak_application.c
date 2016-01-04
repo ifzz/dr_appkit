@@ -584,7 +584,7 @@ ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName
 }
 
 
-easygui_element* ak_find_panel_by_name(ak_application* pApplication, const char* pPanelName)
+easygui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelName)
 {
     if (pApplication == NULL || pPanelName == NULL) {
         return NULL;
