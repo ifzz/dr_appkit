@@ -202,6 +202,9 @@ PRIVATE easygui_element* ak_create_window_panel(ak_application* pApplication, ak
         return NULL;
     }
 
+    ak_panel_set_type(pElement, "AK.RootWindowPanel");
+
+
     float dpiScaleX;
     float dpiScaleY;
     ak_get_window_dpi_scale(pWindow, &dpiScaleX, &dpiScaleY);
@@ -1366,13 +1369,19 @@ bool ak_is_window_ancestor(ak_window* pAncestor, ak_window* pDescendant)
 
 ak_window* ak_get_panel_window(easygui_element* pPanel)
 {
-    assert(pPanel != NULL);
-    assert(pPanel->pParent == NULL);                                                // Must be a top-level element.
-    assert(ak_panel_get_extra_data_size(pPanel) == sizeof(element_user_data));      // A loose check to help ensure we're working with the right kind of panel. 
+    easygui_element* pTopLevelPanel = easygui_find_top_level_element(pPanel);
+    if (pTopLevelPanel == NULL) {
+        return NULL;
+    }
 
-    element_user_data* pWindowData = ak_panel_get_extra_data(pPanel);
+    if (!ak_panel_is_of_type(pTopLevelPanel, "AK.RootWindowPanel")) {
+        return NULL;
+    }
+
+    element_user_data* pWindowData = ak_panel_get_extra_data(pTopLevelPanel);
     assert(pWindowData != NULL);
 
+    assert(ak_panel_get_extra_data_size(pTopLevelPanel) == sizeof(element_user_data));      // A loose check to help ensure we're working with the right kind of panel.
     return pWindowData->pWindow;
 }
 

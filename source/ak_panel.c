@@ -407,6 +407,11 @@ ak_application* ak_get_panel_application(easygui_element* pPanel)
     return pPanelData->pApplication;
 }
 
+easygui_element* ak_panel_get_parent(easygui_element* pPanel)
+{
+    return pPanel->pParent;
+}
+
 size_t ak_panel_get_extra_data_size(easygui_element* pPanel)
 {
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
@@ -558,6 +563,11 @@ void ak_panel_unsplit(easygui_element* pPanel)
 
     pPanelData->splitAxis = ak_panel_split_axis_none;
     pPanelData->splitPos  = 0;
+}
+
+bool ak_panel_is_split(easygui_element* pPanel)
+{
+    return ak_panel_get_split_axis(pPanel) != ak_panel_split_axis_none;
 }
 
 ak_panel_split_axis ak_panel_get_split_axis(easygui_element* pPanel)

@@ -60,6 +60,9 @@ easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* 
 /// Retrieves a pointer to the application that owns the given panel.
 ak_application* ak_get_panel_application(easygui_element* pPanel);
 
+/// Retrieves the parent panel of the given panel.
+easygui_element* ak_panel_get_parent(easygui_element* pPanel);
+
 
 /// Retrieves the size of the panel's extra data.
 size_t ak_panel_get_extra_data_size(easygui_element* pPanel);
@@ -102,6 +105,9 @@ bool ak_panel_split(easygui_element* pPanel, ak_panel_split_axis splitAxis, floa
 /// @remarks
 ///     This will delete any child elements, so ensure everything has been cleaned up appropriately beforehand.
 void ak_panel_unsplit(easygui_element* pPanel);
+
+/// Determines whether or not the given panel is split.
+bool ak_panel_is_split(easygui_element* pPanel);
 
 /// Retrieves the axis that the given panel is split along.
 ak_panel_split_axis ak_panel_get_split_axis(easygui_element* pPanel);

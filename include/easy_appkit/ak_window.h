@@ -161,11 +161,6 @@ bool ak_is_window_ancestor(ak_window* pAncestor, ak_window* pDescendant);
 
 
 /// Retrieves a pointer to the window that is associated with the given panel.
-///
-/// @remarks
-///     It is assumed the given panel is a top-level element and is associated with a window.
-///     @par
-///     This will return null if the panel is not a top-level element.
 ak_window* ak_get_panel_window(easygui_element* pPanel);
 
 

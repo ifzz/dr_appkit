@@ -162,13 +162,38 @@ ak_window* ak_get_element_window(easygui_element* pElement);
 ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName);
 
 
-/// Retrieves a pointer to the panel with the given name.
+/// Retrieves a pointer to the first window in the given application.
+ak_window* ak_get_first_window(ak_application* pApplication);
+
+/// Retrieves a pointer to the next window in the given application.
+ak_window* ak_get_next_window(ak_application* pApplication, ak_window* pWindow);
+
+
+/// Retrieves a pointer to the first panel.
+///
+/// @remarks
+///     Use this in conjunction with ak_get_next_panel() to iterate over every panel in the main hierarchy.
+///     @par
+///     This will only find panels that are part of the main hierarchy and will not find those that are part of custom tools.
+easygui_element* ak_get_first_panel(ak_application* pApplication);
+
+/// Retrieves a pointer to the next panel.
+easygui_element* ak_get_next_panel(ak_application* pApplication, easygui_element* pPanel);
+
+
+/// Retrieves a pointer to the panel with the given type.
 ///
 /// @remarks
 ///     This is a slow recursive function.
 ///     @par
-///     This will only find panels that were created by the layout config.
-easygui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelName);
+///     This will only find panels that are part of the main hierarchy and will not find those that are part of custom tools.
+easygui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelType);
+
+/// Retrieves a pointer to the next panel with the given type.
+///
+/// @remarks
+///     This will only find panels that are part of the main hierarchy and will not find those that are part of custom tools.
+easygui_element* ak_find_next_panel_by_type(ak_application* pApplication, easygui_element* pPanel, const char* pPanelType);
 
 
 /// Sets the function to call just before the application enters into the main loop.

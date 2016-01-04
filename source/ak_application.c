@@ -584,18 +584,100 @@ ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName
 }
 
 
-easygui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelName)
+ak_window* ak_get_first_window(ak_application* pApplication)
 {
-    if (pApplication == NULL || pPanelName == NULL) {
+    if (pApplication == NULL) {
         return NULL;
     }
 
-    // We need to search each window.
-    for (ak_window* pWindow = pApplication->pFirstWindow; pWindow != NULL; pWindow = ak_get_next_sibling_window(pWindow))
+    return pApplication->pFirstWindow;
+}
+
+ak_window* ak_get_next_window(ak_application* pApplication, ak_window* pWindow)
+{
+    if (pApplication == NULL || pWindow == NULL) {
+        return NULL;
+    }
+
+    return ak_get_next_sibling_window(pWindow);
+}
+
+
+easygui_element* ak_get_first_panel(ak_application* pApplication)
+{
+    // The first panel is the first panel of the first window.
+    ak_window* pFirstWindow = ak_get_first_window(pApplication);
+    if (pFirstWindow == NULL) {
+        return NULL;
+    }
+
+    return ak_get_window_panel(pFirstWindow);
+}
+
+PRIVATE easygui_element* ak_get_next_non_child_panel(ak_application* pApplication, easygui_element* pPanel)
+{
+    if (pPanel == NULL) {
+        return NULL;
+    }
+
+    if (pPanel == ak_get_window_panel(ak_get_panel_window(pPanel)))
     {
-        easygui_element* pResult = ak_panel_find_by_type_recursive(ak_get_window_panel(pWindow), pPanelName);
-        if (pResult != NULL) {
-            return pResult;
+        // It's the root panel on the window so we just return the first panel of the next window.
+        return ak_get_window_panel(ak_get_next_window(pApplication, ak_get_panel_window(pPanel)));
+    }
+    else
+    {
+        // It's not a root level window. If <pPanel> is the first split panel of it's parent, we just return the second split panel.
+        if (pPanel == ak_panel_get_split_panel_1(ak_panel_get_parent(pPanel)))
+        {
+            // <pPanel> is the first split panel, so we just return the second.
+            return ak_panel_get_split_panel_2(ak_panel_get_parent(pPanel));
+        }
+        else
+        {
+            // <pPanel> is not the first split panel (probably the second). In this case we need to get the next panel that is not
+            // a child of the parent.
+            return ak_get_next_non_child_panel(pApplication, ak_panel_get_parent(pPanel));
+        }
+    }
+}
+
+easygui_element* ak_get_next_panel(ak_application* pApplication, easygui_element* pPanel)
+{
+    // The next panel depends on where <pPanel> is in relation to it's parent, and whether or not it is split. If it's a split panel we just return the first of
+    // the split children. If it's not split, it's a bit more complex.
+
+    if (ak_panel_is_split(pPanel))
+    {
+        // It's a split panel - just return the first split child.
+        return ak_panel_get_split_panel_1(pPanel);
+    }
+    else
+    {
+        // It's not a split panel so we just get the next non-child.
+        return ak_get_next_non_child_panel(pApplication, pPanel);
+    }
+}
+
+
+easygui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelType)
+{
+    for (easygui_element* pPanel = ak_get_first_panel(pApplication); pPanel != NULL; pPanel = ak_get_next_panel(pApplication, pPanel))
+    {
+        if (ak_panel_is_of_type(pPanel, pPanelType)) {
+            return pPanel;
+        }
+    }
+
+    return NULL;
+}
+
+easygui_element* ak_find_next_panel_by_type(ak_application* pApplication, easygui_element* pPanel, const char* pPanelType)
+{
+    for (easygui_element* pNextPanel = ak_get_next_panel(pApplication, pPanel); pNextPanel != NULL; pNextPanel = ak_get_next_panel(pApplication, pNextPanel))
+    {
+        if (ak_panel_is_of_type(pNextPanel, pPanelType)) {
+            return pNextPanel;
         }
     }
 
@@ -873,7 +955,17 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
             return false;
         }
 
-        ak_panel_set_type(pWorkingPanel, attr.type);
+        // We only set the panel type for panels that are not the top-level panel.
+        if (pWorkingPanel != ak_get_window_panel(ak_get_panel_window(pWorkingPanel))) {
+            if (attr.type[0] != '\0') {
+                ak_panel_set_type(pWorkingPanel, attr.type);
+            }
+        } else {
+            if (attr.type[0] != '\0') {
+                ak_warning(pApplication, "Attempting to set panel type of a top-level panel which is illegal.");
+            }
+        }
+        
 
         if (attr.splitAxis == ak_panel_split_axis_none)
         {
