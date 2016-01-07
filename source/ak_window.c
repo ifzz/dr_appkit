@@ -491,10 +491,12 @@ easygui_key ak_win32_to_easygui_key(WPARAM wParam)
 {
     switch (wParam)
     {
-    case VK_LEFT:  return EASYGUI_ARROW_LEFT;
-    case VK_UP:    return EASYGUI_ARROW_UP;
-    case VK_RIGHT: return EASYGUI_ARROW_RIGHT;
-    case VK_DOWN:  return EASYGUI_ARROW_DOWN;
+    case VK_BACK:   return EASYGUI_BACKSPACE;
+    case VK_LEFT:   return EASYGUI_ARROW_LEFT;
+    case VK_UP:     return EASYGUI_ARROW_UP;
+    case VK_RIGHT:  return EASYGUI_ARROW_RIGHT;
+    case VK_DOWN:   return EASYGUI_ARROW_DOWN;
+    case VK_DELETE: return EASYGUI_DELETE;
 
     default: break;
     }
