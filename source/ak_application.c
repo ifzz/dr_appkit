@@ -1214,6 +1214,30 @@ void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMo
     easygui_post_inbound_event_mouse_wheel(ak_get_window_panel(pWindow), delta, relativeMousePosX, relativeMousePosY);
 }
 
+void ak_application_on_key_down(ak_window* pWindow, easygui_key key, bool autoRepeated)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_key_down(pWindow, key, autoRepeated);
+    easygui_post_inbound_event_key_down(ak_get_window_panel(pWindow)->pContext, key, autoRepeated);
+}
+
+void ak_application_on_key_up(ak_window* pWindow, easygui_key key)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_key_up(pWindow, key);
+    easygui_post_inbound_event_key_up(ak_get_window_panel(pWindow)->pContext, key);
+}
+
+void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int character, bool autoRepeated)
+{
+    assert(pWindow != NULL);
+
+    ak_window_on_printable_key_down(pWindow, character, autoRepeated);
+    easygui_post_inbound_event_printable_key_down(ak_get_window_panel(pWindow)->pContext, character, autoRepeated);
+}
+
 
 void ak_application_track_top_level_window(ak_window* pWindow)
 {

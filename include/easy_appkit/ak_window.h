@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <easy_gui/easy_gui.h>
 
 // This flag is posted on on_hide events when a popup window is automatically hidden as a result of the user clicking
 // outside of it's region.
@@ -30,8 +31,6 @@ extern "C" {
 
 typedef struct ak_window ak_window;
 typedef struct ak_application ak_application;
-typedef struct easygui_element easygui_element;
-typedef struct easy2d_surface easy2d_surface;
 
 typedef enum
 {
@@ -53,14 +52,17 @@ typedef enum
 
 } ak_window_type;
 
-typedef bool (* ak_window_on_hide_proc)        (ak_window* pWindow, unsigned int flags);
-typedef bool (* ak_window_on_show_proc)        (ak_window* pWindow);
-typedef void (* ak_window_on_activate_proc)    (ak_window* pWindow);
-typedef void (* ak_window_on_deactivate_proc)  (ak_window* pWindow);
-typedef void (* ak_window_on_mouse_enter_proc) (ak_window* pWindow);
-typedef void (* ak_window_on_mouse_leave_proc) (ak_window* pWindow);
-typedef void (* ak_window_on_mouse_button_proc)(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
-typedef void (* ak_window_on_mouse_wheel_proc) (ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
+typedef bool (* ak_window_on_hide_proc)              (ak_window* pWindow, unsigned int flags);
+typedef bool (* ak_window_on_show_proc)              (ak_window* pWindow);
+typedef void (* ak_window_on_activate_proc)          (ak_window* pWindow);
+typedef void (* ak_window_on_deactivate_proc)        (ak_window* pWindow);
+typedef void (* ak_window_on_mouse_enter_proc)       (ak_window* pWindow);
+typedef void (* ak_window_on_mouse_leave_proc)       (ak_window* pWindow);
+typedef void (* ak_window_on_mouse_button_proc)      (ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+typedef void (* ak_window_on_mouse_wheel_proc)       (ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
+typedef void (* ak_window_on_key_down_proc)          (ak_window* pWindow, easygui_key key, bool autoRepeated);
+typedef void (* ak_window_on_key_up_proc)            (ak_window* pWindow, easygui_key key);
+typedef void (* ak_window_on_printable_key_down_proc)(ak_window* pWindow, unsigned int character, bool autoRepeated);
 
 
 /// Creates a window of the given type.
@@ -218,6 +220,15 @@ void ak_window_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int
 
 /// Calls the on_mouse_button_wheel event handler for the given window.
 void ak_window_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
+
+/// Calls the on_key_down event handler for the given window.
+void ak_window_on_key_down(ak_window* pWindow, easygui_key key, bool autoRepeated);
+
+/// Calls the on_key_up event handlers for the given window.
+void ak_window_on_key_up(ak_window* pWindow, easygui_key key);
+
+/// Calls the on_printable_key_down for the given window.
+void ak_window_on_printable_key_down(ak_window* pWindow, unsigned int character, bool autoRepeated);
 
 
 #ifdef __cplusplus

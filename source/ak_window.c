@@ -27,6 +27,10 @@ struct ak_window
     int popupRelativePosX;
     int popupRelativePosY;
 
+    /// The high-surrogate from a WM_CHAR message. This is used in order to build a surrogate pair from a couple of WM_CHAR messages. When
+    /// a WM_CHAR message is received when code point is not a high surrogate, this is set to 0.
+    unsigned short utf16HighSurrogate;
+
     /// Keeps track of whether or not the cursor is over this window.
     bool isCursorOver;
 
@@ -84,6 +88,15 @@ struct ak_window
 
     /// Called when the mouse wheel is turned.
     ak_window_on_mouse_wheel_proc onMouseWheel;
+
+    /// Called when a key is pressed.
+    ak_window_on_key_down_proc onKeyDown;
+
+    /// Called when a key is released.
+    ak_window_on_key_up_proc onKeyUp;
+
+    /// Called when a printable key is pressed.
+    ak_window_on_printable_key_down_proc onPrintableKeyDown;
 
 
     /// A pointer to the parent window.
@@ -326,6 +339,7 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     pWindow->hCursor               = LoadCursor(NULL, IDC_ARROW);
     pWindow->popupRelativePosX     = 0;
     pWindow->popupRelativePosY     = 0;
+    pWindow->utf16HighSurrogate    = 0;
     pWindow->isCursorOver          = false;
     pWindow->isMarkedAsDeleted     = false;
 
@@ -343,6 +357,9 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     pWindow->onMouseButtonUp       = NULL;
     pWindow->onMouseButtonDblClick = NULL;
     pWindow->onMouseWheel          = NULL;
+    pWindow->onKeyDown             = NULL;
+    pWindow->onKeyUp               = NULL;
+    pWindow->onPrintableKeyDown    = NULL;
     pWindow->pParent               = NULL;
     pWindow->pFirstChild           = NULL;
     pWindow->pLastChild            = NULL;
@@ -463,6 +480,26 @@ PRIVATE void ak_win32_track_mouse_leave_event(HWND hWnd)
     tme.dwFlags   = TME_LEAVE;
     tme.hwndTrack = hWnd;
     TrackMouseEvent(&tme);
+}
+
+bool ak_is_win32_mouse_button_key_code(WPARAM wParam)
+{
+    return wParam == VK_LBUTTON || wParam == VK_RBUTTON || wParam == VK_MBUTTON || wParam == VK_XBUTTON1 || wParam == VK_XBUTTON2;
+}
+
+easygui_key ak_win32_to_easygui_key(WPARAM wParam)
+{
+    switch (wParam)
+    {
+    case VK_LEFT:  return EASYGUI_ARROW_LEFT;
+    case VK_UP:    return EASYGUI_ARROW_UP;
+    case VK_RIGHT: return EASYGUI_ARROW_RIGHT;
+    case VK_DOWN:  return EASYGUI_ARROW_DOWN;
+
+    default: break;
+    }
+
+    return (easygui_key)wParam;
 }
 
 LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -729,6 +766,75 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 ak_application_on_mouse_wheel(pWindow, delta, p.x, p.y);
                 break;
             }
+
+
+            case WM_KEYDOWN:
+                {
+                    if (!ak_is_win32_mouse_button_key_code(wParam))
+                    {
+                        bool autoRepeat = (lParam & (1 << 30)) != 0;
+                        ak_application_on_key_down(pWindow, ak_win32_to_easygui_key(wParam), autoRepeat);
+                    }
+
+                    break;
+                }
+
+            case WM_KEYUP:
+                {
+                    if (!ak_is_win32_mouse_button_key_code(wParam))
+                    {
+                        ak_application_on_key_up(pWindow, ak_win32_to_easygui_key(wParam));
+                    }
+
+                    break;
+                }
+
+                // NOTE: WM_UNICHAR is not posted by Windows itself, but rather intended to be posted by applications. Thus, we need to use WM_CHAR. WM_CHAR
+                //       posts events as UTF-16 code points. When the code point is a surrogate pair, we need to store it and wait for the next WM_CHAR event
+                //       which will contain the other half of the pair.
+            case WM_CHAR:
+                {
+                    // Windows will post WM_CHAR events for keys we don't particularly want. We'll filter them out here (they will be processed by WM_KEYDOWN).
+                    if (wParam < 32 || wParam == 127)       // 127 = ASCII DEL (will be triggered by CTRL+Backspace)
+                    {
+                        if (wParam != VK_TAB  &&
+                            wParam != VK_RETURN)    // VK_RETURN = Enter Key.
+                        {
+                            break;
+                        }
+                    }
+
+
+                    if ((lParam & (1U << 31)) == 0)     // Bit 31 will be 1 if the key was pressed, 0 if it was released.
+                    {
+                        if (IS_HIGH_SURROGATE(wParam))
+                        {
+                            assert(pWindow->utf16HighSurrogate == 0);
+                            pWindow->utf16HighSurrogate = (unsigned short)wParam;
+                        }
+                        else
+                        {
+                            unsigned int character = (unsigned int)wParam;
+                            if (IS_LOW_SURROGATE(wParam))
+                            {
+                                assert(IS_HIGH_SURROGATE(pWindow->utf16HighSurrogate) != 0);
+                                character = utf16pair_to_utf32(pWindow->utf16HighSurrogate, (unsigned short)wParam);
+                            }
+
+                            pWindow->utf16HighSurrogate = 0;
+
+
+                            int repeatCount = lParam & 0x0000FFFF;
+                            for (int i = 0; i < repeatCount; ++i)
+                            {
+                                bool autoRepeat = (lParam & (1 << 30)) != 0;
+                                ak_application_on_printable_key_down(pWindow, character, autoRepeat);
+                            }
+                        }
+                    }
+
+                    break;
+                }
 
 
             case WM_MOVE:
@@ -1642,6 +1748,39 @@ void ak_window_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePo
 
     if (pWindow->onMouseWheel) {
         pWindow->onMouseWheel(pWindow, delta, relativeMousePosX, relativeMousePosY);
+    }
+}
+
+void ak_window_on_key_down(ak_window* pWindow, easygui_key key, bool autoRepeated)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onKeyDown) {
+        pWindow->onKeyDown(pWindow, key, autoRepeated);
+    }
+}
+
+void ak_window_on_key_up(ak_window* pWindow, easygui_key key)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onKeyUp) {
+        pWindow->onKeyUp(pWindow, key);
+    }
+}
+
+void ak_window_on_printable_key_down(ak_window* pWindow, unsigned int character, bool autoRepeated)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onPrintableKeyDown) {
+        pWindow->onPrintableKeyDown(pWindow, character, autoRepeated);
     }
 }
 
