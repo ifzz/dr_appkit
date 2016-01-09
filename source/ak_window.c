@@ -492,6 +492,9 @@ easygui_key ak_win32_to_easygui_key(WPARAM wParam)
     switch (wParam)
     {
     case VK_BACK:   return EASYGUI_BACKSPACE;
+    case VK_SHIFT:  return EASYGUI_SHIFT;
+    case VK_END:    return EASYGUI_END;
+    case VK_HOME:   return EASYGUI_HOME;
     case VK_LEFT:   return EASYGUI_ARROW_LEFT;
     case VK_UP:     return EASYGUI_ARROW_UP;
     case VK_RIGHT:  return EASYGUI_ARROW_RIGHT;
