@@ -940,7 +940,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
                             if (hActivatedWnd != NULL)
                             {
-                                ak_application_on_deactivate_window((ak_window*)GetWindowLongPtrA(hActivatedWnd, 0));
+                                ak_application_on_activate_window((ak_window*)GetWindowLongPtrA(hActivatedWnd, 0));
                             }
                         }
                     }
@@ -963,10 +963,12 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                         hActivatedWnd = ak_get_top_level_application_HWND(hActivatedWnd);
                         if (hActivatedWnd != NULL)
                         {
-                            ak_application_on_deactivate_window((ak_window*)GetWindowLongPtrA(hActivatedWnd, 0));
+                            ak_application_on_activate_window((ak_window*)GetWindowLongPtrA(hActivatedWnd, 0));
                         }
                     }
                 }
+
+
 
                 break;
             }
