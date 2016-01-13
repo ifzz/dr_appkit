@@ -28,6 +28,10 @@ typedef struct
     easygui_element* pPanel;
 
 
+    /// The function to call when the tool needs to handle an action.
+    ak_tool_on_handle_action_proc onHandleAction;
+
+
     /// The size of the tool's extra data, in bytes.
     size_t extraDataSize;
 
@@ -162,6 +166,29 @@ const char* ak_get_tool_title(easygui_element* pTool)
     }
 
     return pToolData->title;
+}
+
+
+void ak_tool_handle_action(easygui_element* pTool, const char* pActionName)
+{
+    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    if (pToolData == NULL) {
+        return;
+    }
+
+    if (pToolData->onHandleAction) {
+        pToolData->onHandleAction(pTool, pActionName);
+    }
+}
+
+void ak_tool_set_on_handle_action(easygui_element* pTool, ak_tool_on_handle_action_proc proc)
+{
+    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    if (pToolData == NULL) {
+        return;
+    }
+
+    pToolData->onHandleAction = proc;
 }
 
 

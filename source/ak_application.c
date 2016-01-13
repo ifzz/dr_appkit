@@ -56,8 +56,15 @@ struct ak_application
     /// A pointer to the function to call when a custom tool needs to be instantiated.
     ak_create_tool_proc onCreateTool;
 
-    /// A pointer to the function to call when a custom tooll needs to be deleted.
+    /// A pointer to the function to call when a custom tool needs to be deleted.
     ak_delete_tool_proc onDeleteTool;
+
+    /// A pointer to the function to call when a key down event needs to be handled.
+    ak_application_on_key_down_proc onKeyDown;
+
+    /// A pointer to the function to call when a key up event needs to be handled.
+    ak_application_on_key_up_proc onKeyUp;
+
 
     /// We need to keep track of every existing window that is owned by the application. We implement this as a linked list, with this item being the first. The
     /// first window is considered to be the primary window.
@@ -180,6 +187,8 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         pApplication->onGetDefaultConfig = NULL;
         pApplication->onCreateTool       = NULL;
         pApplication->onDeleteTool       = NULL;
+        pApplication->onKeyDown          = NULL;
+        pApplication->onKeyUp            = NULL;
 
 
         // Windows.
@@ -779,6 +788,25 @@ bool ak_application_delete_tool(ak_application* pApplication, easygui_element* p
 }
 
 
+void ak_set_on_key_down(ak_application* pApplication, ak_application_on_key_down_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onKeyDown = proc;
+}
+
+void ak_set_on_key_up(ak_application* pApplication, ak_application_on_key_up_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onKeyUp = proc;
+}
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1220,6 +1248,11 @@ void ak_application_on_key_down(ak_window* pWindow, easygui_key key, int stateFl
 
     ak_window_on_key_down(pWindow, key, stateFlags);
     easygui_post_inbound_event_key_down(ak_get_window_panel(pWindow)->pContext, key, (stateFlags & AK_KEY_STATE_AUTO_REPEATED) != 0);
+
+    ak_application* pApplication = ak_get_window_application(pWindow);
+    if (pApplication != NULL && pApplication->onKeyDown) {
+        pApplication->onKeyDown(pApplication, pWindow, key, stateFlags);
+    }
 }
 
 void ak_application_on_key_up(ak_window* pWindow, easygui_key key, int stateFlags)
@@ -1228,6 +1261,11 @@ void ak_application_on_key_up(ak_window* pWindow, easygui_key key, int stateFlag
 
     ak_window_on_key_up(pWindow, key, stateFlags);
     easygui_post_inbound_event_key_up(ak_get_window_panel(pWindow)->pContext, key);
+
+    ak_application* pApplication = ak_get_window_application(pWindow);
+    if (pApplication != NULL && pApplication->onKeyUp) {
+        pApplication->onKeyUp(pApplication, pWindow, key, stateFlags);
+    }
 }
 
 void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int character, int stateFlags)

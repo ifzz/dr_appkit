@@ -22,6 +22,8 @@ typedef struct easygui_element easygui_element;
 typedef struct ak_application ak_application;
 typedef struct easygui_tab easygui_tab;
 
+typedef void (* ak_tool_on_handle_action_proc)(easygui_element* pTool, const char* pActionName);
+
 /// Creates a tool.
 ///
 /// @remarks
@@ -65,6 +67,12 @@ void ak_set_tool_title(easygui_element* pTool, const char* title);
 /// Retrieves the title of the tool.
 const char* ak_get_tool_title(easygui_element* pTool);
 
+
+/// Allows the tool to handle the given action.
+void ak_tool_handle_action(easygui_element* pTool, const char* pActionName);
+
+/// Sets the function to call when an action needs to be handled.
+void ak_tool_set_on_handle_action(easygui_element* pTool, ak_tool_on_handle_action_proc proc);
 
 
 #ifdef __cplusplus
