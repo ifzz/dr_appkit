@@ -3,6 +3,14 @@
 #ifndef ak_clipboard_h
 #define ak_clipboard_h
 
+#include <stdint.h>
+#include <stdbool.h>
+
+/// Sets the text on the clipboard.
+bool ak_clipboard_set_text(const char* text, size_t textLength);
+
+/// Retrieves the text on the clipboard.
+size_t ak_clipboard_get_text(char* textOut, size_t textOutSize);
 
 
 #endif

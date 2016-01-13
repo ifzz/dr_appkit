@@ -2,6 +2,114 @@
 
 #include "../include/easy_appkit/ak_clipboard.h"
 
+#ifdef _WIN32
+#include <windows.h>
+
+bool ak_clipboard_set_text(const char* text, size_t textLength)
+{
+    if (textLength == (size_t)-1) {
+        textLength = strlen(text);
+    }
+
+    // We must ensure line endlings are normalized to \r\n. If we don't do this pasting won't work
+    // correctly in things like Notepad.
+    //
+    // We allocate a buffer x2 the size of the original string to guarantee there will be enough room
+    // for the extra \r character's we'll be adding.
+    HGLOBAL hTextMem = GlobalAlloc(GMEM_SHARE | GMEM_MOVEABLE, ((textLength*2 + 1) * sizeof(char)));
+    if (hTextMem == NULL) {
+        return false;
+    }
+
+    char* textRN = GlobalLock(hTextMem);
+    if (textRN == NULL) {
+        GlobalFree(hTextMem);
+        return false;
+    }
+
+    if (!OpenClipboard(NULL)) {
+        GlobalFree(hTextMem);
+        return false;
+    }
+
+    if (!EmptyClipboard()) {
+        GlobalFree(hTextMem);
+        CloseClipboard();
+        return false;
+    }
+
+    while (*text != '\0' && textLength > 0)
+    {
+        if (text[0] == '\r' && textLength > 1 && text[1] == '\n')
+        {
+            *textRN++ = '\r';
+            *textRN++ = '\n';
+
+            text += 2;
+            textLength -= 2;
+        }
+        else
+        {
+            if (*text == '\n') {
+                *textRN++ = '\r';
+            }
+
+            *textRN++ = *text++;
+
+            textLength -= 1;
+        }
+    }
+
+    *textRN = '\0';
+    
+
+    GlobalUnlock(hTextMem);
+
+
+    if (SetClipboardData(CF_TEXT, hTextMem) == NULL) {
+        GlobalFree(hTextMem);
+        CloseClipboard();
+        return false;
+    }
+
+    CloseClipboard();
+
+    return true;
+}
+
+size_t ak_clipboard_get_text(char* textOut, size_t textOutSize)
+{
+    if (!IsClipboardFormatAvailable(CF_TEXT)) {
+        return 0;
+    }
+
+    if (!OpenClipboard(NULL)) {
+        return 0;
+    }
+
+    HGLOBAL hTextMem = GetClipboardData(CF_TEXT);
+    if (hTextMem == NULL) {
+        CloseClipboard();
+        return 0;
+    }
+
+    char* textRN = GlobalLock(hTextMem);
+    if (textRN == NULL) {
+        CloseClipboard();
+        return false;
+    }
+
+    size_t textRNLength = strlen(textRN);
+    if (textOut != NULL) {
+        strncpy_s(textOut, textOutSize, textRN, _TRUNCATE);
+    }
+
+    GlobalUnlock(hTextMem);
+    CloseClipboard();
+
+    return textRNLength;
+}
+#endif
 
 /*
 This is free and unencumbered software released into the public domain.
