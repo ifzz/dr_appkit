@@ -507,6 +507,28 @@ easygui_key ak_win32_to_easygui_key(WPARAM wParam)
     return (easygui_key)wParam;
 }
 
+int ak_win32_get_modifier_key_state_flags()
+{
+    int stateFlags = 0;
+    
+    SHORT keyState = GetAsyncKeyState(VK_SHIFT);
+    if (keyState & 0x8000) {
+        stateFlags |= AK_KEY_STATE_SHIFT_DOWN;
+    }
+
+    keyState = GetAsyncKeyState(VK_CONTROL);
+    if (keyState & 0x8000) {
+        stateFlags |= AK_KEY_STATE_CTRL_DOWN;
+    }
+
+    keyState = GetAsyncKeyState(VK_MENU);
+    if (keyState & 0x8000) {
+        stateFlags |= AK_KEY_STATE_ALT_DOWN;
+    }
+
+    return stateFlags;
+}
+
 LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     ak_window* pWindow = (ak_window*)GetWindowLongPtrA(hWnd, 0);
@@ -777,8 +799,12 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 {
                     if (!ak_is_win32_mouse_button_key_code(wParam))
                     {
-                        bool autoRepeat = (lParam & (1 << 30)) != 0;
-                        ak_application_on_key_down(pWindow, ak_win32_to_easygui_key(wParam), autoRepeat);
+                        int stateFlags = ak_win32_get_modifier_key_state_flags();
+                        if ((lParam & (1 << 30)) != 0) {
+                            stateFlags |= AK_KEY_STATE_AUTO_REPEATED;
+                        }
+
+                        ak_application_on_key_down(pWindow, ak_win32_to_easygui_key(wParam), stateFlags);
                     }
 
                     break;
@@ -788,7 +814,8 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 {
                     if (!ak_is_win32_mouse_button_key_code(wParam))
                     {
-                        ak_application_on_key_up(pWindow, ak_win32_to_easygui_key(wParam));
+                        int stateFlags = ak_win32_get_modifier_key_state_flags();
+                        ak_application_on_key_up(pWindow, ak_win32_to_easygui_key(wParam), stateFlags);
                     }
 
                     break;
@@ -832,8 +859,12 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                             int repeatCount = lParam & 0x0000FFFF;
                             for (int i = 0; i < repeatCount; ++i)
                             {
-                                bool autoRepeat = (lParam & (1 << 30)) != 0;
-                                ak_application_on_printable_key_down(pWindow, character, autoRepeat);
+                                int stateFlags = ak_win32_get_modifier_key_state_flags();
+                                if ((lParam & (1 << 30)) != 0) {
+                                    stateFlags |= AK_KEY_STATE_AUTO_REPEATED;
+                                }
+
+                                ak_application_on_printable_key_down(pWindow, character, stateFlags);
                             }
                         }
                     }
@@ -1758,36 +1789,36 @@ void ak_window_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePo
     }
 }
 
-void ak_window_on_key_down(ak_window* pWindow, easygui_key key, bool autoRepeated)
+void ak_window_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags)
 {
     if (pWindow == NULL) {
         return;
     }
 
     if (pWindow->onKeyDown) {
-        pWindow->onKeyDown(pWindow, key, autoRepeated);
+        pWindow->onKeyDown(pWindow, key, stateFlags);
     }
 }
 
-void ak_window_on_key_up(ak_window* pWindow, easygui_key key)
+void ak_window_on_key_up(ak_window* pWindow, easygui_key key, int stateFlags)
 {
     if (pWindow == NULL) {
         return;
     }
 
     if (pWindow->onKeyUp) {
-        pWindow->onKeyUp(pWindow, key);
+        pWindow->onKeyUp(pWindow, key, stateFlags);
     }
 }
 
-void ak_window_on_printable_key_down(ak_window* pWindow, unsigned int character, bool autoRepeated)
+void ak_window_on_printable_key_down(ak_window* pWindow, unsigned int character, int stateFlags)
 {
     if (pWindow == NULL) {
         return;
     }
 
     if (pWindow->onPrintableKeyDown) {
-        pWindow->onPrintableKeyDown(pWindow, character, autoRepeated);
+        pWindow->onPrintableKeyDown(pWindow, character, stateFlags);
     }
 }
 

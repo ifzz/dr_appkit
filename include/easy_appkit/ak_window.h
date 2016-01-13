@@ -25,6 +25,12 @@
 // outside of it's region.
 #define AK_AUTO_HIDE_FROM_OUTSIDE_CLICK     (1 << 0)
 
+// The flags below are posted on on key down and up events.
+#define AK_KEY_STATE_AUTO_REPEATED          (1 << 0)        // Whether or not the key press is generated due to auto-repeating. Only used with key down events.
+#define AK_KEY_STATE_SHIFT_DOWN             (1 << 1)        // Whether or not a shift key is down at the time the key event is handled.
+#define AK_KEY_STATE_CTRL_DOWN              (1 << 2)        // Whether or not a ctrl key is down at the time the key event is handled.
+#define AK_KEY_STATE_ALT_DOWN               (1 << 3)        // Whether or not an alt key is down at the time the key event is handled.
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,9 +66,9 @@ typedef void (* ak_window_on_mouse_enter_proc)       (ak_window* pWindow);
 typedef void (* ak_window_on_mouse_leave_proc)       (ak_window* pWindow);
 typedef void (* ak_window_on_mouse_button_proc)      (ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
 typedef void (* ak_window_on_mouse_wheel_proc)       (ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
-typedef void (* ak_window_on_key_down_proc)          (ak_window* pWindow, easygui_key key, bool autoRepeated);
-typedef void (* ak_window_on_key_up_proc)            (ak_window* pWindow, easygui_key key);
-typedef void (* ak_window_on_printable_key_down_proc)(ak_window* pWindow, unsigned int character, bool autoRepeated);
+typedef void (* ak_window_on_key_down_proc)          (ak_window* pWindow, easygui_key key, int stateFlags);
+typedef void (* ak_window_on_key_up_proc)            (ak_window* pWindow, easygui_key key, int stateFlags);
+typedef void (* ak_window_on_printable_key_down_proc)(ak_window* pWindow, unsigned int character, int stateFlags);
 
 
 /// Creates a window of the given type.
@@ -222,13 +228,13 @@ void ak_window_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int
 void ak_window_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
 
 /// Calls the on_key_down event handler for the given window.
-void ak_window_on_key_down(ak_window* pWindow, easygui_key key, bool autoRepeated);
+void ak_window_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags);
 
 /// Calls the on_key_up event handlers for the given window.
-void ak_window_on_key_up(ak_window* pWindow, easygui_key key);
+void ak_window_on_key_up(ak_window* pWindow, easygui_key key, int stateFlags);
 
 /// Calls the on_printable_key_down for the given window.
-void ak_window_on_printable_key_down(ak_window* pWindow, unsigned int character, bool autoRepeated);
+void ak_window_on_printable_key_down(ak_window* pWindow, unsigned int character, int stateFlags);
 
 
 #ifdef __cplusplus

@@ -1214,28 +1214,28 @@ void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMo
     easygui_post_inbound_event_mouse_wheel(ak_get_window_panel(pWindow), delta, relativeMousePosX, relativeMousePosY);
 }
 
-void ak_application_on_key_down(ak_window* pWindow, easygui_key key, bool autoRepeated)
+void ak_application_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags)
 {
     assert(pWindow != NULL);
 
-    ak_window_on_key_down(pWindow, key, autoRepeated);
-    easygui_post_inbound_event_key_down(ak_get_window_panel(pWindow)->pContext, key, autoRepeated);
+    ak_window_on_key_down(pWindow, key, stateFlags);
+    easygui_post_inbound_event_key_down(ak_get_window_panel(pWindow)->pContext, key, (stateFlags & AK_KEY_STATE_AUTO_REPEATED) != 0);
 }
 
-void ak_application_on_key_up(ak_window* pWindow, easygui_key key)
+void ak_application_on_key_up(ak_window* pWindow, easygui_key key, int stateFlags)
 {
     assert(pWindow != NULL);
 
-    ak_window_on_key_up(pWindow, key);
+    ak_window_on_key_up(pWindow, key, stateFlags);
     easygui_post_inbound_event_key_up(ak_get_window_panel(pWindow)->pContext, key);
 }
 
-void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int character, bool autoRepeated)
+void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int character, int stateFlags)
 {
     assert(pWindow != NULL);
 
-    ak_window_on_printable_key_down(pWindow, character, autoRepeated);
-    easygui_post_inbound_event_printable_key_down(ak_get_window_panel(pWindow)->pContext, character, autoRepeated);
+    ak_window_on_printable_key_down(pWindow, character, stateFlags);
+    easygui_post_inbound_event_printable_key_down(ak_get_window_panel(pWindow)->pContext, character, (stateFlags & AK_KEY_STATE_AUTO_REPEATED) != 0);
 }
 
 

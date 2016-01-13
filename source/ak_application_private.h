@@ -64,13 +64,13 @@ void ak_application_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton
 void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
 
 /// Called the on_key_down event handler for the given window.
-void ak_application_on_key_down(ak_window* pWindow, easygui_key key, bool autoRepeated);
+void ak_application_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags);
 
 /// Called the on_key_up event handlers for the given window.
-void ak_application_on_key_up(ak_window* pWindow, easygui_key key);
+void ak_application_on_key_up(ak_window* pWindow, easygui_key key, int stateFlags);
 
 /// Called the on_printable_key_down for the given window.
-void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int character, bool autoRepeated);
+void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int character, int stateFlags);
 
 
 /// Tracks the given window.
