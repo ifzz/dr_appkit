@@ -916,12 +916,6 @@ void ak_delete_timer(ak_timer* pTimer)
     KillTimer(pTimer->hWnd, pTimer->tagWin32);
     free(pTimer);
 }
-
-
-unsigned int ak_get_caret_blink_rate()
-{
-    return GetCaretBlinkTime();
-}
 #endif
 
 

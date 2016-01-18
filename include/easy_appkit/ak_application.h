@@ -271,10 +271,6 @@ ak_timer* ak_create_timer(ak_application* pApplication, unsigned int timeoutInMi
 void ak_delete_timer(ak_timer* pTimer);
 
 
-/// Retrieves the blink rate in milliseconds for text cursors/carets.
-unsigned int ak_get_caret_blink_rate();
-
-
 #ifdef __cplusplus
 }
 #endif
