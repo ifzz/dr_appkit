@@ -18,6 +18,10 @@
 #include <string.h>
 #include <assert.h>
 
+#ifdef AK_USE_WIN32
+#include <windows.h>
+#endif
+
 struct ak_application
 {
     /// The name of the application.
@@ -71,6 +75,13 @@ struct ak_application
     ak_window* pFirstWindow;
 
 
+    // Platform Specific.
+#ifdef AK_USE_WIN32
+    /// The window to associate timers with.
+    HWND hTimerWnd;
+#endif
+
+
     /// The size of the extra data, in bytes.
     size_t extraDataSize;
 
@@ -94,6 +105,13 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
 /// Recursively deletes the tools that are within the given panel.
 PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, easygui_element* pPanel);
 
+
+#ifdef AK_USE_WIN32
+static LRESULT TimerWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+#endif
 
 ak_application* ak_create_application(const char* pName, size_t extraDataSize, const void* pExtraData)
 {
@@ -195,6 +213,22 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         pApplication->pFirstWindow = NULL;
 
 
+        // Platform Specific
+#ifdef AK_USE_WIN32
+        pApplication->hTimerWnd = NULL;
+
+        WNDCLASSEXW timerWC;
+        memset(&timerWC, 0, sizeof(timerWC));
+        timerWC.cbSize        = sizeof(timerWC);
+        timerWC.lpfnWndProc   = (WNDPROC)TimerWindowProcWin32;
+        timerWC.lpszClassName = L"AK_TimerHWND";
+        timerWC.style         = CS_OWNDC;
+        if (RegisterClassExW(&timerWC)) {
+            pApplication->hTimerWnd = CreateWindowExW(0, L"AK_TimerHWND", L"", 0, 0, 0, 0, 0, NULL, NULL, GetModuleHandle(NULL), NULL);
+        }
+#endif
+
+
         // Extra data.
         pApplication->extraDataSize = extraDataSize;
 
@@ -244,6 +278,9 @@ void ak_delete_application(ak_application* pApplication)
 #ifdef AK_USE_WIN32
     // On Windows, we need to unregister the window classes. This is the part that makes ak_delete_application() not thread safe.
     ak_win32_unregister_window_classes();
+
+    // The timer window.
+    DestroyWindow(pApplication->hTimerWnd);
 #endif
 
 
@@ -806,6 +843,86 @@ void ak_set_on_key_up(ak_application* pApplication, ak_application_on_key_up_pro
     pApplication->onKeyUp = proc;
 }
 
+
+//// Timers ////
+#ifdef AK_USE_WIN32
+struct ak_timer
+{
+    /// The value returned by SetTimer().
+    UINT_PTR tagWin32;
+
+    /// The window associated with the timer.
+    HWND hWnd;
+
+    /// The timeout in milliseconds.
+    unsigned int timeoutInMilliseconds;
+
+    /// The callback function.
+    ak_timer_proc callback;
+
+    /// The user data passed to ak_create_timer().
+    void* pUserData;
+};
+
+static VOID CALLBACK ak_timer_proc_win32(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+    (void)hWnd;
+    (void)uMsg;
+    (void)dwTime;
+
+    ak_timer* pTimer = (ak_timer*)idEvent;
+    if (pTimer == NULL) {
+        assert(false);
+    }
+
+    if (pTimer->callback != NULL) {
+        pTimer->callback(pTimer, pTimer->pUserData);
+    }
+}
+
+
+ak_timer* ak_create_timer(ak_application* pApplication, unsigned int timeoutInMilliseconds, ak_timer_proc callback, void* pUserData)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    ak_timer* pTimer = malloc(sizeof(*pTimer));
+    if (pTimer == NULL) {
+        return NULL;
+    }
+
+    // On Win32 we need to associate the timer with a window.
+    pTimer->tagWin32 = SetTimer(pApplication->hTimerWnd, (UINT_PTR)pTimer, timeoutInMilliseconds, ak_timer_proc_win32);
+    if (pTimer->tagWin32 == 0) {
+        free(pTimer);
+        return NULL;
+    }
+
+    pTimer->hWnd                  = pApplication->hTimerWnd;
+    pTimer->timeoutInMilliseconds = timeoutInMilliseconds;
+    pTimer->callback              = callback;
+    pTimer->pUserData             = pUserData;
+
+    return pTimer;
+}
+
+void ak_delete_timer(ak_timer* pTimer)
+{
+    if (pTimer == NULL) {
+        return;
+    }
+
+    KillTimer(pTimer->hWnd, pTimer->tagWin32);
+    free(pTimer);
+}
+
+
+unsigned int ak_get_caret_blink_rate()
+{
+    return GetCaretBlinkTime();
+}
+#endif
 
 
 

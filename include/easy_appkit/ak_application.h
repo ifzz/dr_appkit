@@ -15,6 +15,7 @@ typedef struct ak_application ak_application;
 typedef struct ak_window ak_window;
 typedef struct ak_theme ak_theme;
 typedef struct ak_gui_image_manager ak_gui_image_manager;
+typedef struct ak_timer ak_timer;
 typedef struct easygui_context easygui_context;
 typedef struct easygui_element easygui_element;
 typedef struct easy2d_context easy2d_context;
@@ -26,8 +27,11 @@ typedef const char*      (* ak_layout_config_proc) (ak_application* pApplication
 typedef easygui_element* (* ak_create_tool_proc)   (ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
 typedef bool             (* ak_delete_tool_proc)   (ak_application* pApplication, easygui_element* pTool, bool force);
 
-typedef void             (* ak_application_on_key_down_proc)(ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
-typedef void             (* ak_application_on_key_up_proc)  (ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
+typedef void (* ak_application_on_key_down_proc)(ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
+typedef void (* ak_application_on_key_up_proc)  (ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
+
+typedef void (* ak_timer_proc)(ak_timer* pTimer, void* pUserData);
+
 
 /// Creates a new application object.
 ///
@@ -244,7 +248,6 @@ easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplicat
 bool ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool, bool force);
 
 
-
 /// Sets the function to call when the application received a key down event.
 ///
 /// @remarks
@@ -256,6 +259,20 @@ void ak_set_on_key_down(ak_application* pApplication, ak_application_on_key_down
 /// @remarks
 ///     This callback can be used to do things like handling shortcuts.
 void ak_set_on_key_up(ak_application* pApplication, ak_application_on_key_up_proc proc);
+
+
+/// Creates a timer associated with the given application.
+///
+/// @remarks
+///     The given callback function will be called from the main application loop.
+ak_timer* ak_create_timer(ak_application* pApplication, unsigned int timeoutInMilliseconds, ak_timer_proc callback, void* pUserData);
+
+/// Deletes the given timer.
+void ak_delete_timer(ak_timer* pTimer);
+
+
+/// Retrieves the blink rate in milliseconds for text cursors/carets.
+unsigned int ak_get_caret_blink_rate();
 
 
 #ifdef __cplusplus
