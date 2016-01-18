@@ -1898,6 +1898,7 @@ bool ak_win32_register_window_classes()
     wc.lpfnWndProc   = (WNDPROC)GenericWindowProc;
     wc.lpszClassName = g_WindowClass;
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wc.hIcon         = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(101));
     wc.style         = CS_DBLCLKS;
     if (!RegisterClassExA(&wc))
     {
