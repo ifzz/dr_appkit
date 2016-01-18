@@ -151,10 +151,10 @@ void ak_menu_set_on_hide(ak_window* pMenuWindow, ak_menu_on_hide_proc proc, void
 void ak_menu_on_mouse_leave(easygui_element* pMenuElement);
 
 /// Called when the mouse move event needs to be processed for the given tree-view control.
-void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX, int relativeMousePosY);
+void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called when the mouse button down event needs to be processed for the given tree-view control.
-void ak_menu_on_mouse_button_up(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+void ak_menu_on_mouse_button_up(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called when the paint event needs to be processed for the given tree-view control.
 void ak_menu_on_paint(easygui_element* pMenuElement, easygui_rect relativeClippingRect, void* pPaintData);

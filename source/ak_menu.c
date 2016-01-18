@@ -519,8 +519,10 @@ void ak_menu_on_mouse_leave(easygui_element* pMenuElement)
     }
 }
 
-void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX, int relativeMousePosY)
+void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
+    (void)stateFlags;
+
     ak_menu* pMenu = ak_get_window_extra_data(ak_get_panel_window(pMenuElement));
     if (pMenu == NULL) {
         return;
@@ -536,8 +538,10 @@ void ak_menu_on_mouse_move(easygui_element* pMenuElement, int relativeMousePosX,
     }
 }
 
-void ak_menu_on_mouse_button_up(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+void ak_menu_on_mouse_button_up(easygui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
+    (void)stateFlags;
+
     ak_menu* pMenu = ak_get_window_extra_data(ak_get_panel_window(pMenuElement));
     if (pMenu == NULL) {
         return;

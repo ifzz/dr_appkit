@@ -52,16 +52,16 @@ void ak_application_on_mouse_enter(ak_window* pWindow);
 void ak_application_on_mouse_leave(ak_window* pWindow);
 
 /// Called when a mouse button is pressed.
-void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called when a mouse button is released.
-void ak_application_on_mouse_button_up(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+void ak_application_on_mouse_button_up(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called when a mouse button is double clicked.
-void ak_application_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+void ak_application_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called when the mouse wheel is turned.
-void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
+void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called the on_key_down event handler for the given window.
 void ak_application_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags);

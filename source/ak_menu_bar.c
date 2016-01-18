@@ -443,8 +443,10 @@ void ak_mb_on_mouse_leave(easygui_element* pMBElement)
     }
 }
 
-void ak_mb_on_mouse_move(easygui_element* pMBElement, int relativeMousePosX, int relativeMousePosY)
+void ak_mb_on_mouse_move(easygui_element* pMBElement, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
+    (void)stateFlags;
+
     ak_menu_bar* pMB = easygui_get_extra_data(pMBElement);
     if (pMB == NULL) {
         return;
@@ -471,8 +473,10 @@ void ak_mb_on_mouse_move(easygui_element* pMBElement, int relativeMousePosX, int
     }
 }
 
-void ak_mb_on_mouse_button_down(easygui_element* pMBElement, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+void ak_mb_on_mouse_button_down(easygui_element* pMBElement, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
+    (void)stateFlags;
+
     ak_menu_bar* pMB = easygui_get_extra_data(pMBElement);
     if (pMB == NULL) {
         return;

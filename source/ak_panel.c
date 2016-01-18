@@ -300,8 +300,10 @@ PRIVATE void ak_panel_on_mouse_leave(easygui_element* pElement)
     ak_panel_refresh_tabs(pElement);
 }
 
-PRIVATE void ak_panel_on_mouse_move(easygui_element* pElement, int relativeMousePosX, int relativeMousePosY)
+PRIVATE void ak_panel_on_mouse_move(easygui_element* pElement, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
+    (void)stateFlags;
+
     ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
     assert(pPanelData != NULL);
 
@@ -310,8 +312,10 @@ PRIVATE void ak_panel_on_mouse_move(easygui_element* pElement, int relativeMouse
     pPanelData->relativeMousePosY = (float)relativeMousePosY;
 }
 
-PRIVATE void ak_panel_on_mouse_button_down(easygui_element* pElement, int button, int relativeMousePosX, int relativeMousePosY)
+PRIVATE void ak_panel_on_mouse_button_down(easygui_element* pElement, int button, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
+    (void)stateFlags;
+
     ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
     assert(pPanelData != NULL);
 

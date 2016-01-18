@@ -1362,7 +1362,7 @@ void ak_application_on_mouse_leave(ak_window* pWindow)
     easygui_post_inbound_event_mouse_leave(ak_get_window_panel(pWindow));
 }
 
-void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     assert(pWindow != NULL);
 
@@ -1372,37 +1372,37 @@ void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, in
     ak_application_hide_non_ancestor_popups(pWindow);
 
     // Let the GUI know about the event.
-    easygui_post_inbound_event_mouse_button_down(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY);
+    easygui_post_inbound_event_mouse_button_down(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY, stateFlags);
 }
 
-void ak_application_on_mouse_button_up(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+void ak_application_on_mouse_button_up(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     assert(pWindow != NULL);
 
     ak_window_on_mouse_button_up(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
 
     // Let the GUI know about the event.
-    easygui_post_inbound_event_mouse_button_up(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY);
+    easygui_post_inbound_event_mouse_button_up(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY, stateFlags);
 }
 
-void ak_application_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY)
+void ak_application_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     assert(pWindow != NULL);
 
     ak_window_on_mouse_button_dblclick(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
 
     // Let the GUI know about the event.
-    easygui_post_inbound_event_mouse_button_dblclick(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY);
+    easygui_post_inbound_event_mouse_button_dblclick(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY, stateFlags);
 }
 
-void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY)
+void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     assert(pWindow != NULL);
 
     ak_window_on_mouse_wheel(pWindow, delta, relativeMousePosX, relativeMousePosY);
 
     // Let the GUI know about the event.
-    easygui_post_inbound_event_mouse_wheel(ak_get_window_panel(pWindow), delta, relativeMousePosX, relativeMousePosY);
+    easygui_post_inbound_event_mouse_wheel(ak_get_window_panel(pWindow), delta, relativeMousePosX, relativeMousePosY, stateFlags);
 }
 
 void ak_application_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags)

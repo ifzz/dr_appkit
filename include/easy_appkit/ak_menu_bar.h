@@ -117,10 +117,10 @@ void ak_mb_set_on_mbi_paint(easygui_element* pMBElement, ak_mbi_on_paint_proc pr
 void ak_mb_on_mouse_leave(easygui_element* pMBElement);
 
 /// Called when the mouse move event needs to be handled.
-void ak_mb_on_mouse_move(easygui_element* pMBElement, int relativeMousePosX, int relativeMousePosY);
+void ak_mb_on_mouse_move(easygui_element* pMBElement, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called when the mouse button down event needs to be handled.
-void ak_mb_on_mouse_button_down(easygui_element* pMBElement, int mouseButton, int relativeMousePosX, int relativeMousePosY);
+void ak_mb_on_mouse_button_down(easygui_element* pMBElement, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called when the paint event needs to be handled.
 void ak_mb_on_paint(easygui_element* pMBElement, easygui_rect relativeClippingRect, void* pPaintData);

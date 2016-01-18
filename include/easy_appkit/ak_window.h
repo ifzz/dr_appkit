@@ -26,10 +26,15 @@
 #define AK_AUTO_HIDE_FROM_OUTSIDE_CLICK     (1 << 0)
 
 // The flags below are posted on on key down and up events.
-#define AK_KEY_STATE_AUTO_REPEATED          (1 << 0)        // Whether or not the key press is generated due to auto-repeating. Only used with key down events.
-#define AK_KEY_STATE_SHIFT_DOWN             (1 << 1)        // Whether or not a shift key is down at the time the key event is handled.
-#define AK_KEY_STATE_CTRL_DOWN              (1 << 2)        // Whether or not a ctrl key is down at the time the key event is handled.
-#define AK_KEY_STATE_ALT_DOWN               (1 << 3)        // Whether or not an alt key is down at the time the key event is handled.
+#define AK_MOUSE_BUTTON_LEFT_DOWN   (1 << 0)
+#define AK_MOUSE_BUTTON_RIGHT_DOWN  (1 << 1)
+#define AK_MOUSE_BUTTON_MIDDLE_DOWN (1 << 2)
+#define AK_MOUSE_BUTTON_4_DOWN      (1 << 3)
+#define AK_MOUSE_BUTTON_5_DOWN      (1 << 4)
+#define AK_KEY_STATE_SHIFT_DOWN     (1 << 5)        // Whether or not a shift key is down at the time the input event is handled.
+#define AK_KEY_STATE_CTRL_DOWN      (1 << 6)        // Whether or not a ctrl key is down at the time the input event is handled.
+#define AK_KEY_STATE_ALT_DOWN       (1 << 7)        // Whether or not an alt key is down at the time the input event is handled.
+#define AK_KEY_STATE_AUTO_REPEATED  (1 << 31)       // Whether or not the key press is generated due to auto-repeating. Only used with key down events.
 
 #ifdef __cplusplus
 extern "C" {
