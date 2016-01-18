@@ -72,7 +72,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
 
 
     //// Fonts ////
-    pTheme->pUIFont = easygui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, easy2d_weight_normal, easy2d_slant_none, 0);
+    pTheme->pUIFont = easygui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, easygui_font_weight_normal, easygui_font_slant_none, 0);
     pTheme->uiFontColor = easygui_rgb(240, 240, 240);
     easygui_get_glyph_metrics(pTheme->pUIFont, 'X', 1, 1, &pTheme->uiCrossMetrics);
 
@@ -81,7 +81,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     //// Default Text Editor ///
 
     // Default text editor.
-    pTheme->defaultText = ak_init_text_theme(pApplication, defaultMonospaceFontFamily, defaultMonospaceFontSize, easy2d_weight_default, easy2d_slant_none, easygui_rgb(224, 224, 224), easygui_rgb(48, 48, 48));
+    pTheme->defaultText = ak_init_text_theme(pApplication, defaultMonospaceFontFamily, defaultMonospaceFontSize, easygui_font_weight_default, easygui_font_slant_none, easygui_rgb(224, 224, 224), easygui_rgb(48, 48, 48));
 }
 
 void ak_theme_load_from_file(ak_application* pApplication, ak_theme* pTheme, const char* absolutePath)
