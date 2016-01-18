@@ -81,6 +81,9 @@ struct ak_application
     /// A pointer to the function to call when a tool is deactivated.
     ak_application_on_tool_deactivated_proc onToolDeactivated;
 
+    /// A pointer to the function to call when an action needs to be handled.
+    ak_application_on_handle_action_proc onHandleAction;
+
 
     /// We need to keep track of every existing window that is owned by the application. We implement this as a linked list, with this item being the first. The
     /// first window is considered to be the primary window.
@@ -221,6 +224,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         pApplication->onKeyUp            = NULL;
         pApplication->onToolActivated    = NULL;
         pApplication->onToolDeactivated  = NULL;
+        pApplication->onHandleAction     = NULL;
 
 
         // Windows.
@@ -896,6 +900,27 @@ void ak_set_on_tool_deactivated(ak_application* pApplication, ak_application_on_
 }
 
 
+void ak_set_on_handle_action(ak_application* pApplication, ak_application_on_handle_action_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onHandleAction = proc;
+}
+
+void ak_handle_action(ak_application* pApplication, const char* pActionName)
+{
+    if (pApplication == NULL || pActionName == NULL) {
+        return;
+    }
+
+    if (pApplication->onHandleAction) {
+        pApplication->onHandleAction(pApplication, pActionName);
+    }
+}
+
+
 //// Timers ////
 #ifdef AK_USE_WIN32
 struct ak_timer
@@ -990,7 +1015,7 @@ PRIVATE int ak_main_loop(ak_application* pApplication)
         if (bRet == -1)
         {
             // Unknown error.
-            return -43;
+            return -42;
         }
 
         TranslateMessage(&msg);

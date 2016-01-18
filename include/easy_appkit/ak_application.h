@@ -33,6 +33,7 @@ typedef void (* ak_application_on_panel_activated_proc)  (ak_application* pAppli
 typedef void (* ak_application_on_panel_deactivated_proc)(ak_application* pApplication, easygui_element* pPanel);
 typedef void (* ak_application_on_tool_activated_proc)   (ak_application* pApplication, easygui_element* pTool);
 typedef void (* ak_application_on_tool_deactivated_proc) (ak_application* pApplication, easygui_element* pTool);
+typedef void (* ak_application_on_handle_action_proc)    (ak_application* pApplication, const char* pActionName);
 
 typedef void (* ak_timer_proc)(ak_timer* pTimer, void* pUserData);
 
@@ -277,6 +278,13 @@ void ak_set_on_tool_activated(ak_application* pApplication, ak_application_on_to
 
 /// Sets the function to call when a tool is deactivated.
 void ak_set_on_tool_deactivated(ak_application* pApplication, ak_application_on_tool_deactivated_proc proc);
+
+
+/// Sets the function to call when an event needs to be handled.
+void ak_set_on_handle_action(ak_application* pApplication, ak_application_on_handle_action_proc proc);
+
+/// Handles the given action.
+void ak_handle_action(ak_application* pApplication, const char* pActionName);
 
 
 /// Creates a timer associated with the given application.
