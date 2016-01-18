@@ -1410,7 +1410,7 @@ void ak_application_on_key_down(ak_window* pWindow, easygui_key key, int stateFl
     assert(pWindow != NULL);
 
     ak_window_on_key_down(pWindow, key, stateFlags);
-    easygui_post_inbound_event_key_down(ak_get_window_panel(pWindow)->pContext, key, (stateFlags & AK_KEY_STATE_AUTO_REPEATED) != 0);
+    easygui_post_inbound_event_key_down(ak_get_window_panel(pWindow)->pContext, key, stateFlags);
 
     ak_application* pApplication = ak_get_window_application(pWindow);
     if (pApplication != NULL && pApplication->onKeyDown) {
@@ -1423,7 +1423,7 @@ void ak_application_on_key_up(ak_window* pWindow, easygui_key key, int stateFlag
     assert(pWindow != NULL);
 
     ak_window_on_key_up(pWindow, key, stateFlags);
-    easygui_post_inbound_event_key_up(ak_get_window_panel(pWindow)->pContext, key);
+    easygui_post_inbound_event_key_up(ak_get_window_panel(pWindow)->pContext, key, stateFlags);
 
     ak_application* pApplication = ak_get_window_application(pWindow);
     if (pApplication != NULL && pApplication->onKeyUp) {
@@ -1436,7 +1436,7 @@ void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int chara
     assert(pWindow != NULL);
 
     ak_window_on_printable_key_down(pWindow, character, stateFlags);
-    easygui_post_inbound_event_printable_key_down(ak_get_window_panel(pWindow)->pContext, character, (stateFlags & AK_KEY_STATE_AUTO_REPEATED) != 0);
+    easygui_post_inbound_event_printable_key_down(ak_get_window_panel(pWindow)->pContext, character, stateFlags);
 }
 
 
