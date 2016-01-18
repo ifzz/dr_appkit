@@ -73,6 +73,20 @@ void ak_application_on_key_up(ak_window* pWindow, easygui_key key, int stateFlag
 void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int character, int stateFlags);
 
 
+/// Calls the on_tool_activated event for the given application.
+void ak_application_on_panel_activated(ak_application* pApplication, easygui_element* pPanel);
+
+/// Calls the on_tool_deactivated event for the given application.
+void ak_application_on_panel_deactivated(ak_application* pApplication, easygui_element* pPanel);
+
+
+/// Calls the on_tool_activated event for the given application.
+void ak_application_on_tool_activated(ak_application* pApplication, easygui_element* pTool);
+
+/// Calls the on_tool_deactivated event for the given application.
+void ak_application_on_tool_deactivated(ak_application* pApplication, easygui_element* pTool);
+
+
 /// Tracks the given window.
 ///
 /// @remarks

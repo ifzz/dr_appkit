@@ -69,6 +69,18 @@ struct ak_application
     /// A pointer to the function to call when a key up event needs to be handled.
     ak_application_on_key_up_proc onKeyUp;
 
+    /// A pointer to the function to call when a panel is activated.
+    ak_application_on_panel_activated_proc onPanelActivated;
+
+    /// A pointer to the function to call when a panel is deactivated.
+    ak_application_on_panel_deactivated_proc onPanelDeactivated;
+
+    /// A pointer to the function to call when a tool is activated.
+    ak_application_on_tool_activated_proc onToolActivated;
+
+    /// A pointer to the function to call when a tool is deactivated.
+    ak_application_on_tool_deactivated_proc onToolDeactivated;
+
 
     /// We need to keep track of every existing window that is owned by the application. We implement this as a linked list, with this item being the first. The
     /// first window is considered to be the primary window.
@@ -207,6 +219,8 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         pApplication->onDeleteTool       = NULL;
         pApplication->onKeyDown          = NULL;
         pApplication->onKeyUp            = NULL;
+        pApplication->onToolActivated    = NULL;
+        pApplication->onToolDeactivated  = NULL;
 
 
         // Windows.
@@ -844,6 +858,44 @@ void ak_set_on_key_up(ak_application* pApplication, ak_application_on_key_up_pro
 }
 
 
+void ak_set_on_panel_activated(ak_application* pApplication, ak_application_on_panel_activated_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onPanelActivated = proc;
+}
+
+void ak_set_on_panel_deactivated(ak_application* pApplication, ak_application_on_panel_deactivated_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onPanelDeactivated = proc;
+}
+
+
+void ak_set_on_tool_activated(ak_application* pApplication, ak_application_on_tool_activated_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onToolActivated = proc;
+}
+
+void ak_set_on_tool_deactivated(ak_application* pApplication, ak_application_on_tool_deactivated_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onToolDeactivated = proc;
+}
+
+
 //// Timers ////
 #ifdef AK_USE_WIN32
 struct ak_timer
@@ -1385,6 +1437,52 @@ void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int chara
 
     ak_window_on_printable_key_down(pWindow, character, stateFlags);
     easygui_post_inbound_event_printable_key_down(ak_get_window_panel(pWindow)->pContext, character, (stateFlags & AK_KEY_STATE_AUTO_REPEATED) != 0);
+}
+
+
+void ak_application_on_panel_activated(ak_application* pApplication, easygui_element* pPanel)
+{
+    if (pApplication == NULL || pPanel == NULL) {
+        return;
+    }
+
+    if (pApplication->onPanelActivated) {
+        pApplication->onPanelActivated(pApplication, pPanel);
+    }
+}
+
+void ak_application_on_panel_deactivated(ak_application* pApplication, easygui_element* pPanel)
+{
+    if (pApplication == NULL || pPanel == NULL) {
+        return;
+    }
+
+    if (pApplication->onPanelDeactivated) {
+        pApplication->onPanelDeactivated(pApplication, pPanel);
+    }
+}
+
+
+void ak_application_on_tool_activated(ak_application* pApplication, easygui_element* pTool)
+{
+    if (pApplication == NULL || pTool == NULL) {
+        return;
+    }
+
+    if (pApplication->onToolActivated) {
+        pApplication->onToolActivated(pApplication, pTool);
+    }
+}
+
+void ak_application_on_tool_deactivated(ak_application* pApplication, easygui_element* pTool)
+{
+    if (pApplication == NULL || pTool == NULL) {
+        return;
+    }
+
+    if (pApplication->onToolDeactivated) {
+        pApplication->onToolDeactivated(pApplication, pTool);
+    }
 }
 
 

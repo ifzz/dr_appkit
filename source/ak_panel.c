@@ -7,6 +7,7 @@
 #include "../include/easy_appkit/ak_gui_image_manager.h"
 #include "../include/easy_appkit/ak_build_config.h"
 #include "ak_tool_private.h"
+#include "ak_application_private.h"
 #include <easy_gui/easy_gui.h>
 #include <easy_util/easy_util.h>
 #include <assert.h>
@@ -344,6 +345,8 @@ PRIVATE void ak_panel_on_tab_deactivated(easygui_element* pTBElement, easygui_ta
 
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
     pPanelData->pActiveTool = NULL;
+
+    ak_application_on_tool_deactivated(pPanelData->pApplication, pTool);
 }
 
 PRIVATE void ak_panel_on_tab_activated(easygui_element* pTBElement, easygui_tab* pTab)
@@ -358,9 +361,10 @@ PRIVATE void ak_panel_on_tab_activated(easygui_element* pTBElement, easygui_tab*
     // The tool needs to be shown.
     easygui_show(pTool);
 
-
     ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
     pPanelData->pActiveTool = pTool;
+
+    ak_application_on_tool_activated(pPanelData->pApplication, pTool);
 }
 
 PRIVATE void ak_panel_on_tab_close(easygui_element* pTBElement, easygui_tab* pTab)
@@ -829,7 +833,6 @@ bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool)
     if (!(pTool == NULL || pTool->pParent == pPanelData->pToolContainer)) {
         return false;
     }
-
 
     // To activate a tool we just activate the associated tab on the tab bar control which will in turn post
     // activate and deactivate events which is where the actual swith will occur.

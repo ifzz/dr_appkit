@@ -27,8 +27,12 @@ typedef const char*      (* ak_layout_config_proc) (ak_application* pApplication
 typedef easygui_element* (* ak_create_tool_proc)   (ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
 typedef bool             (* ak_delete_tool_proc)   (ak_application* pApplication, easygui_element* pTool, bool force);
 
-typedef void (* ak_application_on_key_down_proc)(ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
-typedef void (* ak_application_on_key_up_proc)  (ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
+typedef void (* ak_application_on_key_down_proc)         (ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
+typedef void (* ak_application_on_key_up_proc)           (ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
+typedef void (* ak_application_on_panel_activated_proc)  (ak_application* pApplication, easygui_element* pPanel);
+typedef void (* ak_application_on_panel_deactivated_proc)(ak_application* pApplication, easygui_element* pPanel);
+typedef void (* ak_application_on_tool_activated_proc)   (ak_application* pApplication, easygui_element* pTool);
+typedef void (* ak_application_on_tool_deactivated_proc) (ak_application* pApplication, easygui_element* pTool);
 
 typedef void (* ak_timer_proc)(ak_timer* pTimer, void* pUserData);
 
@@ -259,6 +263,20 @@ void ak_set_on_key_down(ak_application* pApplication, ak_application_on_key_down
 /// @remarks
 ///     This callback can be used to do things like handling shortcuts.
 void ak_set_on_key_up(ak_application* pApplication, ak_application_on_key_up_proc proc);
+
+
+/// Sets the function to call when a panel is activated.
+void ak_set_on_panel_activated(ak_application* pApplication, ak_application_on_panel_activated_proc proc);
+
+/// Sets the function to call when a panel is deactivated.
+void ak_set_on_panel_deactivated(ak_application* pApplication, ak_application_on_panel_deactivated_proc proc);
+
+
+/// Sets the function to call when a tool is activated.
+void ak_set_on_tool_activated(ak_application* pApplication, ak_application_on_tool_activated_proc proc);
+
+/// Sets the function to call when a tool is deactivated.
+void ak_set_on_tool_deactivated(ak_application* pApplication, ak_application_on_tool_deactivated_proc proc);
 
 
 /// Creates a timer associated with the given application.
