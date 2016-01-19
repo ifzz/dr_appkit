@@ -98,11 +98,15 @@ PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
     float borderWidth = 0;
     float splitPos = pPanelData->splitPos;
 
-    if (pPanelData->splitAxis == ak_panel_split_axis_horizontal)
+    if (pPanelData->splitAxis == ak_panel_split_axis_horizontal || pPanelData->splitAxis == ak_panel_split_axis_horizontal_bottom)
     {
         // Horizontal.
         if (pPanelData->maintainSplitRatio) {
             splitPos = pPanel->height * pPanelData->splitRatio;
+        }
+
+        if (pPanelData->splitAxis == ak_panel_split_axis_horizontal_bottom) {
+            splitPos = pPanel->height - splitPos;
         }
 
         easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
@@ -116,6 +120,10 @@ PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
         // Vertical.
         if (pPanelData->maintainSplitRatio) {
             splitPos = pPanel->width * pPanelData->splitRatio;
+        }
+
+        if (pPanelData->splitAxis == ak_panel_split_axis_vertical_right) {
+            splitPos = pPanel->width - splitPos;
         }
 
         easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
@@ -604,6 +612,16 @@ ak_panel_split_axis ak_panel_get_split_axis(easygui_element* pPanel)
     }
 
     return pPanelData->splitAxis;
+}
+
+float ak_panel_get_split_pos(easygui_element* pPanel)
+{
+    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return 0;
+    }
+
+    return pPanelData->splitPos;
 }
 
 easygui_element* ak_panel_get_split_panel_1(easygui_element* pPanel)

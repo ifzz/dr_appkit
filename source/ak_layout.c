@@ -242,8 +242,12 @@ bool ak_parse_panel_layout_attributes(const char* attributesStr, ak_panel_layout
     {
         if (strcmp(splitAxisOrTypeStr, "hsplit") == 0) {
             splitAxis = ak_panel_split_axis_horizontal;
+        } else if (strcmp(splitAxisOrTypeStr, "hsplit-bottom") == 0) {
+            splitAxis = ak_panel_split_axis_horizontal_bottom;
         } else if (strcmp(splitAxisOrTypeStr, "vsplit") == 0) {
             splitAxis = ak_panel_split_axis_vertical;
+        } else if (strcmp(splitAxisOrTypeStr, "vsplit-right") == 0) {
+            splitAxis = ak_panel_split_axis_vertical_right;
         } else {
             // It's not "hsplit" or "vsplit", so assume it's the name.
             strcpy_s(type, sizeof(type), splitAxisOrTypeStr);

@@ -46,7 +46,9 @@ typedef enum
 {
     ak_panel_split_axis_none,
     ak_panel_split_axis_horizontal,
-    ak_panel_split_axis_vertical
+    ak_panel_split_axis_horizontal_bottom,
+    ak_panel_split_axis_vertical,
+    ak_panel_split_axis_vertical_right
 } ak_panel_split_axis;
 
 
@@ -111,6 +113,9 @@ bool ak_panel_is_split(easygui_element* pPanel);
 
 /// Retrieves the axis that the given panel is split along.
 ak_panel_split_axis ak_panel_get_split_axis(easygui_element* pPanel);
+
+/// Retrieves the split position of the given panel.
+float ak_panel_get_split_pos(easygui_element* pPanel);
 
 /// Retrieves the first child panel of the given split panel.
 ///
