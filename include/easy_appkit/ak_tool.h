@@ -43,6 +43,9 @@ size_t ak_get_tool_extra_data_size(easygui_element* pTool);
 void* ak_get_tool_extra_data(easygui_element* pTool);
 
 
+/// Determines whether the given tool type is of the given type.
+bool ak_is_of_tool_type(const char* pToolType, const char* pBaseToolType);
+
 /// Determines whether or not the tool is of the given type.
 ///
 /// @remarks

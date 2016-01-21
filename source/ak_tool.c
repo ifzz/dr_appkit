@@ -114,6 +114,11 @@ void* ak_get_tool_extra_data(easygui_element* pTool)
 }
 
 
+bool ak_is_of_tool_type(const char* pToolType, const char* pBaseToolType)
+{
+    return strncmp(pToolType, pBaseToolType, strlen(pBaseToolType)) == 0;
+}
+
 bool ak_is_tool_of_type(easygui_element* pTool, const char* type)
 {
     ak_tool_data* pToolData = easygui_get_extra_data(pTool);
