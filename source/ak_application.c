@@ -84,6 +84,9 @@ struct ak_application
     /// A pointer to the function to call when an action needs to be handled.
     ak_application_on_handle_action_proc onHandleAction;
 
+    /// A pointer to the function to call when a command needs to be handled.
+    ak_application_on_exec_proc onExec;
+
 
     /// We need to keep track of every existing window that is owned by the application. We implement this as a linked list, with this item being the first. The
     /// first window is considered to be the primary window.
@@ -225,6 +228,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         pApplication->onToolActivated    = NULL;
         pApplication->onToolDeactivated  = NULL;
         pApplication->onHandleAction     = NULL;
+        pApplication->onExec             = NULL;
 
 
         // Windows.
@@ -917,6 +921,32 @@ void ak_handle_action(ak_application* pApplication, const char* pActionName)
 
     if (pApplication->onHandleAction) {
         pApplication->onHandleAction(pApplication, pActionName);
+    }
+}
+
+
+void ak_set_on_exec(ak_application* pApplication, ak_application_on_exec_proc proc)
+{
+    if (pApplication == NULL) {
+        return;
+    }
+
+    pApplication->onExec = proc;
+}
+
+void ak_exec(ak_application* pApplication, const char* cmd)
+{
+    if (pApplication == NULL || cmd == NULL) {
+        return;
+    }
+
+    if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
+        ak_post_quit_message(pApplication, 0);
+        return;
+    }
+
+    if (pApplication->onExec) {
+        pApplication->onExec(pApplication, cmd);
     }
 }
 

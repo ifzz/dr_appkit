@@ -34,6 +34,7 @@ typedef void (* ak_application_on_panel_deactivated_proc)(ak_application* pAppli
 typedef void (* ak_application_on_tool_activated_proc)   (ak_application* pApplication, easygui_element* pTool);
 typedef void (* ak_application_on_tool_deactivated_proc) (ak_application* pApplication, easygui_element* pTool);
 typedef void (* ak_application_on_handle_action_proc)    (ak_application* pApplication, const char* pActionName);
+typedef void (* ak_application_on_exec_proc)             (ak_application* pApplication, const char* cmd);
 
 typedef void (* ak_timer_proc)(ak_timer* pTimer, void* pUserData);
 
@@ -285,6 +286,13 @@ void ak_set_on_handle_action(ak_application* pApplication, ak_application_on_han
 
 /// Handles the given action.
 void ak_handle_action(ak_application* pApplication, const char* pActionName);
+
+
+/// Sets the function to call when a command needs to be executed.
+void ak_set_on_exec(ak_application* pApplication, ak_application_on_exec_proc proc);
+
+/// A generic function for executing a command.
+void ak_exec(ak_application* pApplication, const char* cmd);
 
 
 /// Creates a timer associated with the given application.
