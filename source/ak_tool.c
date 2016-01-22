@@ -43,7 +43,7 @@ typedef struct
 
 easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* pParent, const char* type, size_t extraDataSize, const void* pExtraData)
 {
-    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_tool_data) - sizeof(char) + extraDataSize);
+    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_tool_data) - sizeof(char) + extraDataSize, NULL);
     if (pElement != NULL)
     {
         easygui_hide(pElement);

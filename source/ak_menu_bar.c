@@ -133,7 +133,7 @@ PRIVATE void ak_mb_on_menu_show(ak_window* pMenu, void* pUserData);
 
 easygui_element* ak_create_menu_bar(easygui_context* pContext, easygui_element* pParent, size_t extraDataSize, const void* pExtraData)
 {
-    easygui_element* pMBElement = easygui_create_element(pContext, pParent, sizeof(ak_menu_bar) - sizeof(char) + extraDataSize);
+    easygui_element* pMBElement = easygui_create_element(pContext, pParent, sizeof(ak_menu_bar) - sizeof(char) + extraDataSize, NULL);
     if (pMBElement == NULL) {
         return NULL;
     }
@@ -145,6 +145,7 @@ easygui_element* ak_create_menu_bar(easygui_context* pContext, easygui_element* 
     pMB->pLastItem               = NULL;
     pMB->pFocusedItem            = NULL;
     pMB->isExpanded              = false;
+    pMB->blockNextMouseDown      = false;
     pMB->isMouseOver             = false;
     pMB->relativeMousePosX       = 0;
     pMB->relativeMousePosY       = 0;

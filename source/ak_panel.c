@@ -394,7 +394,7 @@ PRIVATE void ak_panel_on_tab_close(easygui_element* pTBElement, easygui_tab* pTa
 
 easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* pParent, size_t extraDataSize, const void* pExtraData)
 {
-    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_panel_data) - sizeof(char) + extraDataSize);
+    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_panel_data) - sizeof(char) + extraDataSize, NULL);
     if (pElement != NULL)
     {
         ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
@@ -762,7 +762,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
 
 
         // Tool container.
-        pPanelData->pToolContainer = easygui_create_element(pPanel->pContext, pPanel, 0);
+        pPanelData->pToolContainer = easygui_create_element(pPanel->pContext, pPanel, 0, NULL);
         if (pPanelData->pToolContainer == NULL) {
             return false;
         }
