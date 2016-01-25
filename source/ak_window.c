@@ -164,8 +164,10 @@ PRIVATE static void ak_on_global_release_mouse(easygui_element* pElement)
     }
 }
 
-PRIVATE static void ak_on_global_capture_keyboard(easygui_element* pElement)
+PRIVATE static void ak_on_global_capture_keyboard(easygui_element* pElement, easygui_element* pPrevCapturedElement)
 {
+    (void)pPrevCapturedElement;
+
     easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
@@ -175,8 +177,10 @@ PRIVATE static void ak_on_global_capture_keyboard(easygui_element* pElement)
     }
 }
 
-PRIVATE static void ak_on_global_release_keyboard(easygui_element* pElement)
+PRIVATE static void ak_on_global_release_keyboard(easygui_element* pElement, easygui_element* pNewCapturedElement)
 {
+    (void)pNewCapturedElement;
+
     easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
@@ -493,6 +497,7 @@ easygui_key ak_win32_to_easygui_key(WPARAM wParam)
     {
     case VK_BACK:   return EASYGUI_BACKSPACE;
     case VK_SHIFT:  return EASYGUI_SHIFT;
+    case VK_ESCAPE: return EASYGUI_ESCAPE;
     case VK_PRIOR:  return EASYGUI_PAGE_UP;
     case VK_NEXT:   return EASYGUI_PAGE_DOWN;
     case VK_END:    return EASYGUI_END;
