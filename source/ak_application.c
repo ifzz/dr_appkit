@@ -934,20 +934,22 @@ void ak_set_on_exec(ak_application* pApplication, ak_application_on_exec_proc pr
     pApplication->onExec = proc;
 }
 
-void ak_exec(ak_application* pApplication, const char* cmd)
+int ak_exec(ak_application* pApplication, const char* cmd)
 {
     if (pApplication == NULL || cmd == NULL) {
-        return;
+        return 0;
     }
 
     if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "exit") == 0) {
         ak_post_quit_message(pApplication, 0);
-        return;
+        return 0;
     }
 
     if (pApplication->onExec) {
-        pApplication->onExec(pApplication, cmd);
+        return pApplication->onExec(pApplication, cmd);
     }
+
+    return 0;
 }
 
 

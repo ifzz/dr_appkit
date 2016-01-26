@@ -34,7 +34,7 @@ typedef void (* ak_application_on_panel_deactivated_proc)(ak_application* pAppli
 typedef void (* ak_application_on_tool_activated_proc)   (ak_application* pApplication, easygui_element* pTool);
 typedef void (* ak_application_on_tool_deactivated_proc) (ak_application* pApplication, easygui_element* pTool);
 typedef void (* ak_application_on_handle_action_proc)    (ak_application* pApplication, const char* pActionName);
-typedef void (* ak_application_on_exec_proc)             (ak_application* pApplication, const char* cmd);
+typedef int  (* ak_application_on_exec_proc)             (ak_application* pApplication, const char* cmd);
 
 typedef void (* ak_timer_proc)(ak_timer* pTimer, void* pUserData);
 
@@ -292,7 +292,11 @@ void ak_handle_action(ak_application* pApplication, const char* pActionName);
 void ak_set_on_exec(ak_application* pApplication, ak_application_on_exec_proc proc);
 
 /// A generic function for executing a command.
-void ak_exec(ak_application* pApplication, const char* cmd);
+///
+/// @remarks
+///     The return value is specific to the callback that was set with ak_set_on_exec(). The return value is not
+///     used by easy_appkit and exists only for host applications.
+int ak_exec(ak_application* pApplication, const char* cmd);
 
 
 /// Creates a timer associated with the given application.
