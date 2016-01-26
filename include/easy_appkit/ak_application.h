@@ -182,6 +182,12 @@ ak_window* ak_get_first_window(ak_application* pApplication);
 /// Retrieves a pointer to the next window in the given application.
 ak_window* ak_get_next_window(ak_application* pApplication, ak_window* pWindow);
 
+/// Retrieves a pointer to the primary window.
+///
+/// @remarks
+///     The primary window is the first application window that was created.
+ak_window* ak_get_primary_window(ak_application* pApplication);
+
 
 /// Retrieves a pointer to the first panel.
 ///

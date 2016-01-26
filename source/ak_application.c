@@ -670,6 +670,18 @@ ak_window* ak_get_next_window(ak_application* pApplication, ak_window* pWindow)
     return ak_get_next_sibling_window(pWindow);
 }
 
+ak_window* ak_get_primary_window(ak_application* pApplication)
+{
+    for (ak_window* pWindow = ak_get_first_window(pApplication); pWindow != NULL; pWindow = ak_get_next_window(pApplication, pWindow))
+    {
+        if (ak_get_window_type(pWindow) == ak_window_type_application) {
+            return pWindow;
+        }
+    }
+
+    return NULL;
+}
+
 
 easygui_element* ak_get_first_panel(ak_application* pApplication)
 {
@@ -1361,14 +1373,10 @@ void ak_application_on_window_wants_to_close(ak_window* pWindow)
     //
     // Later on what we'll want to do is just pass this off the program by just calling a callback function and letting it handle things however
     // it would like.
-    if (ak_get_next_sibling_window(pWindow) == NULL)
-    {
+    if (ak_get_primary_window(pApplication) == pWindow) {
         ak_delete_all_application_windows(pApplication);
-
         ak_post_quit_message(pApplication, 0);
-    }
-    else
-    {
+    } else {
         ak_delete_window(pWindow);
     }
 }
