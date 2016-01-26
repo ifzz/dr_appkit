@@ -123,8 +123,9 @@ struct ak_window
 };
 
 
-static const char* g_WindowClass       = "AK_WindowClass";
-static const char* g_WindowClass_Popup = "AK_WindowClass_Popup";
+static const char* g_WindowClass        = "AK_WindowClass";
+static const char* g_WindowClass_Dialog = "AK_WindowClass_Dialog";
+static const char* g_WindowClass_Popup  = "AK_WindowClass_Popup";
 
 #define GET_X_LPARAM(lp)                        ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)                        ((int)(short)HIWORD(lp))
@@ -381,7 +382,7 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
 
 
     // The application needs to track this window.
-    if (pWindow->pParent == NULL) {
+    if (pParent == NULL) {
         ak_application_track_top_level_window(pWindow);
     } else {
         ak_append_window(pWindow, pParent);
@@ -1163,7 +1164,7 @@ PRIVATE ak_window* ak_create_dialog_window(ak_application* pApplication, ak_wind
     // Create a window.
     DWORD dwExStyle = WS_EX_DLGMODALFRAME;
     DWORD dwStyle   = WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
-    HWND hWnd = CreateWindowExA(dwExStyle, g_WindowClass, "", dwStyle, 0, 0, 1, 1, pParent->hWnd, NULL, NULL, NULL);
+    HWND hWnd = CreateWindowExA(dwExStyle, g_WindowClass_Dialog, "", dwStyle, 0, 0, 1, 1, pParent->hWnd, NULL, NULL, NULL);
     if (hWnd == NULL)
     {
         ak_errorf(pApplication, "Failed to create Win32 dialog window.");
@@ -1482,6 +1483,45 @@ void ak_get_window_position(ak_window* pWindow, int* pPosXOut, int* pPosYOut)
     if (pPosYOut != NULL) {
         *pPosYOut = rect.top;
     }
+}
+
+void ak_center_window(ak_window* pWindow)
+{
+    int parentPosX = 0;
+    int parentPosY = 0;
+    unsigned int parentWidth  = 0;
+    unsigned int parentHeight = 0;
+
+    unsigned int windowWidth;
+    unsigned int windowHeight;
+    ak_get_window_size(pWindow, &windowWidth, &windowHeight);
+
+    if (pWindow->pParent != NULL)
+    {
+        // Center on the parent.
+        ak_get_window_size(pWindow->pParent, &parentWidth, &parentHeight);
+
+        RECT rect;
+        GetWindowRect(pWindow->pParent->hWnd, &rect);
+        parentPosX = rect.left;
+        parentPosY = rect.top;
+    }
+    else
+    {
+        // Center on the monitor.
+        MONITORINFO mi;
+        ZeroMemory(&mi, sizeof(mi));
+        mi.cbSize = sizeof(MONITORINFO);
+        if (GetMonitorInfoA(MonitorFromWindow(pWindow->hWnd, 0), &mi))
+        {
+            parentWidth  = (unsigned int)(mi.rcMonitor.right - mi.rcMonitor.left);
+            parentHeight = (unsigned int)(mi.rcMonitor.bottom - mi.rcMonitor.top);
+        }
+    }
+
+    int windowPosX = (((int)parentWidth  - (int)windowWidth)  / 2) + parentPosX;
+    int windowPosY = (((int)parentHeight - (int)windowHeight) / 2) + parentPosY;
+    SetWindowPos(pWindow->hWnd, NULL, windowPosX, windowPosY, windowWidth, windowHeight, SWP_NOZORDER | SWP_NOSIZE);
 }
 
 
@@ -1910,6 +1950,20 @@ bool ak_win32_register_window_classes()
         return false;
     }
 
+    // Dialog windows.
+    WNDCLASSEXA wcDialog;
+    ZeroMemory(&wcDialog, sizeof(wcDialog));
+    wcDialog.cbSize        = sizeof(wcDialog);
+    wcDialog.cbWndExtra    = sizeof(ak_window*);
+    wcDialog.lpfnWndProc   = (WNDPROC)GenericWindowProc;
+    wcDialog.lpszClassName = g_WindowClass_Dialog;
+    wcDialog.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wcDialog.style         = CS_DBLCLKS;
+    if (!RegisterClassExA(&wcDialog))
+    {
+        UnregisterClassA(g_WindowClass, NULL);
+        return false;
+    }
 
     // Popup windows.
     WNDCLASSEXA wcPopup;
@@ -1923,6 +1977,7 @@ bool ak_win32_register_window_classes()
     if (!RegisterClassExA(&wcPopup))
     {
         UnregisterClassA(g_WindowClass, NULL);
+        UnregisterClassA(g_WindowClass_Popup, NULL);
         return false;
     }
 
@@ -1939,8 +1994,9 @@ void ak_win32_unregister_window_classes()
 
         if (g_Win32ClassRegCounter == 0)
         {
-            UnregisterClassA(g_WindowClass,       NULL);
-            UnregisterClassA(g_WindowClass_Popup, NULL);
+            UnregisterClassA(g_WindowClass,        NULL);
+            UnregisterClassA(g_WindowClass_Dialog, NULL);
+            UnregisterClassA(g_WindowClass_Popup,  NULL);
         }
     }
 }

@@ -146,6 +146,9 @@ void ak_set_window_position(ak_window* pWindow, int posX, int posY);
 /// Retrieves the position of the given window.
 void ak_get_window_position(ak_window* pWindow, int* pPosXOut, int* pPosYOut);
 
+/// Centers the given window against it's parent, or the monitor if it's parentless.
+void ak_center_window(ak_window* pWindow);
+
 
 /// Shows the given window.
 void ak_show_window(ak_window* pWindow);
