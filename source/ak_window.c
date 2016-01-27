@@ -1397,7 +1397,7 @@ void ak_get_window_title(ak_window* pWindow, char* pTitleOut, size_t titleOutSiz
 }
 
 
-void ak_set_window_size(ak_window* pWindow, unsigned int width, unsigned int height)
+void ak_set_window_size(ak_window* pWindow, int width, int height)
 {
     if (pWindow == NULL) {
         return;
@@ -1414,12 +1414,12 @@ void ak_set_window_size(ak_window* pWindow, unsigned int width, unsigned int hei
     assert(windowFrameX >= 0);
     assert(windowFrameY >= 0);
 
-    unsigned int scaledWidth  = width  + windowFrameX;
-    unsigned int scaledHeight = height + windowFrameY;
+    int scaledWidth  = width  + windowFrameX;
+    int scaledHeight = height + windowFrameY;
     SetWindowPos(pWindow->hWnd, NULL, 0, 0, scaledWidth, scaledHeight, SWP_NOZORDER | SWP_NOMOVE);
 }
 
-void ak_get_window_size(ak_window* pWindow, unsigned int* pWidthOut, unsigned int* pHeightOut)
+void ak_get_window_size(ak_window* pWindow, int* pWidthOut, int* pHeightOut)
 {
     RECT rect;
     if (pWindow == NULL)
@@ -1495,11 +1495,11 @@ void ak_center_window(ak_window* pWindow)
 {
     int parentPosX = 0;
     int parentPosY = 0;
-    unsigned int parentWidth  = 0;
-    unsigned int parentHeight = 0;
+    int parentWidth  = 0;
+    int parentHeight = 0;
 
-    unsigned int windowWidth;
-    unsigned int windowHeight;
+    int windowWidth;
+    int windowHeight;
     ak_get_window_size(pWindow, &windowWidth, &windowHeight);
 
     if (pWindow->pParent != NULL)
@@ -1520,13 +1520,13 @@ void ak_center_window(ak_window* pWindow)
         mi.cbSize = sizeof(MONITORINFO);
         if (GetMonitorInfoA(MonitorFromWindow(pWindow->hWnd, 0), &mi))
         {
-            parentWidth  = (unsigned int)(mi.rcMonitor.right - mi.rcMonitor.left);
-            parentHeight = (unsigned int)(mi.rcMonitor.bottom - mi.rcMonitor.top);
+            parentWidth  = mi.rcMonitor.right - mi.rcMonitor.left;
+            parentHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
         }
     }
 
-    int windowPosX = (((int)parentWidth  - (int)windowWidth)  / 2) + parentPosX;
-    int windowPosY = (((int)parentHeight - (int)windowHeight) / 2) + parentPosY;
+    int windowPosX = ((parentWidth  - windowWidth)  / 2) + parentPosX;
+    int windowPosY = ((parentHeight - windowHeight) / 2) + parentPosY;
     SetWindowPos(pWindow->hWnd, NULL, windowPosX, windowPosY, windowWidth, windowHeight, SWP_NOZORDER | SWP_NOSIZE);
 }
 
@@ -1554,7 +1554,7 @@ void ak_show_window_maximized(ak_window* pWindow)
     ShowWindow(pWindow->hWnd, SW_SHOWMAXIMIZED);
 }
 
-void show_window_sized(ak_window* pWindow, unsigned int width, unsigned int height)
+void show_window_sized(ak_window* pWindow, int width, int height)
 {
     if (pWindow == NULL) {
         return;

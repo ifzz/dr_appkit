@@ -132,13 +132,13 @@ void ak_get_window_title(ak_window* pWindow, char* pTitleOut, size_t titleOutSiz
 ///
 /// @remarks
 ///     On Windows, this sets the size of the client area. This is done for consistency with GTK.
-void ak_set_window_size(ak_window* pWindow, unsigned int width, unsigned int height);
+void ak_set_window_size(ak_window* pWindow, int width, int height);
 
 /// Retrieves the size of the given window.
 ///
 /// @remarks
 ///     On Windows, this retrieves the size of the client area of the window.
-void ak_get_window_size(ak_window* pWindow, unsigned int* pWidthOut, unsigned int* pHeightOut);
+void ak_get_window_size(ak_window* pWindow, int* pWidthOut, int* pHeightOut);
 
 
 /// Sets the position of the given window.
@@ -158,7 +158,7 @@ void ak_show_window(ak_window* pWindow);
 void ak_show_window_maximized(ak_window* pWindow);
 
 /// Shows a window in a non-maximized state with an initial size.
-void show_window_sized(ak_window* pWindow, unsigned int width, unsigned int height);
+void show_window_sized(ak_window* pWindow, int width, int height);
 
 /// Hides the given window.
 ///
