@@ -63,6 +63,7 @@ typedef enum
 
 } ak_window_type;
 
+typedef void (* ak_window_on_close_proc)             (ak_window* pWindow);
 typedef bool (* ak_window_on_hide_proc)              (ak_window* pWindow, unsigned int flags);
 typedef bool (* ak_window_on_show_proc)              (ak_window* pWindow);
 typedef void (* ak_window_on_activate_proc)          (ak_window* pWindow);
@@ -198,12 +199,18 @@ void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut);
 void ak_get_window_dpi_scale(ak_window* pWindow, float* pDPIScaleXOut, float* pDPIScaleYOut);
 
 
+/// Sets the function to call when the on_close event is received.
+void ak_window_set_on_close(ak_window* pWindow, ak_window_on_close_proc proc);
+
 /// Sets the function to call when the on_hide event is received.
 void ak_window_set_on_hide(ak_window* pWindow, ak_window_on_hide_proc proc);
 
 /// Sets the function to call when the on_show event is received.
 void ak_window_set_on_show(ak_window* pWindow, ak_window_on_show_proc proc);
 
+
+/// Calls the on_close event handler for the given window.
+void ak_window_on_close(ak_window* pWindow);
 
 /// Calls the on_hide event handler for the given window.
 bool ak_window_on_hide(ak_window* pWindow, unsigned int flags);

@@ -19,13 +19,17 @@ ak_window* ak_get_application_next_window(ak_application* pApplication, ak_windo
 
 
 /// Called by the main application loop when a window want's to close.
-void ak_application_on_window_wants_to_close(ak_window* pWindow);
+//void ak_application_on_window_wants_to_close(ak_window* pWindow);
 
 /// Called when a window is being deleted.
 ///
 /// @remarks
 ///     This will delete every tool and panel tied to the window.
-void ak_application_on_delete_window(ak_window* pWindow);
+//void ak_application_on_delete_window(ak_window* pWindow);
+
+
+/// Called when a window is wanting to close.
+void ak_application_on_close_window(ak_window* pWindow);
 
 /// Called when a window is about to be hidden.
 ///

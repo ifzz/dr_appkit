@@ -59,6 +59,10 @@ struct ak_window
     /// The flags to pass to the onHide event handler.
     unsigned int onHideFlags;
 
+
+    /// The function to call when the window is wanting to close.
+    ak_window_on_close_proc onClose;
+
     /// The function to call when the window is about to be hidden. If false is returned the window is prevented from being hidden.
     ak_window_on_hide_proc onHide;
 
@@ -352,6 +356,7 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     pWindow->type                  = type;
     pWindow->name[0]               = '\0';
     pWindow->onHideFlags           = 0;
+    pWindow->onClose               = NULL;
     pWindow->onHide                = NULL;
     pWindow->onShow                = NULL;
     pWindow->onActivate            = NULL;
@@ -405,7 +410,7 @@ void ak_uninit_and_free_window_win32(ak_window* pWindow)
     SetWindowLongPtrA(pWindow->hWnd, 0, (LONG_PTR)NULL);
 
 
-    ak_application_on_delete_window(pWindow);
+    //ak_application_on_delete_window(pWindow);
 
     ak_delete_window_panel(pWindow->pPanel);
     pWindow->pPanel = NULL;
@@ -617,17 +622,18 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 break;
             }
 
-            case WM_CLOSE:
-            {
-                ak_application_on_window_wants_to_close(pWindow);
-                return 0;
-            }
-
             case WM_ERASEBKGND:
             {
                 return 1;       // Never draw the background of the window - always leave that to easy_gui.
             }
 
+
+            case WM_CLOSE:
+            {
+                //ak_application_on_window_wants_to_close(pWindow);
+                ak_application_on_close_window(pWindow);
+                return 0;
+            }
 
             case WM_WINDOWPOSCHANGING:
             {
@@ -1746,6 +1752,15 @@ void ak_get_window_dpi_scale(ak_window* pWindow, float* pDPIScaleXOut, float* pD
 }
 
 
+void ak_window_set_on_close(ak_window* pWindow, ak_window_on_close_proc proc)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    pWindow->onClose = proc;
+}
+
 void ak_window_set_on_hide(ak_window* pWindow, ak_window_on_hide_proc proc)
 {
     if (pWindow == NULL) {
@@ -1764,6 +1779,17 @@ void ak_window_set_on_show(ak_window* pWindow, ak_window_on_show_proc proc)
     pWindow->onShow = proc;
 }
 
+
+void ak_window_on_close(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (pWindow->onClose) {
+        pWindow->onClose(pWindow);
+    }
+}
 
 bool ak_window_on_hide(ak_window* pWindow, unsigned int flags)
 {

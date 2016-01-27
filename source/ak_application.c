@@ -641,7 +641,7 @@ ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName
         return NULL;
     }
 
-    for (ak_window* pWindow = pApplication->pFirstWindow; pWindow != NULL; pWindow = ak_get_next_sibling_window(pWindow))
+    for (ak_window* pWindow = ak_get_first_window(pApplication); pWindow != NULL; pWindow = ak_get_next_window(pApplication, pWindow))
     {
         if (strcmp(ak_get_window_name(pWindow), pName) == 0) {
             return pWindow;
@@ -661,13 +661,36 @@ ak_window* ak_get_first_window(ak_application* pApplication)
     return pApplication->pFirstWindow;
 }
 
+PRIVATE ak_window* ak_get_next_non_child_window(ak_application* pApplication, ak_window* pWindow)
+{
+    if (pApplication == NULL || pWindow == NULL) {
+        return NULL;
+    }
+
+    // If we have a next sibling we just return that, otherwise we recursively traverse upwards.
+    if (ak_get_next_sibling_window(pWindow) != NULL) {
+        return ak_get_next_sibling_window(pWindow);
+    }
+
+    // At this point we don't have a sibling so we just check our parent.
+    return ak_get_next_non_child_window(pApplication, ak_get_parent_window(pWindow));
+}
+
 ak_window* ak_get_next_window(ak_application* pApplication, ak_window* pWindow)
 {
     if (pApplication == NULL || pWindow == NULL) {
         return NULL;
     }
 
-    return ak_get_next_sibling_window(pWindow);
+    // If we have children, just return the next child.
+    if (ak_get_first_child_window(pWindow) != NULL) {
+        return ak_get_first_child_window(pWindow);
+    }
+
+    // At this point we don't have any children, so return the next sibling if we have one.
+    return ak_get_next_non_child_window(pApplication, pWindow);
+
+    //return ak_get_next_sibling_window(pWindow);
 }
 
 ak_window* ak_get_primary_window(ak_application* pApplication)
@@ -1353,32 +1376,12 @@ ak_window* ak_get_application_next_window(ak_application* pApplication, ak_windo
     return ak_get_application_next_non_child_window(pApplication, pWindow);
 }
 
-void ak_application_on_delete_window(ak_window* pWindow)
-{
-    // Tools need to be deleted.
-    //ak_delete_tools_recursive(ak_get_window_application(pWindow), ak_get_window_panel(pWindow));
-}
 
-void ak_application_on_window_wants_to_close(ak_window* pWindow)
+void ak_application_on_close_window(ak_window* pWindow)
 {
     assert(pWindow != NULL);
 
-    ak_application* pApplication = ak_get_window_application(pWindow);
-    assert(pApplication != NULL);
-
-    // TODO: Improve this.
-    //
-    // This is very temporary. If the window that's wanting to close is the primary window (the first window in the list), we just post a global
-    // quit message. This actually restricts processes to being able to run only a single application instance at a time.
-    //
-    // Later on what we'll want to do is just pass this off the program by just calling a callback function and letting it handle things however
-    // it would like.
-    if (ak_get_primary_window(pApplication) == pWindow) {
-        ak_delete_all_application_windows(pApplication);
-        ak_post_quit_message(pApplication, 0);
-    } else {
-        ak_delete_window(pWindow);
-    }
+    ak_window_on_close(pWindow);
 }
 
 bool ak_application_on_hide_window(ak_window* pWindow, unsigned int flags)
@@ -1601,7 +1604,7 @@ void ak_application_hide_non_ancestor_popups(ak_window* pWindow)
     ak_application* pApplication = ak_get_window_application(pWindow);
     assert(pApplication != NULL);
 
-    for (ak_window* pOtherWindow = pApplication->pFirstWindow; pOtherWindow != NULL; pOtherWindow = ak_get_next_sibling_window(pOtherWindow))
+    for (ak_window* pOtherWindow = ak_get_first_window(pApplication); pOtherWindow != NULL; pOtherWindow = ak_get_next_window(pApplication, pOtherWindow))
     {
         if (pOtherWindow != pWindow && ak_get_window_type(pOtherWindow) == ak_window_type_popup && !ak_is_window_ancestor(pOtherWindow, pWindow))
         {
