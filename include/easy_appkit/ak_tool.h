@@ -30,6 +30,12 @@ typedef void (* ak_tool_on_handle_action_proc)(easygui_element* pTool, const cha
 ///     Specific types of tools will call this inside their own creation function.
 easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* pParent, const char* type, size_t extraDataSize, const void* pExtraData);
 
+/// Deletes the given tool.
+///
+/// @remarks
+///     This is equivalent to easygui_delete_element(), but is included for consistency with ak_delete_tool().
+void ak_delete_tool(easygui_element* pTool);
+
 /// Retrieves a pointer to the application that owns the given tool.
 ak_application* ak_get_tool_application(easygui_element* pTool);
 

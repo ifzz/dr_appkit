@@ -72,6 +72,11 @@ easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* p
     return pElement;
 }
 
+void ak_delete_tool(easygui_element* pTool)
+{
+    easygui_delete_element(pTool);
+}
+
 ak_application* ak_get_tool_application(easygui_element* pTool)
 {
     ak_tool_data* pToolData = easygui_get_extra_data(pTool);
