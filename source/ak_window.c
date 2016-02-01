@@ -338,8 +338,8 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     }
 
     // The GUI panel needs to have it's initial size set.
-    unsigned int windowWidth;
-    unsigned int windowHeight;
+    int windowWidth;
+    int windowHeight;
     ak_get_window_size(pWindow, &windowWidth, &windowHeight);
     easygui_set_size(pWindow->pPanel, (float)windowWidth, (float)windowHeight);
 

@@ -980,8 +980,8 @@ PRIVATE ak_menu_item* ak_menu_find_item_under_point(ak_window* pMenuWindow, floa
         return NULL;
     }
 
-    unsigned int menuWidth = 0;
-    unsigned int menuHeight = 0;
+    int menuWidth = 0;
+    int menuHeight = 0;
     ak_get_window_size(pMenuWindow, &menuWidth, &menuHeight);
 
     float runningPosY = pMenu->borderWidth + pMenu->paddingY;
