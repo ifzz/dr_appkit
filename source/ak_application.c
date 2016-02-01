@@ -171,7 +171,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
                 strcat_s(path, sizeof(path), istr);
                 strcat_s(path, sizeof(path), ".log");
 
-                pApplication->pLogFile = easyvfs_open(pApplication->pVFS, path, EASYVFS_WRITE, 0);
+                pApplication->pLogFile = easyvfs_open(pApplication->pVFS, path, EASYVFS_WRITE | EASYVFS_TRUNCATE, 0);
                 if (pApplication->pLogFile != NULL)
                 {
                     // We were able to open the log file, so break here.
