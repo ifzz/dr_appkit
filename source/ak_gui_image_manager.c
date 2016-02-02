@@ -5,7 +5,7 @@
 #include "nanosvgrast.h"
 #include <dr_libs/dr_vfs.h>
 #include <easy_gui/easy_gui.h>
-#include <easy_path/easy_path.h>
+#include <dr_libs/dr_path.h>
 
 struct ak_gui_image_manager
 {
@@ -76,7 +76,7 @@ easygui_image* ak_load_vector_image_from_file(ak_gui_image_manager* pIM, const c
     // TODO: Find an already-loaded image of the same name and increment reference counter if exists.
 
     // Currently, only SVG is supported.
-    if (!easypath_extension_equal(fileName, "svg")) {
+    if (!drpath_extension_equal(fileName, "svg")) {
         return NULL;
     }
 

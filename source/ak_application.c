@@ -12,7 +12,7 @@
 #include <dr_libs/dr_util.h>
 #include <easy_gui/easy_gui.h>
 #include <dr_libs/dr_vfs.h>
-#include <easy_path/easy_path.h>
+#include <dr_libs/dr_path.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -167,7 +167,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
                 snprintf(istr, 16, "%d", iAttempt);
 
                 strcpy_s(path, sizeof(path), logDirPath);
-                easypath_append(path, sizeof(path), easypath_file_name(pApplication->name));
+                drpath_append(path, sizeof(path), drpath_file_name(pApplication->name));
                 strcat_s(path, sizeof(path), istr);
                 strcat_s(path, sizeof(path), ".log");
 
@@ -552,7 +552,7 @@ bool ak_get_log_file_folder_path(ak_application* pApplication, char* pathOut, si
         return false;
     }
 
-    return easypath_append(pathOut, (unsigned int)pathOutSize, ak_get_application_name(pApplication));
+    return drpath_append(pathOut, (unsigned int)pathOutSize, ak_get_application_name(pApplication));
 }
 
 bool ak_get_config_file_folder_path(ak_application* pApplication, char* pathOut, size_t pathOutSize)
@@ -569,14 +569,14 @@ bool ak_get_config_file_folder_path(ak_application* pApplication, char* pathOut,
         return false;
     }
 
-    return easypath_append(pathOut, (unsigned int)pathOutSize, ak_get_application_name(pApplication));
+    return drpath_append(pathOut, (unsigned int)pathOutSize, ak_get_application_name(pApplication));
 }
 
 bool ak_get_config_file_path(ak_application* pApplication, char* pathOut, size_t pathOutSize)
 {
     if (ak_get_config_file_folder_path(pApplication, pathOut, pathOutSize))
     {
-        return easypath_append(pathOut, (unsigned int)pathOutSize, easypath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".cfg") == 0;
+        return drpath_append(pathOut, (unsigned int)pathOutSize, drpath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".cfg") == 0;
     }
 
     return false;
@@ -598,12 +598,12 @@ bool ak_get_theme_file_path(ak_application* pApplication, char* pathOut, size_t 
     }
 
     // Append the sub-directory.
-    if (!easypath_append(pathOut, (unsigned int)pathOutSize, ak_get_application_name(pApplication))) {
+    if (!drpath_append(pathOut, (unsigned int)pathOutSize, ak_get_application_name(pApplication))) {
         return false;
     }
 
     // Append the file name.
-    return easypath_append(pathOut, (unsigned int)pathOutSize, easypath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".theme") == 0;
+    return drpath_append(pathOut, (unsigned int)pathOutSize, drpath_file_name(ak_get_application_name(pApplication))) && strcat_s(pathOut, pathOutSize, ".theme") == 0;
 }
 
 
