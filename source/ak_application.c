@@ -454,7 +454,7 @@ void ak_log(ak_application* pApplication, const char* message)
     // Log file.
     if (pApplication->pLogFile != NULL) {
         char dateTime[64];
-        drutil_datetime_short(drutil_now(), dateTime, sizeof(dateTime));
+        dr_datetime_short(dr_now(), dateTime, sizeof(dateTime));
 
         drvfs_write_string(pApplication->pLogFile, "[");
         drvfs_write_string(pApplication->pLogFile, dateTime);
@@ -548,7 +548,7 @@ bool ak_get_log_file_folder_path(ak_application* pApplication, char* pathOut, si
     }
 
 
-    if (!drutil_get_log_folder_path(pathOut, pathOutSize)) {
+    if (!dr_get_log_folder_path(pathOut, pathOutSize)) {
         return false;
     }
 
@@ -565,7 +565,7 @@ bool ak_get_config_file_folder_path(ak_application* pApplication, char* pathOut,
         return false;
     }
 
-    if (!drutil_get_config_folder_path(pathOut, pathOutSize)) {
+    if (!dr_get_config_folder_path(pathOut, pathOutSize)) {
         return false;
     }
 
@@ -593,7 +593,7 @@ bool ak_get_theme_file_path(ak_application* pApplication, char* pathOut, size_t 
     }
 
     // Use the config path as the basis.
-    if (!drutil_get_config_folder_path(pathOut, pathOutSize)) {
+    if (!dr_get_config_folder_path(pathOut, pathOutSize)) {
         return false;
     }
 
@@ -1291,7 +1291,7 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
         // When instantiating tools, we don't actually fail - we just silently ignore it. Thus, we never return false at this point.
 
         char toolType[AK_MAX_WINDOW_NAME_LENGTH];
-        const char* toolAttributes = drutil_first_non_whitespace(drutil_next_token(pLayout->attributes, toolType, sizeof(toolType)));
+        const char* toolAttributes = dr_first_non_whitespace(dr_next_token(pLayout->attributes, toolType, sizeof(toolType)));
         if (toolAttributes != NULL)
         {
             easygui_element* pTool = ak_create_tool_by_type_and_attributes(pApplication, ak_get_element_window(pWorkingPanel), toolType, toolAttributes);

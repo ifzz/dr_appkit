@@ -907,7 +907,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                             if (IS_LOW_SURROGATE(wParam))
                             {
                                 assert(IS_HIGH_SURROGATE(pWindow->utf16HighSurrogate) != 0);
-                                character = utf16pair_to_utf32(pWindow->utf16HighSurrogate, (unsigned short)wParam);
+                                character = dr_utf16pair_to_utf32_ch(pWindow->utf16HighSurrogate, (unsigned short)wParam);
                             }
 
                             pWindow->utf16HighSurrogate = 0;
@@ -1683,14 +1683,14 @@ void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut)
     HMODULE hSHCoreDLL = LoadLibraryW(L"shcore.dll");
     if (hSHCoreDLL == NULL)
     {
-        win32_get_system_dpi(pDPIXOut, pDPIYOut);
+        dr_win32_get_system_dpi(pDPIXOut, pDPIYOut);
         return;
     }
 
     PFN_GetDpiForMonitor _GetDpiForMonitor = (PFN_GetDpiForMonitor)GetProcAddress(hSHCoreDLL, "GetDpiForMonitor");
     if (_GetDpiForMonitor == NULL)
     {
-        win32_get_system_dpi(pDPIXOut, pDPIYOut);
+        dr_win32_get_system_dpi(pDPIXOut, pDPIYOut);
         FreeLibrary(hSHCoreDLL);
         return;
     }
@@ -1709,7 +1709,7 @@ void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut)
     }
     else
     {
-        win32_get_system_dpi(pDPIXOut, pDPIYOut);
+        dr_win32_get_system_dpi(pDPIXOut, pDPIYOut);
     }
 
     FreeLibrary(hSHCoreDLL);
@@ -1725,7 +1725,7 @@ void ak_get_window_dpi_scale(ak_window* pWindow, float* pDPIScaleXOut, float* pD
 #if defined(AK_USE_WIN32)
         int baseDPIX;
         int baseDPIY;
-        win32_get_base_dpi(&baseDPIX, &baseDPIY);
+        dr_win32_get_base_dpi(&baseDPIX, &baseDPIY);
 
         int windowDPIX = baseDPIX;
         int windowDPIY = baseDPIY;

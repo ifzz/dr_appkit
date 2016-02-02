@@ -145,7 +145,7 @@ bool ak_parse_window_layout_attributes(const char* attributesStr, ak_window_layo
 
 
     char typeStr[16];
-    attributesStr = drutil_next_token(attributesStr, typeStr, sizeof(typeStr));
+    attributesStr = dr_next_token(attributesStr, typeStr, sizeof(typeStr));
     if (attributesStr == NULL) {
         return false;
     }
@@ -165,43 +165,43 @@ bool ak_parse_window_layout_attributes(const char* attributesStr, ak_window_layo
 
 
     char posXStr[8];
-    attributesStr = drutil_next_token(attributesStr, posXStr, sizeof(posXStr));
+    attributesStr = dr_next_token(attributesStr, posXStr, sizeof(posXStr));
     if (attributesStr == NULL) {
         return false;
     }
 
     char posYStr[8];
-    attributesStr = drutil_next_token(attributesStr, posYStr, sizeof(posYStr));
+    attributesStr = dr_next_token(attributesStr, posYStr, sizeof(posYStr));
     if (attributesStr == NULL) {
         return false;
     }
 
     char widthStr[8];
-    attributesStr = drutil_next_token(attributesStr, widthStr, sizeof(widthStr));
+    attributesStr = dr_next_token(attributesStr, widthStr, sizeof(widthStr));
     if (attributesStr == NULL) {
         return false;
     }
 
     char heightStr[8];
-    attributesStr = drutil_next_token(attributesStr, heightStr, sizeof(heightStr));
+    attributesStr = dr_next_token(attributesStr, heightStr, sizeof(heightStr));
     if (attributesStr == NULL) {
         return false;
     }
 
     char maximizedStr[8];
-    attributesStr = drutil_next_token(attributesStr, maximizedStr, sizeof(maximizedStr));
+    attributesStr = dr_next_token(attributesStr, maximizedStr, sizeof(maximizedStr));
     if (attributesStr == NULL) {
         return false;
     }
 
 
     // The next two properties are optional (title and name).
-    attributesStr = drutil_next_token(attributesStr, pAttributesOut->title, sizeof(pAttributesOut->title));
+    attributesStr = dr_next_token(attributesStr, pAttributesOut->title, sizeof(pAttributesOut->title));
     if (attributesStr == NULL) {
         strcpy_s(pAttributesOut->title, sizeof(pAttributesOut->title), "");
     }
 
-    attributesStr = drutil_next_token(attributesStr, pAttributesOut->name, sizeof(pAttributesOut->name));
+    attributesStr = dr_next_token(attributesStr, pAttributesOut->name, sizeof(pAttributesOut->name));
     if (attributesStr == NULL) {
         strcpy_s(pAttributesOut->name, sizeof(pAttributesOut->name), "");
     }
@@ -237,7 +237,7 @@ bool ak_parse_panel_layout_attributes(const char* attributesStr, ak_panel_layout
 
     // The first token is the split axis.
     char splitAxisOrTypeStr[AK_MAX_PANEL_TYPE_LENGTH];
-    attributesStr = drutil_next_token(attributesStr, splitAxisOrTypeStr, sizeof(splitAxisOrTypeStr));
+    attributesStr = dr_next_token(attributesStr, splitAxisOrTypeStr, sizeof(splitAxisOrTypeStr));
     if (attributesStr != NULL)
     {
         if (strcmp(splitAxisOrTypeStr, "hsplit") == 0) {
@@ -258,7 +258,7 @@ bool ak_parse_panel_layout_attributes(const char* attributesStr, ak_panel_layout
         if (splitAxis != ak_panel_split_axis_none)
         {
             char splitPosStr[8];
-            attributesStr = drutil_next_token(attributesStr, splitPosStr, sizeof(splitPosStr));
+            attributesStr = dr_next_token(attributesStr, splitPosStr, sizeof(splitPosStr));
             if (attributesStr == NULL) {
                 return false;
             }
@@ -267,7 +267,7 @@ bool ak_parse_panel_layout_attributes(const char* attributesStr, ak_panel_layout
 
 
             // The third argument on a split panel will be the name which is optional.
-            attributesStr = drutil_next_token(attributesStr, splitAxisOrTypeStr, sizeof(splitAxisOrTypeStr));
+            attributesStr = dr_next_token(attributesStr, splitAxisOrTypeStr, sizeof(splitAxisOrTypeStr));
             if (attributesStr != NULL) {
                 strcpy_s(type, sizeof(type), splitAxisOrTypeStr);
             }
