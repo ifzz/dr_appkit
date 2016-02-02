@@ -3,19 +3,13 @@ A small library for making it easier to build applications. If you've stumbled
 across this library you probably don't want to use it.
 
 
-# Usage
-
-
-
 # Building
 Compiling this library should just be a matter of building the dependenies and
-adding each .c file to the build. The easy_* branded libraries are very simple
-and can be added to the source tree directly.
+adding each .c file to the build. The dr_* and easy_* branded libraries are very
+simple and can be added to the source tree directly.
 
 ## Dependencies
- - easy_util
- - easy_path
- - easy_vfs
+ - dr_libs
  - easy_gui
  - easy_draw
  - nanosvg (https://github.com/memononen/nanosvg)
