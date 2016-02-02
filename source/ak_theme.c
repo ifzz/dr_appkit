@@ -30,7 +30,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     assert(pApplication != NULL);
     assert(pTheme       != NULL);
 
-    //easy2d_context* pDrawingContext = ak_get_application_drawing_context(pApplication);
+    //dr2d_context* pDrawingContext = ak_get_application_drawing_context(pApplication);
     //assert(pDrawingContext != NULL);
 
 #ifdef AK_USE_WIN32

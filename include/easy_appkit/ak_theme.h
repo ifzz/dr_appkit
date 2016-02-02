@@ -4,7 +4,6 @@
 #define ak_theme_h
 
 #include <easy_gui/easy_gui.h>    // For easygui_color, easygui_font
-#include <easy_draw/easy_2d.h>    // For easy2d_font_metrics
 
 #ifdef __cplusplus
 extern "C" {

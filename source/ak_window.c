@@ -50,7 +50,7 @@ struct ak_window
     easygui_element* pPanel;
 
     /// The easy_draw surface we'll be drawing to.
-    easy2d_surface* pSurface;
+    dr2d_surface* pSurface;
 
     /// The name of the window.
     char name[AK_MAX_WINDOW_NAME_LENGTH];
@@ -317,7 +317,7 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
         return NULL;
     }
 
-    pWindow->pSurface = easy2d_create_surface_gdi_HWND(ak_get_application_drawing_context(pApplication), hWnd);
+    pWindow->pSurface = dr2d_create_surface_gdi_HWND(ak_get_application_drawing_context(pApplication), hWnd);
     if (pWindow->pSurface == NULL)
     {
         ak_errorf(pApplication, "Failed to create drawing surface for window.");
@@ -415,7 +415,7 @@ void ak_uninit_and_free_window_win32(ak_window* pWindow)
     ak_delete_window_panel(pWindow->pPanel);
     pWindow->pPanel = NULL;
 
-    easy2d_delete_surface(pWindow->pSurface);
+    dr2d_delete_surface(pWindow->pSurface);
     pWindow->pSurface = NULL;
 
     free(pWindow);
@@ -1337,7 +1337,7 @@ easygui_element* ak_get_window_panel(ak_window* pWindow)
     return pWindow->pPanel;
 }
 
-easy2d_surface* ak_get_window_surface(ak_window* pWindow)
+dr2d_surface* ak_get_window_surface(ak_window* pWindow)
 {
     if (pWindow == NULL) {
         return NULL;

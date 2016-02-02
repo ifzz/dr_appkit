@@ -108,7 +108,7 @@ void* ak_get_window_extra_data(ak_window* pWindow);
 easygui_element* ak_get_window_panel(ak_window* pWindow);
 
 /// Retrieves a pointer to the easy_draw surface the window will be drawing to.
-easy2d_surface* ak_get_window_surface(ak_window* pWindow);
+dr2d_surface* ak_get_window_surface(ak_window* pWindow);
 
 
 /// Sets the name of the window.

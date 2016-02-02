@@ -38,7 +38,7 @@ struct ak_application
     
 
     /// The drawing context.
-    easy2d_context* pDrawingContext;
+    dr2d_context* pDrawingContext;
 
     /// A pointer to the GUI context.
     easygui_context* pGUI;
@@ -188,10 +188,10 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
         // GUI.
 #ifdef AK_USE_WIN32
-        pApplication->pDrawingContext = easy2d_create_context_gdi();
+        pApplication->pDrawingContext = dr2d_create_context_gdi();
 #endif
 #ifdef AK_USE_GTK
-        pApplication->pDrawingContext = easy2d_create_context_cairo();
+        pApplication->pDrawingContext = dr2d_create_context_cairo();
 #endif
         if (pApplication->pDrawingContext == NULL) {
             free(pApplication);
@@ -200,7 +200,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
         pApplication->pGUI = easygui_create_context_easy_draw(pApplication->pDrawingContext);
         if (pApplication->pGUI == NULL) {
-            easy2d_delete_context(pApplication->pDrawingContext);
+            dr2d_delete_context(pApplication->pDrawingContext);
             free(pApplication);
             return NULL;
         }
@@ -208,7 +208,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         pApplication->pGUIImageManager = ak_create_gui_image_manager(pApplication->pVFS, pApplication->pGUI);
         if (pApplication->pGUIImageManager == NULL) {
             easygui_delete_context(pApplication->pGUI);
-            easy2d_delete_context(pApplication->pDrawingContext);
+            dr2d_delete_context(pApplication->pDrawingContext);
             free(pApplication);
             return NULL;
         }
@@ -288,7 +288,7 @@ void ak_delete_application(ak_application* pApplication)
     // GUI.
     ak_delete_gui_image_manager(pApplication->pGUIImageManager);
     easygui_delete_context(pApplication->pGUI);
-    easy2d_delete_context(pApplication->pDrawingContext);
+    dr2d_delete_context(pApplication->pDrawingContext);
 
     // Logs.
     drvfs_close(pApplication->pLogFile);
@@ -407,7 +407,7 @@ void* ak_get_application_extra_data(ak_application* pApplication)
     return pApplication->pExtraData;
 }
 
-easy2d_context* ak_get_application_drawing_context(ak_application* pApplication)
+dr2d_context* ak_get_application_drawing_context(ak_application* pApplication)
 {
     if (pApplication == NULL) {
         return NULL;

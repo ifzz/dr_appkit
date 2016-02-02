@@ -18,7 +18,7 @@ typedef struct ak_gui_image_manager ak_gui_image_manager;
 typedef struct ak_timer ak_timer;
 typedef struct easygui_context easygui_context;
 typedef struct easygui_element easygui_element;
-typedef struct easy2d_context easy2d_context;
+typedef struct dr2d_context dr2d_context;
 typedef struct drvfs_context drvfs_context;
 
 typedef bool             (* ak_run_proc)           (ak_application* pApplication);
@@ -109,7 +109,7 @@ size_t ak_get_application_extra_data_size(ak_application* pApplication);
 void* ak_get_application_extra_data(ak_application* pApplication);
 
 /// Retrieves a pointer to the GUI drawing context.
-easy2d_context* ak_get_application_drawing_context(ak_application* pApplication);
+dr2d_context* ak_get_application_drawing_context(ak_application* pApplication);
 
 /// Retrieves a pointer to the GUI context associated with the application.
 easygui_context* ak_get_application_gui(ak_application* pApplication);
