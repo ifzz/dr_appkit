@@ -9,7 +9,7 @@
 #include "ak_application_private.h"
 #include "ak_window_private.h"
 #include "ak_config.h"
-#include <easy_util/easy_util.h>
+#include <dr_libs/dr_util.h>
 #include <easy_gui/easy_gui.h>
 #include <dr_libs/dr_vfs.h>
 #include <easy_path/easy_path.h>
@@ -454,7 +454,7 @@ void ak_log(ak_application* pApplication, const char* message)
     // Log file.
     if (pApplication->pLogFile != NULL) {
         char dateTime[64];
-        easyutil_datetime_short(easyutil_now(), dateTime, sizeof(dateTime));
+        drutil_datetime_short(drutil_now(), dateTime, sizeof(dateTime));
 
         drvfs_write_string(pApplication->pLogFile, "[");
         drvfs_write_string(pApplication->pLogFile, dateTime);
@@ -548,7 +548,7 @@ bool ak_get_log_file_folder_path(ak_application* pApplication, char* pathOut, si
     }
 
 
-    if (!easyutil_get_log_folder_path(pathOut, pathOutSize)) {
+    if (!drutil_get_log_folder_path(pathOut, pathOutSize)) {
         return false;
     }
 
@@ -565,7 +565,7 @@ bool ak_get_config_file_folder_path(ak_application* pApplication, char* pathOut,
         return false;
     }
 
-    if (!easyutil_get_config_folder_path(pathOut, pathOutSize)) {
+    if (!drutil_get_config_folder_path(pathOut, pathOutSize)) {
         return false;
     }
 
@@ -593,7 +593,7 @@ bool ak_get_theme_file_path(ak_application* pApplication, char* pathOut, size_t 
     }
 
     // Use the config path as the basis.
-    if (!easyutil_get_config_folder_path(pathOut, pathOutSize)) {
+    if (!drutil_get_config_folder_path(pathOut, pathOutSize)) {
         return false;
     }
 
@@ -1291,7 +1291,7 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
         // When instantiating tools, we don't actually fail - we just silently ignore it. Thus, we never return false at this point.
 
         char toolType[AK_MAX_WINDOW_NAME_LENGTH];
-        const char* toolAttributes = easyutil_first_non_whitespace(easyutil_next_token(pLayout->attributes, toolType, sizeof(toolType)));
+        const char* toolAttributes = drutil_first_non_whitespace(drutil_next_token(pLayout->attributes, toolType, sizeof(toolType)));
         if (toolAttributes != NULL)
         {
             easygui_element* pTool = ak_create_tool_by_type_and_attributes(pApplication, ak_get_element_window(pWorkingPanel), toolType, toolAttributes);

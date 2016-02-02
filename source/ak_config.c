@@ -180,7 +180,7 @@ bool ak_parse_config_from_file(ak_config* pConfig, drvfs_file* pFile, ak_on_conf
     context.pCurrentLayout   = pConfig->pRootLayout;
     context.onError          = onError;
     context.pOnErrorUserData = pOnErrorUserData;
-    easyutil_parse_key_value_pairs(ak_config_on_read_from_file_proc, ak_config_on_pair, NULL, &context);
+    drutil_parse_key_value_pairs(ak_config_on_read_from_file_proc, ak_config_on_pair, NULL, &context);
 
     if (context.foundError) {
         ak_uninit_config(pConfig);
@@ -209,7 +209,7 @@ bool ak_parse_config_from_string(ak_config* pConfig, const char* configString, a
     context.pCurrentLayout     = pConfig->pRootLayout;
     context.onError            = onError;
     context.pOnErrorUserData   = pOnErrorUserData;
-    easyutil_parse_key_value_pairs(ak_config_on_read_from_string_proc, ak_config_on_pair, NULL, &context);
+    drutil_parse_key_value_pairs(ak_config_on_read_from_string_proc, ak_config_on_pair, NULL, &context);
 
     if (context.foundError) {
         ak_uninit_config(pConfig);

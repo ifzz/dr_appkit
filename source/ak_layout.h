@@ -7,7 +7,7 @@
 #include "../include/easy_appkit/ak_panel.h"
 #include "../include/easy_appkit/ak_tool.h"
 #include "../include/easy_appkit/ak_window.h"
-#include <easy_util/easy_util.h>
+#include <dr_libs/dr_util.h>
 
 #ifdef __cplusplus
 extern "C" {

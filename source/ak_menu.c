@@ -2,7 +2,7 @@
 
 #include "../include/easy_appkit/ak_menu.h"
 #include "../include/easy_appkit/ak_window.h"
-#include <easy_util/easy_util.h>
+#include <dr_libs/dr_util.h>
 #include <math.h>
 #include <assert.h>
 
@@ -743,7 +743,7 @@ PRIVATE void ak_menu_on_measure_item_default(ak_menu_item* pMI, float* pWidthOut
             *pWidthOut = pMenu->itemPadding + pMenu->iconSize + pMenu->textPaddingLeft + textWidth + pMenu->shortcutTextPaddingLeft + shortcutTextWidth + pMenu->arrowPaddingLeft + pMenu->arrowSize + pMenu->itemPadding;
         }
         if (pHeightOut) {
-            *pHeightOut = easy_max(textHeight, easy_max(shortcutTextHeight, easy_max(pMenu->iconSize, pMenu->arrowSize))) + (pMenu->itemPadding*2);
+            *pHeightOut = dr_max(textHeight, dr_max(shortcutTextHeight, dr_max(pMenu->iconSize, pMenu->arrowSize))) + (pMenu->itemPadding*2);
         }
     }
 }
@@ -921,8 +921,8 @@ PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow)
                 float shortcutTextHeight = 0;
                 easygui_measure_string(pMenu->pFont, pMI->shortcutText, strlen(pMI->shortcutText), innerScaleX, innerScaleY, &shortcutTextWidth, &shortcutTextHeight);
 
-                maxTextWidth = easy_max(maxTextWidth, textWidth);
-                maxShortcutTextWidth = easy_max(maxShortcutTextWidth, shortcutTextWidth);
+                maxTextWidth = dr_max(maxTextWidth, textWidth);
+                maxShortcutTextWidth = dr_max(maxShortcutTextWidth, shortcutTextWidth);
             }
         }
     }
@@ -958,7 +958,7 @@ PRIVATE void ak_menu_resize_by_items(ak_window* pMenuWindow)
             float itemHeight = 0;
             pMenu->onItemMeasure(pMI, &itemWidth, &itemHeight);
 
-            menuWidth = easy_max(menuWidth, itemWidth);
+            menuWidth = dr_max(menuWidth, itemWidth);
             menuHeight += itemHeight;
         }
     }

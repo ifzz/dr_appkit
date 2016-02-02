@@ -9,7 +9,7 @@
 #include "ak_tool_private.h"
 #include "ak_application_private.h"
 #include <easy_gui/easy_gui.h>
-#include <easy_util/easy_util.h>
+#include <dr_libs/dr_util.h>
 #include <assert.h>
 
 typedef struct 
