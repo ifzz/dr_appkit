@@ -17,7 +17,7 @@ PRIVATE bool ak_is_layout_item_tag(const char* tag)
 typedef struct
 {
     /// A pointer to the file to read from. Null if the file is not being used for parsing.
-    easyvfs_file* pFile;
+    drvfs_file* pFile;
 
     /// The string to read the script from. Not used if the script is being read from the file.
     const char* configString;
@@ -49,7 +49,7 @@ static size_t ak_config_on_read_from_file_proc(void* pUserData, void* pDataOut, 
     assert(pContext != NULL);
 
     unsigned int bytesRead;
-    if (easyvfs_read(pContext->pFile, pDataOut, (unsigned int)bytesToRead, &bytesRead)) {
+    if (drvfs_read(pContext->pFile, pDataOut, (unsigned int)bytesToRead, &bytesRead)) {
         return bytesRead;
     }
 
@@ -162,7 +162,7 @@ static void ak_config_on_error(void* pUserData, const char* message, unsigned in
 }
 
 
-bool ak_parse_config_from_file(ak_config* pConfig, easyvfs_file* pFile, ak_on_config_error_proc onError, void* pOnErrorUserData)
+bool ak_parse_config_from_file(ak_config* pConfig, drvfs_file* pFile, ak_on_config_error_proc onError, void* pOnErrorUserData)
 {
     if (pConfig == NULL || pFile == NULL) {
         return false;

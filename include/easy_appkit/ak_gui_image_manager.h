@@ -14,13 +14,13 @@
 extern "C" {
 #endif
 
-typedef struct easyvfs_context easyvfs_context;
+typedef struct drvfs_context drvfs_context;
 typedef struct easygui_context easygui_context;
 typedef struct easygui_image easygui_image;
 typedef struct ak_gui_image_manager ak_gui_image_manager;
 
 /// Creates a new GUI image manager object.
-ak_gui_image_manager* ak_create_gui_image_manager(easyvfs_context* pVFS, easygui_context* pGUI);
+ak_gui_image_manager* ak_create_gui_image_manager(drvfs_context* pVFS, easygui_context* pGUI);
 
 /// Deletes the given image manager.
 void ak_delete_gui_image_manager(ak_gui_image_manager* pIM);

@@ -11,7 +11,7 @@
 #include "ak_config.h"
 #include <easy_util/easy_util.h>
 #include <easy_gui/easy_gui.h>
-#include <easy_fs/easy_vfs.h>
+#include <dr_libs/dr_vfs.h>
 #include <easy_path/easy_path.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,10 +28,10 @@ struct ak_application
     char name[AK_MAX_APPLICATION_NAME_LENGTH];
 
     /// The virtual file system context. This is mainly used for opening log, theme and configuration files.
-    easyvfs_context* pVFS;
+    drvfs_context* pVFS;
 
     /// The log file.
-    easyvfs_file* pLogFile;
+    drvfs_file* pLogFile;
 
     /// The log callback.
     ak_log_proc onLog;
@@ -145,7 +145,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
 
         // File system.
-        pApplication->pVFS = easyvfs_create_context();
+        pApplication->pVFS = drvfs_create_context();
         if (pApplication->pVFS == NULL) {
             free(pApplication);
             return NULL;
@@ -155,12 +155,12 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         // Logging
         pApplication->onLog = NULL;
         
-        char logDirPath[EASYVFS_MAX_PATH];
+        char logDirPath[DRVFS_MAX_PATH];
         if (ak_get_log_file_folder_path(pApplication, logDirPath, sizeof(logDirPath)))
         {
             const unsigned int maxAttempts = 10;
 
-            char path[EASYVFS_MAX_PATH];
+            char path[DRVFS_MAX_PATH];
             for (unsigned int iAttempt = 0; iAttempt < maxAttempts; ++iAttempt)
             {
                 char istr[16];
@@ -171,7 +171,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
                 strcat_s(path, sizeof(path), istr);
                 strcat_s(path, sizeof(path), ".log");
 
-                pApplication->pLogFile = easyvfs_open(pApplication->pVFS, path, EASYVFS_WRITE | EASYVFS_TRUNCATE, 0);
+                pApplication->pLogFile = drvfs_open(pApplication->pVFS, path, DRVFS_WRITE | DRVFS_TRUNCATE, 0);
                 if (pApplication->pLogFile != NULL)
                 {
                     // We were able to open the log file, so break here.
@@ -291,10 +291,10 @@ void ak_delete_application(ak_application* pApplication)
     easy2d_delete_context(pApplication->pDrawingContext);
 
     // Logs.
-    easyvfs_close(pApplication->pLogFile);
+    drvfs_close(pApplication->pLogFile);
 
     // File system.
-    easyvfs_delete_context(pApplication->pVFS);
+    drvfs_delete_context(pApplication->pVFS);
 
 
 #ifdef AK_USE_WIN32
@@ -380,7 +380,7 @@ const char* ak_get_application_name(ak_application* pApplication)
     return pApplication->name;
 }
 
-easyvfs_context* ak_get_application_vfs(ak_application* pApplication)
+drvfs_context* ak_get_application_vfs(ak_application* pApplication)
 {
     if (pApplication == NULL) {
         return NULL;
@@ -456,11 +456,11 @@ void ak_log(ak_application* pApplication, const char* message)
         char dateTime[64];
         easyutil_datetime_short(easyutil_now(), dateTime, sizeof(dateTime));
 
-        easyvfs_write_string(pApplication->pLogFile, "[");
-        easyvfs_write_string(pApplication->pLogFile, dateTime);
-        easyvfs_write_string(pApplication->pLogFile, "]");
-        easyvfs_write_line  (pApplication->pLogFile, message);
-        easyvfs_flush(pApplication->pLogFile);
+        drvfs_write_string(pApplication->pLogFile, "[");
+        drvfs_write_string(pApplication->pLogFile, dateTime);
+        drvfs_write_string(pApplication->pLogFile, "]");
+        drvfs_write_line  (pApplication->pLogFile, message);
+        drvfs_flush(pApplication->pLogFile);
     }
 
 
@@ -1113,7 +1113,7 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
 
     // We load the theme first because it contains the data we need for drawing the window which will be shown when the
     // main config is applied.
-    char themePath[EASYVFS_MAX_PATH];
+    char themePath[DRVFS_MAX_PATH];
     if (ak_get_theme_file_path(pApplication, themePath, sizeof(themePath))) {
         ak_theme_load_from_file(pApplication, &pApplication->theme, themePath);
     }
@@ -1121,10 +1121,10 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
 
     // We first need to try and open the config file. If we can't find it we need to try and load the default config. If both
     // fail, we need to return false.
-    char configPath[EASYVFS_MAX_PATH];
+    char configPath[DRVFS_MAX_PATH];
     if (ak_get_config_file_path(pApplication, configPath, sizeof(configPath)))
     {
-        easyvfs_file* pConfigFile = easyvfs_open(ak_get_application_vfs(pApplication), configPath, EASYVFS_READ, 0);
+        drvfs_file* pConfigFile = drvfs_open(ak_get_application_vfs(pApplication), configPath, DRVFS_READ, 0);
         if (pConfigFile != NULL)
         {
             ak_config config;

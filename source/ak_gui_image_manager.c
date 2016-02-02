@@ -3,14 +3,14 @@
 #include "../include/easy_appkit/ak_gui_image_manager.h"
 #include "nanosvg.h"
 #include "nanosvgrast.h"
-#include <easy_fs/easy_vfs.h>
+#include <dr_libs/dr_vfs.h>
 #include <easy_gui/easy_gui.h>
 #include <easy_path/easy_path.h>
 
 struct ak_gui_image_manager
 {
     /// A pointer to the virtual file system to use to load image files.
-    easyvfs_context* pVFS;
+    drvfs_context* pVFS;
 
     /// A pointer to the GUI context.
     easygui_context* pGUI;
@@ -30,7 +30,7 @@ struct ak_gui_image_manager
 PRIVATE easygui_image* ak_load_svg_from_string(ak_gui_image_manager* pIM, char* svg, unsigned int width, unsigned int height);
 
 
-ak_gui_image_manager* ak_create_gui_image_manager(easyvfs_context* pVFS, easygui_context* pGUI)
+ak_gui_image_manager* ak_create_gui_image_manager(drvfs_context* pVFS, easygui_context* pGUI)
 {
     if (pVFS == NULL || pGUI == NULL) {
         return NULL;
@@ -80,14 +80,14 @@ easygui_image* ak_load_vector_image_from_file(ak_gui_image_manager* pIM, const c
         return NULL;
     }
 
-    char* svg = easyvfs_open_and_read_text_file(pIM->pVFS, fileName, NULL);
+    char* svg = drvfs_open_and_read_text_file(pIM->pVFS, fileName, NULL);
     if (svg == NULL) {
         return NULL;
     }
 
     easygui_image* pImage = ak_load_svg_from_string(pIM, svg, width, height);
 
-    easyvfs_free(svg);
+    drvfs_free(svg);
     return pImage;
 }
 
@@ -545,7 +545,7 @@ PRIVATE easygui_image* ak_load_svg_from_string(ak_gui_image_manager* pIM, char* 
 {
     NSVGimage* pSVGImage = nsvgParse(svg, "px", 96);
     if (pSVGImage == NULL) {
-        easyvfs_free(svg);
+        drvfs_free(svg);
         return NULL;
     }
 
