@@ -10,6 +10,10 @@
 #include <dr_libs/dr_util.h>
 #include <assert.h>
 
+#ifndef PRIVATE
+#define PRIVATE static
+#endif
+
 #ifdef AK_USE_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -147,7 +151,7 @@ typedef struct
 
 
 
-PRIVATE static void ak_on_global_capture_mouse(easygui_element* pElement)
+PRIVATE void ak_on_global_capture_mouse(easygui_element* pElement)
 {
     easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
@@ -158,7 +162,7 @@ PRIVATE static void ak_on_global_capture_mouse(easygui_element* pElement)
     }
 }
 
-PRIVATE static void ak_on_global_release_mouse(easygui_element* pElement)
+PRIVATE void ak_on_global_release_mouse(easygui_element* pElement)
 {
     easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
@@ -169,7 +173,7 @@ PRIVATE static void ak_on_global_release_mouse(easygui_element* pElement)
     }
 }
 
-PRIVATE static void ak_on_global_capture_keyboard(easygui_element* pElement, easygui_element* pPrevCapturedElement)
+PRIVATE void ak_on_global_capture_keyboard(easygui_element* pElement, easygui_element* pPrevCapturedElement)
 {
     (void)pPrevCapturedElement;
 
@@ -182,7 +186,7 @@ PRIVATE static void ak_on_global_capture_keyboard(easygui_element* pElement, eas
     }
 }
 
-PRIVATE static void ak_on_global_release_keyboard(easygui_element* pElement, easygui_element* pNewCapturedElement)
+PRIVATE void ak_on_global_release_keyboard(easygui_element* pElement, easygui_element* pNewCapturedElement)
 {
     (void)pNewCapturedElement;
 
@@ -195,7 +199,7 @@ PRIVATE static void ak_on_global_release_keyboard(easygui_element* pElement, eas
     }
 }
 
-PRIVATE static void ak_on_global_dirty(easygui_element* pElement, easygui_rect relativeRect)
+PRIVATE void ak_on_global_dirty(easygui_element* pElement, easygui_rect relativeRect)
 {
     easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);

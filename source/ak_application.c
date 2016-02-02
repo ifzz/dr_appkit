@@ -18,6 +18,10 @@
 #include <string.h>
 #include <assert.h>
 
+#ifndef PRIVATE
+#define PRIVATE static
+#endif
+
 #ifdef AK_USE_WIN32
 #include <windows.h>
 #endif
@@ -1098,7 +1102,7 @@ PRIVATE int ak_main_loop(ak_application* pApplication)
 #endif
 }
 
-PRIVATE static void ak_on_config_error(void* pUserData, const char* message)
+PRIVATE void ak_on_config_error(void* pUserData, const char* message)
 {
     ak_application* pApplication = pUserData;
     assert(pApplication != NULL);

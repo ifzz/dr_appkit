@@ -6,6 +6,10 @@
 #include <math.h>
 #include <assert.h>
 
+#ifndef PRIVATE
+#define PRIVATE static
+#endif
+
 typedef struct ak_menu ak_menu;
 
 struct ak_menu

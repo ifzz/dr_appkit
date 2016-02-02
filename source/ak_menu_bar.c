@@ -5,6 +5,10 @@
 #include <math.h>
 #include <assert.h>
 
+#ifndef PRIVATE
+#define PRIVATE static
+#endif
+
 typedef struct ak_menu_bar ak_menu_bar;
 
 struct ak_menu_bar

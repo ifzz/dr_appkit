@@ -7,6 +7,10 @@
 #include <easy_gui/easy_gui.h>
 #include <dr_libs/dr_path.h>
 
+#ifndef PRIVATE
+#define PRIVATE static
+#endif
+
 struct ak_gui_image_manager
 {
     /// A pointer to the virtual file system to use to load image files.

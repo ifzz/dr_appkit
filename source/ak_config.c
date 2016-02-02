@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <assert.h>
 
+#ifndef PRIVATE
+#define PRIVATE static
+#endif
+
 /// Determines whether or not the given string is a layout item tag.
 PRIVATE bool ak_is_layout_item_tag(const char* tag)
 {

@@ -12,6 +12,10 @@
 #include <dr_libs/dr_util.h>
 #include <assert.h>
 
+#ifndef PRIVATE
+#define PRIVATE static
+#endif
+
 typedef struct 
 {
     /// A pointer to the main application.

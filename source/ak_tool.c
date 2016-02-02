@@ -9,6 +9,10 @@
 #include <easy_gui/wip/easygui_tab_bar.h>
 #include <assert.h>
 
+#ifndef PRIVATE
+#define PRIVATE static
+#endif
+
 typedef struct
 {
     /// A pointer to the application that owns this tool.
@@ -203,7 +207,7 @@ void ak_tool_set_on_handle_action(easygui_element* pTool, ak_tool_on_handle_acti
 
 
 
-PRIVATE void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab)
+void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab)
 {
     ak_tool_data* pToolData = easygui_get_extra_data(pTool);
     if (pToolData == NULL) {
@@ -213,7 +217,7 @@ PRIVATE void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab)
     pToolData->pTab = pTab;
 }
 
-PRIVATE void ak_set_tool_panel(easygui_element* pTool, easygui_element* pPanel)
+void ak_set_tool_panel(easygui_element* pTool, easygui_element* pPanel)
 {
     ak_tool_data* pToolData = easygui_get_extra_data(pTool);
     if (pToolData == NULL) {
