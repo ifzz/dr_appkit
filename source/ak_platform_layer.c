@@ -1,6 +1,6 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/easy_appkit/ak_platform_layer.h"
+#include "../include/dr_appkit/ak_platform_layer.h"
 
 #ifdef _WIN32
 #include <windows.h>

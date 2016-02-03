@@ -1,7 +1,7 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/easy_appkit/ak_menu_bar.h"
-#include "../include/easy_appkit/ak_window.h"
+#include "../include/dr_appkit/ak_menu_bar.h"
+#include "../include/dr_appkit/ak_window.h"
 #include <math.h>
 #include <assert.h>
 

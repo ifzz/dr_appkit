@@ -3,10 +3,10 @@
 #ifndef ak_layout_h
 #define ak_layout_h
 
-#include "../include/easy_appkit/ak_build_config.h"
-#include "../include/easy_appkit/ak_panel.h"
-#include "../include/easy_appkit/ak_tool.h"
-#include "../include/easy_appkit/ak_window.h"
+#include "../include/dr_appkit/ak_build_config.h"
+#include "../include/dr_appkit/ak_panel.h"
+#include "../include/dr_appkit/ak_tool.h"
+#include "../include/dr_appkit/ak_window.h"
 #include <dr_libs/dr_util.h>
 
 #ifdef __cplusplus

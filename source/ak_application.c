@@ -1,11 +1,11 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/easy_appkit/ak_application.h"
-#include "../include/easy_appkit/ak_build_config.h"
-#include "../include/easy_appkit/ak_theme.h"
-#include "../include/easy_appkit/ak_window.h"
-#include "../include/easy_appkit/ak_panel.h"
-#include "../include/easy_appkit/ak_gui_image_manager.h"
+#include "../include/dr_appkit/ak_application.h"
+#include "../include/dr_appkit/ak_build_config.h"
+#include "../include/dr_appkit/ak_theme.h"
+#include "../include/dr_appkit/ak_window.h"
+#include "../include/dr_appkit/ak_panel.h"
+#include "../include/dr_appkit/ak_gui_image_manager.h"
 #include "ak_application_private.h"
 #include "ak_window_private.h"
 #include "ak_config.h"

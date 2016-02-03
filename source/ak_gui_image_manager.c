@@ -1,6 +1,6 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/easy_appkit/ak_gui_image_manager.h"
+#include "../include/dr_appkit/ak_gui_image_manager.h"
 #include "nanosvg.h"
 #include "nanosvgrast.h"
 #include <dr_libs/dr_vfs.h>
