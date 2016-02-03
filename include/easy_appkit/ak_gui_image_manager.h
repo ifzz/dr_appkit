@@ -15,32 +15,32 @@ extern "C" {
 #endif
 
 typedef struct drvfs_context drvfs_context;
-typedef struct easygui_context easygui_context;
-typedef struct easygui_image easygui_image;
+typedef struct drgui_context drgui_context;
+typedef struct drgui_image drgui_image;
 typedef struct ak_gui_image_manager ak_gui_image_manager;
 
 /// Creates a new GUI image manager object.
-ak_gui_image_manager* ak_create_gui_image_manager(drvfs_context* pVFS, easygui_context* pGUI);
+ak_gui_image_manager* ak_create_gui_image_manager(drvfs_context* pVFS, drgui_context* pGUI);
 
 /// Deletes the given image manager.
 void ak_delete_gui_image_manager(ak_gui_image_manager* pIM);
 
 
 /// Loads a vector image.
-easygui_image* ak_load_vector_image_from_file(ak_gui_image_manager* pIM, const char* fileName, unsigned int width, unsigned int height);
+drgui_image* ak_load_vector_image_from_file(ak_gui_image_manager* pIM, const char* fileName, unsigned int width, unsigned int height);
 
 /// Deletes the given GUI image.
-void ak_unload_image(ak_gui_image_manager* pIM, easygui_image* image);
+void ak_unload_image(ak_gui_image_manager* pIM, drgui_image* image);
 
 
 /// Retrieves a pointer to the right-facing arrow for use with sub-menus and tree-view controls.
-easygui_image* ak_get_arrow_right_image(ak_gui_image_manager* pIM);
+drgui_image* ak_get_arrow_right_image(ak_gui_image_manager* pIM);
 
 /// Retrieves a pointer to the right-down facing arrow for use with tree-view controls.
-easygui_image* ak_get_arrow_right_down_image(ak_gui_image_manager* pIM);
+drgui_image* ak_get_arrow_right_down_image(ak_gui_image_manager* pIM);
 
 /// Retrieves a pointer to the red cross image for close buttons.
-easygui_image* ak_get_red_cross_image(ak_gui_image_manager* pIM);
+drgui_image* ak_get_red_cross_image(ak_gui_image_manager* pIM);
 
 
 #ifdef __cplusplus

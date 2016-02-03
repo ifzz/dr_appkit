@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <easy_gui/easy_gui.h>
+#include <dr_libs/dr_gui.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,23 +16,23 @@ typedef struct ak_window ak_window;
 typedef struct ak_theme ak_theme;
 typedef struct ak_gui_image_manager ak_gui_image_manager;
 typedef struct ak_timer ak_timer;
-typedef struct easygui_context easygui_context;
-typedef struct easygui_element easygui_element;
+typedef struct drgui_context drgui_context;
+typedef struct drgui_element drgui_element;
 typedef struct dr2d_context dr2d_context;
 typedef struct drvfs_context drvfs_context;
 
 typedef bool             (* ak_run_proc)           (ak_application* pApplication);
 typedef void             (* ak_log_proc)           (ak_application* pApplication, const char* message);
 typedef const char*      (* ak_layout_config_proc) (ak_application* pApplication);
-typedef easygui_element* (* ak_create_tool_proc)   (ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
-typedef bool             (* ak_delete_tool_proc)   (ak_application* pApplication, easygui_element* pTool, bool force);
+typedef drgui_element* (* ak_create_tool_proc)   (ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
+typedef bool             (* ak_delete_tool_proc)   (ak_application* pApplication, drgui_element* pTool, bool force);
 
-typedef void (* ak_application_on_key_down_proc)         (ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
-typedef void (* ak_application_on_key_up_proc)           (ak_application* pApplication, ak_window* pWindow, easygui_key key, int stateFlags);
-typedef void (* ak_application_on_panel_activated_proc)  (ak_application* pApplication, easygui_element* pPanel);
-typedef void (* ak_application_on_panel_deactivated_proc)(ak_application* pApplication, easygui_element* pPanel);
-typedef void (* ak_application_on_tool_activated_proc)   (ak_application* pApplication, easygui_element* pTool);
-typedef void (* ak_application_on_tool_deactivated_proc) (ak_application* pApplication, easygui_element* pTool);
+typedef void (* ak_application_on_key_down_proc)         (ak_application* pApplication, ak_window* pWindow, drgui_key key, int stateFlags);
+typedef void (* ak_application_on_key_up_proc)           (ak_application* pApplication, ak_window* pWindow, drgui_key key, int stateFlags);
+typedef void (* ak_application_on_panel_activated_proc)  (ak_application* pApplication, drgui_element* pPanel);
+typedef void (* ak_application_on_panel_deactivated_proc)(ak_application* pApplication, drgui_element* pPanel);
+typedef void (* ak_application_on_tool_activated_proc)   (ak_application* pApplication, drgui_element* pTool);
+typedef void (* ak_application_on_tool_deactivated_proc) (ak_application* pApplication, drgui_element* pTool);
 typedef void (* ak_application_on_handle_action_proc)    (ak_application* pApplication, const char* pActionName);
 typedef int  (* ak_application_on_exec_proc)             (ak_application* pApplication, const char* cmd);
 
@@ -112,7 +112,7 @@ void* ak_get_application_extra_data(ak_application* pApplication);
 dr2d_context* ak_get_application_drawing_context(ak_application* pApplication);
 
 /// Retrieves a pointer to the GUI context associated with the application.
-easygui_context* ak_get_application_gui(ak_application* pApplication);
+drgui_context* ak_get_application_gui(ak_application* pApplication);
 
 /// Retrieves a pointer to the GUI image manager.
 ak_gui_image_manager* ak_get_application_image_manager(ak_application* pApplication);
@@ -170,7 +170,7 @@ ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication);
 ///
 /// @remarks
 ///     This runs in linear time.
-ak_window* ak_get_element_window(easygui_element* pElement);
+ak_window* ak_get_element_window(drgui_element* pElement);
 
 /// Retrieves the first occurance of the window with the given name.
 ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName);
@@ -195,10 +195,10 @@ ak_window* ak_get_primary_window(ak_application* pApplication);
 ///     Use this in conjunction with ak_get_next_panel() to iterate over every panel in the main hierarchy.
 ///     @par
 ///     This will only find panels that are part of the main hierarchy and will not find those that are part of custom tools.
-easygui_element* ak_get_first_panel(ak_application* pApplication);
+drgui_element* ak_get_first_panel(ak_application* pApplication);
 
 /// Retrieves a pointer to the next panel.
-easygui_element* ak_get_next_panel(ak_application* pApplication, easygui_element* pPanel);
+drgui_element* ak_get_next_panel(ak_application* pApplication, drgui_element* pPanel);
 
 
 /// Retrieves a pointer to the panel with the given type.
@@ -207,13 +207,13 @@ easygui_element* ak_get_next_panel(ak_application* pApplication, easygui_element
 ///     This is a slow recursive function.
 ///     @par
 ///     This will only find panels that are part of the main hierarchy and will not find those that are part of custom tools.
-easygui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelType);
+drgui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelType);
 
 /// Retrieves a pointer to the next panel with the given type.
 ///
 /// @remarks
 ///     This will only find panels that are part of the main hierarchy and will not find those that are part of custom tools.
-easygui_element* ak_find_next_panel_by_type(ak_application* pApplication, easygui_element* pPanel, const char* pPanelType);
+drgui_element* ak_find_next_panel_by_type(ak_application* pApplication, drgui_element* pPanel, const char* pPanelType);
 
 
 /// Sets the function to call just before the application enters into the main loop.
@@ -247,7 +247,7 @@ ak_delete_tool_proc ak_get_on_delete_tool(ak_application* pApplication);
 ///
 /// @remarks
 ///     If the tool type is not a built-in type, it will call the onCreateTool callback.
-easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
+drgui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
 
 /// Deletes the given tool.
 ///
@@ -257,7 +257,7 @@ easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplicat
 ///     This may return false if the tool contains something like a text editor or whatnot and a confirmation dialog needs
 ///     to be shown before deleting the tool. In this case, false would be returned so that the tool is not deleted immediately,
 ///     and instead tool will be attempted to be deleted later on in response to the dialog.
-bool ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool, bool force);
+bool ak_application_delete_tool(ak_application* pApplication, drgui_element* pTool, bool force);
 
 
 /// Sets the function to call when the application received a key down event.

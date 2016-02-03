@@ -68,27 +68,27 @@ void ak_application_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton
 void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called the on_key_down event handler for the given window.
-void ak_application_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags);
+void ak_application_on_key_down(ak_window* pWindow, drgui_key key, int stateFlags);
 
 /// Called the on_key_up event handlers for the given window.
-void ak_application_on_key_up(ak_window* pWindow, easygui_key key, int stateFlags);
+void ak_application_on_key_up(ak_window* pWindow, drgui_key key, int stateFlags);
 
 /// Called the on_printable_key_down for the given window.
 void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int character, int stateFlags);
 
 
 /// Calls the on_tool_activated event for the given application.
-void ak_application_on_panel_activated(ak_application* pApplication, easygui_element* pPanel);
+void ak_application_on_panel_activated(ak_application* pApplication, drgui_element* pPanel);
 
 /// Calls the on_tool_deactivated event for the given application.
-void ak_application_on_panel_deactivated(ak_application* pApplication, easygui_element* pPanel);
+void ak_application_on_panel_deactivated(ak_application* pApplication, drgui_element* pPanel);
 
 
 /// Calls the on_tool_activated event for the given application.
-void ak_application_on_tool_activated(ak_application* pApplication, easygui_element* pTool);
+void ak_application_on_tool_activated(ak_application* pApplication, drgui_element* pTool);
 
 /// Calls the on_tool_deactivated event for the given application.
-void ak_application_on_tool_deactivated(ak_application* pApplication, easygui_element* pTool);
+void ak_application_on_tool_deactivated(ak_application* pApplication, drgui_element* pTool);
 
 
 /// Tracks the given window.

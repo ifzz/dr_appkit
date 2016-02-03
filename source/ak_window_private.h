@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-typedef struct easygui_context easygui_context;
+typedef struct drgui_context drgui_context;
 typedef struct ak_window ak_window;
 
 #ifdef AK_USE_WIN32
@@ -37,7 +37,7 @@ void ak_win32_post_quit_message(int resultCode);
 
 
 /// Connects the given GUI context to the undering windowing system by registering the appropriate global outboud event handlers.
-void ak_connect_gui_to_window_system(easygui_context* pGUI);
+void ak_connect_gui_to_window_system(drgui_context* pGUI);
 
 
 /// Retrieves a pointer to the first child window.

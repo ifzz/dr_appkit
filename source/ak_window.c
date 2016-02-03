@@ -6,7 +6,7 @@
 #include "../include/easy_appkit/ak_panel.h"
 #include "ak_window_private.h"
 #include "ak_application_private.h"
-#include <easy_gui/easy_gui.h>
+#include <dr_libs/dr_gui.h>
 #include <dr_libs/dr_util.h>
 #include <assert.h>
 
@@ -51,7 +51,7 @@ struct ak_window
     ak_window_type type;
 
     /// The top-level GUI element to draw to this window.
-    easygui_element* pPanel;
+    drgui_element* pPanel;
 
     /// The easy_draw surface we'll be drawing to.
     dr2d_surface* pSurface;
@@ -151,9 +151,9 @@ typedef struct
 
 
 
-PRIVATE void ak_on_global_capture_mouse(easygui_element* pElement)
+PRIVATE void ak_on_global_capture_mouse(drgui_element* pElement)
 {
-    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
     element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
@@ -162,9 +162,9 @@ PRIVATE void ak_on_global_capture_mouse(easygui_element* pElement)
     }
 }
 
-PRIVATE void ak_on_global_release_mouse(easygui_element* pElement)
+PRIVATE void ak_on_global_release_mouse(drgui_element* pElement)
 {
-    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
     element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
@@ -173,11 +173,11 @@ PRIVATE void ak_on_global_release_mouse(easygui_element* pElement)
     }
 }
 
-PRIVATE void ak_on_global_capture_keyboard(easygui_element* pElement, easygui_element* pPrevCapturedElement)
+PRIVATE void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_element* pPrevCapturedElement)
 {
     (void)pPrevCapturedElement;
 
-    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
     element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
@@ -186,11 +186,11 @@ PRIVATE void ak_on_global_capture_keyboard(easygui_element* pElement, easygui_el
     }
 }
 
-PRIVATE void ak_on_global_release_keyboard(easygui_element* pElement, easygui_element* pNewCapturedElement)
+PRIVATE void ak_on_global_release_keyboard(drgui_element* pElement, drgui_element* pNewCapturedElement)
 {
     (void)pNewCapturedElement;
 
-    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
     element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
@@ -199,16 +199,16 @@ PRIVATE void ak_on_global_release_keyboard(easygui_element* pElement, easygui_el
     }
 }
 
-PRIVATE void ak_on_global_dirty(easygui_element* pElement, easygui_rect relativeRect)
+PRIVATE void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
 {
-    easygui_element* pTopLevelElement = easygui_find_top_level_element(pElement);
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
     element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL)
     {
-        easygui_rect absoluteRect = relativeRect;
-        easygui_make_rect_absolute(pElement, &absoluteRect);
+        drgui_rect absoluteRect = relativeRect;
+        drgui_make_rect_absolute(pElement, &absoluteRect);
 
 
         RECT rect;
@@ -221,9 +221,9 @@ PRIVATE void ak_on_global_dirty(easygui_element* pElement, easygui_rect relative
 }
 
 
-PRIVATE easygui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow, HWND hWnd)
+PRIVATE drgui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow, HWND hWnd)
 {
-    easygui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(element_user_data), NULL);
+    drgui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(element_user_data), NULL);
     if (pElement == NULL) {
         return NULL;
     }
@@ -243,7 +243,7 @@ PRIVATE easygui_element* ak_create_window_panel(ak_application* pApplication, ak
     }
 #endif
     
-    easygui_set_inner_scale(pElement, dpiScaleX, dpiScaleY);
+    drgui_set_inner_scale(pElement, dpiScaleX, dpiScaleY);
 
     element_user_data* pUserData = ak_panel_get_extra_data(pElement);
     assert(pUserData != NULL);
@@ -254,9 +254,9 @@ PRIVATE easygui_element* ak_create_window_panel(ak_application* pApplication, ak
     return pElement;
 }
 
-PRIVATE void ak_delete_window_panel(easygui_element* pTopLevelElement)
+PRIVATE void ak_delete_window_panel(drgui_element* pTopLevelElement)
 {
-    easygui_delete_element(pTopLevelElement);
+    drgui_delete_element(pTopLevelElement);
 }
 
 
@@ -345,7 +345,7 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     int windowWidth;
     int windowHeight;
     ak_get_window_size(pWindow, &windowWidth, &windowHeight);
-    easygui_set_size(pWindow->pPanel, (float)windowWidth, (float)windowHeight);
+    drgui_set_size(pWindow->pPanel, (float)windowWidth, (float)windowHeight);
 
     // The name should be an empty string by default.
     pWindow->hWnd                  = hWnd;
@@ -501,27 +501,27 @@ bool ak_is_win32_mouse_button_key_code(WPARAM wParam)
     return wParam == VK_LBUTTON || wParam == VK_RBUTTON || wParam == VK_MBUTTON || wParam == VK_XBUTTON1 || wParam == VK_XBUTTON2;
 }
 
-easygui_key ak_win32_to_easygui_key(WPARAM wParam)
+drgui_key ak_win32_to_drgui_key(WPARAM wParam)
 {
     switch (wParam)
     {
-    case VK_BACK:   return EASYGUI_BACKSPACE;
-    case VK_SHIFT:  return EASYGUI_SHIFT;
-    case VK_ESCAPE: return EASYGUI_ESCAPE;
-    case VK_PRIOR:  return EASYGUI_PAGE_UP;
-    case VK_NEXT:   return EASYGUI_PAGE_DOWN;
-    case VK_END:    return EASYGUI_END;
-    case VK_HOME:   return EASYGUI_HOME;
-    case VK_LEFT:   return EASYGUI_ARROW_LEFT;
-    case VK_UP:     return EASYGUI_ARROW_UP;
-    case VK_RIGHT:  return EASYGUI_ARROW_RIGHT;
-    case VK_DOWN:   return EASYGUI_ARROW_DOWN;
-    case VK_DELETE: return EASYGUI_DELETE;
+    case VK_BACK:   return DRGUI_BACKSPACE;
+    case VK_SHIFT:  return DRGUI_SHIFT;
+    case VK_ESCAPE: return DRGUI_ESCAPE;
+    case VK_PRIOR:  return DRGUI_PAGE_UP;
+    case VK_NEXT:   return DRGUI_PAGE_DOWN;
+    case VK_END:    return DRGUI_END;
+    case VK_HOME:   return DRGUI_HOME;
+    case VK_LEFT:   return DRGUI_ARROW_LEFT;
+    case VK_UP:     return DRGUI_ARROW_UP;
+    case VK_RIGHT:  return DRGUI_ARROW_RIGHT;
+    case VK_DOWN:   return DRGUI_ARROW_DOWN;
+    case VK_DELETE: return DRGUI_DELETE;
 
     default: break;
     }
 
-    return (easygui_key)wParam;
+    return (drgui_key)wParam;
 }
 
 int ak_win32_get_modifier_key_state_flags()
@@ -628,7 +628,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
             case WM_ERASEBKGND:
             {
-                return 1;       // Never draw the background of the window - always leave that to easy_gui.
+                return 1;       // Never draw the background of the window - always leave that to dr_gui.
             }
 
 
@@ -688,7 +688,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                     ak_application_on_mouse_enter(pWindow);
                 }
 
-                easygui_post_inbound_event_mouse_move(pWindow->pPanel, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
+                drgui_post_inbound_event_mouse_move(pWindow->pPanel, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
 
@@ -700,7 +700,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_LEFT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
             case WM_NCLBUTTONUP:
@@ -710,7 +710,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam));
+                ak_application_on_mouse_button_up(pWindow, DRGUI_MOUSE_BUTTON_LEFT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_NCLBUTTONDBLCLK:
@@ -720,25 +720,25 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
-                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_LEFT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
+                ak_application_on_mouse_button_dblclick(pWindow, DRGUI_MOUSE_BUTTON_LEFT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
 
             case WM_LBUTTONDOWN:
             {
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
             case WM_LBUTTONUP:
             {
-                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
+                ak_application_on_mouse_button_up(pWindow, DRGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_LBUTTONDBLCLK:
             {
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
-                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
+                ak_application_on_mouse_button_dblclick(pWindow, DRGUI_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
 
@@ -750,7 +750,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_RIGHT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
             case WM_NCRBUTTONUP:
@@ -760,7 +760,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam));
+                ak_application_on_mouse_button_up(pWindow, DRGUI_MOUSE_BUTTON_RIGHT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_NCRBUTTONDBLCLK:
@@ -770,25 +770,25 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
-                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_RIGHT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
+                ak_application_on_mouse_button_dblclick(pWindow, DRGUI_MOUSE_BUTTON_RIGHT, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
 
             case WM_RBUTTONDOWN:
             {
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
             case WM_RBUTTONUP:
             {
-                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
+                ak_application_on_mouse_button_up(pWindow, DRGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_RBUTTONDBLCLK:
             {
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
-                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
+                ak_application_on_mouse_button_dblclick(pWindow, DRGUI_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
 
@@ -800,7 +800,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
             case WM_NCMBUTTONUP:
@@ -810,7 +810,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam));
+                ak_application_on_mouse_button_up(pWindow, DRGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_NCMBUTTONDBLCLK:
@@ -820,25 +820,25 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
-                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
+                ak_application_on_mouse_button_dblclick(pWindow, DRGUI_MOUSE_BUTTON_MIDDLE, p.x, p.y, ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
 
             case WM_MBUTTONDOWN:
             {
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
             case WM_MBUTTONUP:
             {
-                ak_application_on_mouse_button_up(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
+                ak_application_on_mouse_button_up(pWindow, DRGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_MBUTTONDBLCLK:
             {
-                ak_application_on_mouse_button_down(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
-                ak_application_on_mouse_button_dblclick(pWindow, EASYGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
+                ak_application_on_mouse_button_down(pWindow, DRGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
+                ak_application_on_mouse_button_dblclick(pWindow, DRGUI_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam) | AK_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
 
@@ -865,7 +865,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                             stateFlags |= AK_KEY_STATE_AUTO_REPEATED;
                         }
 
-                        ak_application_on_key_down(pWindow, ak_win32_to_easygui_key(wParam), stateFlags);
+                        ak_application_on_key_down(pWindow, ak_win32_to_drgui_key(wParam), stateFlags);
                     }
 
                     break;
@@ -876,7 +876,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                     if (!ak_is_win32_mouse_button_key_code(wParam))
                     {
                         int stateFlags = ak_win32_get_modifier_key_state_flags();
-                        ak_application_on_key_up(pWindow, ak_win32_to_easygui_key(wParam), stateFlags);
+                        ak_application_on_key_up(pWindow, ak_win32_to_drgui_key(wParam), stateFlags);
                     }
 
                     break;
@@ -941,7 +941,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 
             case WM_SIZE:
             {
-                easygui_set_size(pWindow->pPanel, LOWORD(lParam), HIWORD(lParam));
+                drgui_set_size(pWindow->pPanel, LOWORD(lParam), HIWORD(lParam));
                 break;
             }
 
@@ -949,7 +949,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
             {
                 RECT rect;
                 if (GetUpdateRect(hWnd, &rect, FALSE)) {
-                    easygui_draw(pWindow->pPanel, easygui_make_rect((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom), pWindow->pSurface);
+                    drgui_draw(pWindow->pPanel, drgui_make_rect((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom), pWindow->pSurface);
                 }
 
                 break;
@@ -1332,7 +1332,7 @@ void* ak_get_window_extra_data(ak_window* pWindow)
     return pWindow->pExtraData;
 }
 
-easygui_element* ak_get_window_panel(ak_window* pWindow)
+drgui_element* ak_get_window_panel(ak_window* pWindow)
 {
     if (pWindow == NULL) {
         return NULL;
@@ -1611,9 +1611,9 @@ bool ak_is_window_ancestor(ak_window* pAncestor, ak_window* pDescendant)
 }
 
 
-ak_window* ak_get_panel_window(easygui_element* pPanel)
+ak_window* ak_get_panel_window(drgui_element* pPanel)
 {
-    easygui_element* pTopLevelPanel = easygui_find_top_level_element(pPanel);
+    drgui_element* pTopLevelPanel = drgui_find_top_level_element(pPanel);
     if (pTopLevelPanel == NULL) {
         return NULL;
     }
@@ -1909,7 +1909,7 @@ void ak_window_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePo
     }
 }
 
-void ak_window_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags)
+void ak_window_on_key_down(ak_window* pWindow, drgui_key key, int stateFlags)
 {
     if (pWindow == NULL) {
         return;
@@ -1920,7 +1920,7 @@ void ak_window_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags)
     }
 }
 
-void ak_window_on_key_up(ak_window* pWindow, easygui_key key, int stateFlags)
+void ak_window_on_key_up(ak_window* pWindow, drgui_key key, int stateFlags)
 {
     if (pWindow == NULL) {
         return;
@@ -2045,15 +2045,15 @@ void ak_win32_post_quit_message(int exitCode)
 
 //// Functions below are cross-platform ////
 
-void ak_connect_gui_to_window_system(easygui_context* pGUI)
+void ak_connect_gui_to_window_system(drgui_context* pGUI)
 {
     assert(pGUI != NULL);
 
-    easygui_set_global_on_capture_mouse(pGUI, ak_on_global_capture_mouse);
-    easygui_set_global_on_release_mouse(pGUI, ak_on_global_release_mouse);
-    easygui_set_global_on_capture_keyboard(pGUI, ak_on_global_capture_keyboard);
-    easygui_set_global_on_release_keyboard(pGUI, ak_on_global_release_keyboard);
-    easygui_set_global_on_dirty(pGUI, ak_on_global_dirty);
+    drgui_set_global_on_capture_mouse(pGUI, ak_on_global_capture_mouse);
+    drgui_set_global_on_release_mouse(pGUI, ak_on_global_release_mouse);
+    drgui_set_global_on_capture_keyboard(pGUI, ak_on_global_capture_keyboard);
+    drgui_set_global_on_release_keyboard(pGUI, ak_on_global_release_keyboard);
+    drgui_set_global_on_dirty(pGUI, ak_on_global_dirty);
 }
 
 

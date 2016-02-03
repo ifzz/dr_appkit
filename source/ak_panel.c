@@ -8,7 +8,7 @@
 #include "../include/easy_appkit/ak_build_config.h"
 #include "ak_tool_private.h"
 #include "ak_application_private.h"
-#include <easy_gui/easy_gui.h>
+#include <dr_libs/dr_gui.h>
 #include <dr_libs/dr_util.h>
 #include <assert.h>
 
@@ -41,13 +41,13 @@ typedef struct
 
 
     /// The tab bar orientation.
-    tabbar_orientation tabBarOrientation;
+    drgui_tabbar_orientation tabBarOrientation;
 
     /// The tab bar for tool tabs.
-    easygui_element* pTabBar;
+    drgui_element* pTabBar;
 
     /// The container for tools.
-    easygui_element* pToolContainer;
+    drgui_element* pToolContainer;
 
 
     /// Flags for tracking basic settings for the panel.
@@ -64,10 +64,10 @@ typedef struct
     float relativeMousePosY;
 
     /// A pointer to the tool whose tab is being hovered over.
-    easygui_element* pHoveredTool;
+    drgui_element* pHoveredTool;
 
     /// A pointer to the tool whose tab is active.
-    easygui_element* pActiveTool;
+    drgui_element* pActiveTool;
 
 
     /// The size of the panel's extra data, in bytes.
@@ -83,9 +83,9 @@ typedef struct
 // Private API
 
 /// Refreshes the alignment of the child panels of the given panel.
-PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
+PRIVATE void ak_panel_refresh_child_alignments(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     assert(pPanelData != NULL);
     assert(pPanelData->splitAxis != ak_panel_split_axis_none);
     
@@ -94,10 +94,10 @@ PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
 
     float innerScaleX;
     float innerScaleY;
-    easygui_get_inner_scale(pPanel, &innerScaleX, &innerScaleY);
+    drgui_get_inner_scale(pPanel, &innerScaleX, &innerScaleY);
 
-    easygui_element* pChildPanel1 = pPanel->pFirstChild;
-    easygui_element* pChildPanel2 = pPanel->pFirstChild->pNextSibling;
+    drgui_element* pChildPanel1 = pPanel->pFirstChild;
+    drgui_element* pChildPanel2 = pPanel->pFirstChild->pNextSibling;
 
     float borderWidth = 0;
     float splitPos = pPanelData->splitPos;
@@ -113,11 +113,11 @@ PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
             splitPos = pPanel->height - splitPos;
         }
 
-        easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
-        easygui_set_size(pChildPanel1, (pPanel->width / innerScaleX) - (borderWidth*2), splitPos - borderWidth);
+        drgui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
+        drgui_set_size(pChildPanel1, (pPanel->width / innerScaleX) - (borderWidth*2), splitPos - borderWidth);
 
-        easygui_set_relative_position(pChildPanel2, borderWidth, splitPos);
-        easygui_set_size(pChildPanel2, (pPanel->width / innerScaleX) - (borderWidth*2), (pPanel->height / innerScaleY) - splitPos - borderWidth);
+        drgui_set_relative_position(pChildPanel2, borderWidth, splitPos);
+        drgui_set_size(pChildPanel2, (pPanel->width / innerScaleX) - (borderWidth*2), (pPanel->height / innerScaleY) - splitPos - borderWidth);
     }
     else
     {
@@ -130,69 +130,69 @@ PRIVATE void ak_panel_refresh_child_alignments(easygui_element* pPanel)
             splitPos = pPanel->width - splitPos;
         }
 
-        easygui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
-        easygui_set_size(pChildPanel1, (splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
+        drgui_set_relative_position(pChildPanel1, borderWidth, borderWidth);
+        drgui_set_size(pChildPanel1, (splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
 
-        easygui_set_relative_position(pChildPanel2, splitPos, borderWidth);
-        easygui_set_size(pChildPanel2, (pPanel->width - splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
+        drgui_set_relative_position(pChildPanel2, splitPos, borderWidth);
+        drgui_set_size(pChildPanel2, (pPanel->width - splitPos - borderWidth) / innerScaleX, (pPanel->height - (borderWidth*2)) / innerScaleY);
     }
 }
 
-PRIVATE void ak_panel_refresh_tool_container_layout(easygui_element* pPanel)
+PRIVATE void ak_panel_refresh_tool_container_layout(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     assert(pPanelData != NULL);
 
-    float width  = easygui_get_width(pPanel);
-    float height = easygui_get_height(pPanel);
+    float width  = drgui_get_width(pPanel);
+    float height = drgui_get_height(pPanel);
 
     float posX = 0;
     float posY = 0;
 
     // The layout of the container is based on the the layout of the tab bar and the tab bar's orientation.
-    if (easygui_is_visible(pPanelData->pTabBar))
+    if (drgui_is_visible(pPanelData->pTabBar))
     {
-        if (pPanelData->tabBarOrientation == tabbar_orientation_top)
+        if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_top)
         {
-            posY    = easygui_get_height(pPanelData->pTabBar);
-            height -= easygui_get_height(pPanelData->pTabBar);
+            posY    = drgui_get_height(pPanelData->pTabBar);
+            height -= drgui_get_height(pPanelData->pTabBar);
         }
-        else if (pPanelData->tabBarOrientation == tabbar_orientation_bottom)
+        else if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_bottom)
         {
-            posY    = easygui_get_height(pPanel) - easygui_get_height(pPanelData->pTabBar);
-            height -= easygui_get_height(pPanelData->pTabBar);
+            posY    = drgui_get_height(pPanel) - drgui_get_height(pPanelData->pTabBar);
+            height -= drgui_get_height(pPanelData->pTabBar);
         }
-        else if (pPanelData->tabBarOrientation == tabbar_orientation_left)
+        else if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_left)
         {
-            posX   = easygui_get_width(pPanelData->pTabBar);
-            width -= easygui_get_width(pPanelData->pTabBar);
+            posX   = drgui_get_width(pPanelData->pTabBar);
+            width -= drgui_get_width(pPanelData->pTabBar);
         }
-        else if (pPanelData->tabBarOrientation == tabbar_orientation_right)
+        else if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_right)
         {
-            posX   = easygui_get_width(pPanel) - easygui_get_width(pPanelData->pTabBar);
-            width -= easygui_get_width(pPanelData->pTabBar);
+            posX   = drgui_get_width(pPanel) - drgui_get_width(pPanelData->pTabBar);
+            width -= drgui_get_width(pPanelData->pTabBar);
         }
     }
 
 
     float innerScaleX;
     float innerScaleY;
-    easygui_get_inner_scale(pPanel, &innerScaleX, &innerScaleY);
+    drgui_get_inner_scale(pPanel, &innerScaleX, &innerScaleY);
 
-    if (easygui_get_relative_position_x(pPanelData->pToolContainer) != posX || easygui_get_relative_position_y(pPanelData->pToolContainer) != posY) {
-        easygui_set_relative_position(pPanelData->pToolContainer, posX / innerScaleX, posY / innerScaleY);
+    if (drgui_get_relative_position_x(pPanelData->pToolContainer) != posX || drgui_get_relative_position_y(pPanelData->pToolContainer) != posY) {
+        drgui_set_relative_position(pPanelData->pToolContainer, posX / innerScaleX, posY / innerScaleY);
     }
     
-    if (easygui_get_width(pPanelData->pToolContainer) != width || easygui_get_height(pPanelData->pToolContainer) != height) {
-        easygui_set_size(pPanelData->pToolContainer, width / innerScaleX, height / innerScaleY);
+    if (drgui_get_width(pPanelData->pToolContainer) != width || drgui_get_height(pPanelData->pToolContainer) != height) {
+        drgui_set_size(pPanelData->pToolContainer, width / innerScaleX, height / innerScaleY);
     }
 }
 
-PRIVATE void ak_panel_refresh_tabs(easygui_element* pPanel)
+PRIVATE void ak_panel_refresh_tabs(drgui_element* pPanel)
 {
     assert(pPanel != NULL);
 
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     assert(pPanelData != NULL);
 
     ak_theme* pTheme = ak_get_application_theme(ak_get_panel_application(pPanel));
@@ -200,52 +200,52 @@ PRIVATE void ak_panel_refresh_tabs(easygui_element* pPanel)
 
 
     // The layout of the tab bar needs to be refreshed. We only adjust the width OR height, which depends on the orientation.
-    float panelWidth   = easygui_get_width(pPanel);
-    float panelHeight  = easygui_get_height(pPanel);
-    float tabbarWidth  = easygui_get_width(pPanelData->pTabBar);
-    float tabbarHeight = easygui_get_height(pPanelData->pTabBar);
+    float panelWidth   = drgui_get_width(pPanel);
+    float panelHeight  = drgui_get_height(pPanel);
+    float tabbarWidth  = drgui_get_width(pPanelData->pTabBar);
+    float tabbarHeight = drgui_get_height(pPanelData->pTabBar);
     float tabbarPosX   = 0;
     float tabbarPosY   = 0;
 
-    if (easygui_is_visible(pPanelData->pTabBar))
+    if (drgui_is_visible(pPanelData->pTabBar))
     {
-        if (pPanelData->tabBarOrientation == tabbar_orientation_top)
+        if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_top)
         {
             tabbarWidth = panelWidth;
         }
-        else if (pPanelData->tabBarOrientation == tabbar_orientation_bottom)
+        else if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_bottom)
         {
             tabbarWidth = panelWidth;
             tabbarPosY  = panelHeight - tabbarHeight;
         }
-        else if (pPanelData->tabBarOrientation == tabbar_orientation_left)
+        else if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_left)
         {
             tabbarHeight = panelHeight;
         }
-        else if (pPanelData->tabBarOrientation == tabbar_orientation_right)
+        else if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_right)
         {
             tabbarHeight = panelHeight;
             tabbarPosX   = panelWidth - tabbarWidth;
         }
     }
 
-    easygui_set_size(pPanelData->pTabBar, tabbarWidth, tabbarHeight);
-    easygui_set_relative_position(pPanelData->pTabBar, tabbarPosX, tabbarPosY);
+    drgui_set_size(pPanelData->pTabBar, tabbarWidth, tabbarHeight);
+    drgui_set_relative_position(pPanelData->pTabBar, tabbarPosX, tabbarPosY);
 
 
 
     if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_TOOL_TABS) == 0) {
-        easygui_hide(pPanelData->pTabBar);
+        drgui_hide(pPanelData->pTabBar);
     } else {
-        easygui_show(pPanelData->pTabBar);
+        drgui_show(pPanelData->pTabBar);
     }
 
     if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_CLOSE_BUTTON_ON_TABS) == 0) {
-        tabbar_hide_close_buttons(pPanelData->pTabBar);
-        tabbar_disable_close_on_middle_click(pPanelData->pTabBar);
+        drgui_tabbar_hide_close_buttons(pPanelData->pTabBar);
+        drgui_tabbar_disable_close_on_middle_click(pPanelData->pTabBar);
     } else {
-        tabbar_show_close_buttons(pPanelData->pTabBar);
-        tabbar_enable_close_on_middle_click(pPanelData->pTabBar);
+        drgui_tabbar_show_close_buttons(pPanelData->pTabBar);
+        drgui_tabbar_enable_close_on_middle_click(pPanelData->pTabBar);
     }
 
 
@@ -254,9 +254,9 @@ PRIVATE void ak_panel_refresh_tabs(easygui_element* pPanel)
 }
 
 
-PRIVATE void ak_panel_on_paint(easygui_element* pPanel, easygui_rect relativeRect, void* pPaintData)
+PRIVATE void ak_panel_on_paint(drgui_element* pPanel, drgui_rect relativeRect, void* pPaintData)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     assert(pPanelData != NULL);
 
     ak_theme* pTheme = ak_get_application_theme(ak_get_panel_application(pPanel));
@@ -268,16 +268,16 @@ PRIVATE void ak_panel_on_paint(easygui_element* pPanel, easygui_rect relativeRec
     // Only draw the background if we have no children.
     if (pPanel->pFirstChild == NULL || (pPanelData->pToolContainer != NULL && pPanelData->pToolContainer->pFirstChild == NULL))
     {
-        easygui_draw_rect(pPanel, relativeRect, pTheme->baseColor, pPaintData);
+        drgui_draw_rect(pPanel, relativeRect, pTheme->baseColor, pPaintData);
     }
 }
 
-PRIVATE void ak_panel_on_size(easygui_element* pElement, float newWidth, float newHeight)
+PRIVATE void ak_panel_on_size(drgui_element* pElement, float newWidth, float newHeight)
 {
     (void)newWidth;
     (void)newHeight;
 
-    ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pElement);
     assert(pPanelData != NULL);
 
     if (pPanelData->splitAxis == ak_panel_split_axis_none)
@@ -294,17 +294,17 @@ PRIVATE void ak_panel_on_size(easygui_element* pElement, float newWidth, float n
     }
 }
 
-PRIVATE void ak_panel_on_mouse_enter(easygui_element* pElement)
+PRIVATE void ak_panel_on_mouse_enter(drgui_element* pElement)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pElement);
     assert(pPanelData != NULL);
 
     pPanelData->isMouseOver = true;
 }
 
-PRIVATE void ak_panel_on_mouse_leave(easygui_element* pElement)
+PRIVATE void ak_panel_on_mouse_leave(drgui_element* pElement)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pElement);
     assert(pPanelData != NULL);
 
     pPanelData->isMouseOver = false;
@@ -312,11 +312,11 @@ PRIVATE void ak_panel_on_mouse_leave(easygui_element* pElement)
     ak_panel_refresh_tabs(pElement);
 }
 
-PRIVATE void ak_panel_on_mouse_move(easygui_element* pElement, int relativeMousePosX, int relativeMousePosY, int stateFlags)
+PRIVATE void ak_panel_on_mouse_move(drgui_element* pElement, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     (void)stateFlags;
 
-    ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pElement);
     assert(pPanelData != NULL);
 
     pPanelData->isMouseOver = true;
@@ -324,11 +324,11 @@ PRIVATE void ak_panel_on_mouse_move(easygui_element* pElement, int relativeMouse
     pPanelData->relativeMousePosY = (float)relativeMousePosY;
 }
 
-PRIVATE void ak_panel_on_mouse_button_down(easygui_element* pElement, int button, int relativeMousePosX, int relativeMousePosY, int stateFlags)
+PRIVATE void ak_panel_on_mouse_button_down(drgui_element* pElement, int button, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     (void)stateFlags;
 
-    ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pElement);
     assert(pPanelData != NULL);
 
     pPanelData->isMouseOver = true;
@@ -337,9 +337,9 @@ PRIVATE void ak_panel_on_mouse_button_down(easygui_element* pElement, int button
 }
 
 
-PRIVATE void ak_panel_on_tab_bar_size(easygui_element* pTBElement, float newWidth, float newHeight)
+PRIVATE void ak_panel_on_tab_bar_size(drgui_element* pTBElement, float newWidth, float newHeight)
 {
-    easygui_element* pPanel = *(easygui_element**)tabbar_get_extra_data(pTBElement);
+    drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
 
     // TODO: Make sure the tab bar is pinned in the correct position for right and bottom alignments.
@@ -347,48 +347,48 @@ PRIVATE void ak_panel_on_tab_bar_size(easygui_element* pTBElement, float newWidt
     ak_panel_refresh_tool_container_layout(pPanel);
 }
 
-PRIVATE void ak_panel_on_tab_deactivated(easygui_element* pTBElement, easygui_tab* pTab)
+PRIVATE void ak_panel_on_tab_deactivated(drgui_element* pTBElement, drgui_tab* pTab)
 {
-    easygui_element* pPanel = *(easygui_element**)tabbar_get_extra_data(pTBElement);
+    drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
 
-    easygui_element* pTool = *(easygui_element**)tab_get_extra_data(pTab);
+    drgui_element* pTool = *(drgui_element**)tab_get_extra_data(pTab);
     assert(pTool != NULL);
 
 
     // The tool needs to be hidden.
-    easygui_hide(pTool);
+    drgui_hide(pTool);
 
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     pPanelData->pActiveTool = NULL;
 
     ak_application_on_tool_deactivated(pPanelData->pApplication, pTool);
 }
 
-PRIVATE void ak_panel_on_tab_activated(easygui_element* pTBElement, easygui_tab* pTab)
+PRIVATE void ak_panel_on_tab_activated(drgui_element* pTBElement, drgui_tab* pTab)
 {
-    easygui_element* pPanel = *(easygui_element**)tabbar_get_extra_data(pTBElement);
+    drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
 
-    easygui_element* pTool = *(easygui_element**)tab_get_extra_data(pTab);
+    drgui_element* pTool = *(drgui_element**)tab_get_extra_data(pTab);
     assert(pTool != NULL);
 
 
     // The tool needs to be shown.
-    easygui_show(pTool);
+    drgui_show(pTool);
 
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     pPanelData->pActiveTool = pTool;
 
     ak_application_on_tool_activated(pPanelData->pApplication, pTool);
 }
 
-PRIVATE void ak_panel_on_tab_close(easygui_element* pTBElement, easygui_tab* pTab)
+PRIVATE void ak_panel_on_tab_close(drgui_element* pTBElement, drgui_tab* pTab)
 {
-    easygui_element* pPanel = *(easygui_element**)tabbar_get_extra_data(pTBElement);
+    drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
 
-    easygui_element* pTool = *(easygui_element**)tab_get_extra_data(pTab);
+    drgui_element* pTool = *(drgui_element**)tab_get_extra_data(pTab);
     assert(pTool != NULL);
 
     ak_application_delete_tool(ak_get_panel_application(pPanel), pTool, false);     // "false" means that the tool should not be forced to be deleted - we may want to show a confirmation dialog.
@@ -396,12 +396,12 @@ PRIVATE void ak_panel_on_tab_close(easygui_element* pTBElement, easygui_tab* pTa
 
 
 
-easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* pParent, size_t extraDataSize, const void* pExtraData)
+drgui_element* ak_create_panel(ak_application* pApplication, drgui_element* pParent, size_t extraDataSize, const void* pExtraData)
 {
-    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_panel_data) - sizeof(char) + extraDataSize, NULL);
+    drgui_element* pElement = drgui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_panel_data) - sizeof(char) + extraDataSize, NULL);
     if (pElement != NULL)
     {
-        ak_panel_data* pPanelData = easygui_get_extra_data(pElement);
+        ak_panel_data* pPanelData = drgui_get_extra_data(pElement);
         assert(pPanelData != NULL);
 
         pPanelData->pApplication       = pApplication;
@@ -410,7 +410,7 @@ easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* 
         pPanelData->splitPos           = 0;
         pPanelData->splitRatio         = 0;
         pPanelData->maintainSplitRatio = false;
-        pPanelData->tabBarOrientation  = tabbar_orientation_top;
+        pPanelData->tabBarOrientation  = drgui_tabbar_orientation_top;
         pPanelData->pTabBar            = NULL;
         pPanelData->pToolContainer     = NULL;
         pPanelData->optionFlags        = 0;
@@ -424,20 +424,20 @@ easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* 
             memcpy(pPanelData->pExtraData, pExtraData, extraDataSize);
         }
 
-        easygui_set_on_paint(pElement, ak_panel_on_paint);
-        easygui_set_on_size(pElement, ak_panel_on_size);
-        easygui_set_on_mouse_enter(pElement, ak_panel_on_mouse_enter);
-        easygui_set_on_mouse_leave(pElement, ak_panel_on_mouse_leave);
-        easygui_set_on_mouse_move(pElement, ak_panel_on_mouse_move);
-        easygui_set_on_mouse_button_down(pElement, ak_panel_on_mouse_button_down);
+        drgui_set_on_paint(pElement, ak_panel_on_paint);
+        drgui_set_on_size(pElement, ak_panel_on_size);
+        drgui_set_on_mouse_enter(pElement, ak_panel_on_mouse_enter);
+        drgui_set_on_mouse_leave(pElement, ak_panel_on_mouse_leave);
+        drgui_set_on_mouse_move(pElement, ak_panel_on_mouse_move);
+        drgui_set_on_mouse_button_down(pElement, ak_panel_on_mouse_button_down);
     }
 
     return pElement;
 }
 
-ak_application* ak_get_panel_application(easygui_element* pPanel)
+ak_application* ak_get_panel_application(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
@@ -445,14 +445,14 @@ ak_application* ak_get_panel_application(easygui_element* pPanel)
     return pPanelData->pApplication;
 }
 
-easygui_element* ak_panel_get_parent(easygui_element* pPanel)
+drgui_element* ak_panel_get_parent(drgui_element* pPanel)
 {
     return pPanel->pParent;
 }
 
-size_t ak_panel_get_extra_data_size(easygui_element* pPanel)
+size_t ak_panel_get_extra_data_size(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return 0;
     }
@@ -460,9 +460,9 @@ size_t ak_panel_get_extra_data_size(easygui_element* pPanel)
     return pPanelData->extraDataSize;
 }
 
-void* ak_panel_get_extra_data(easygui_element* pPanel)
+void* ak_panel_get_extra_data(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
@@ -471,9 +471,9 @@ void* ak_panel_get_extra_data(easygui_element* pPanel)
 }
 
 
-void ak_panel_set_type(easygui_element* pPanel, const char* type)
+void ak_panel_set_type(drgui_element* pPanel, const char* type)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return;
     }
@@ -485,9 +485,9 @@ void ak_panel_set_type(easygui_element* pPanel, const char* type)
     }
 }
 
-const char* ak_panel_get_type(easygui_element* pPanel)
+const char* ak_panel_get_type(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
@@ -495,9 +495,9 @@ const char* ak_panel_get_type(easygui_element* pPanel)
     return pPanelData->type;
 }
 
-easygui_element* ak_panel_find_by_type_recursive(easygui_element* pPanel, const char* type)
+drgui_element* ak_panel_find_by_type_recursive(drgui_element* pPanel, const char* type)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
@@ -514,7 +514,7 @@ easygui_element* ak_panel_find_by_type_recursive(easygui_element* pPanel, const 
     // If it's a split panel we need to check those. If it's not split, we just return NULL;
     if (pPanelData->splitAxis != ak_panel_split_axis_none)
     {
-        easygui_element* pResult = NULL;
+        drgui_element* pResult = NULL;
         
         pResult = ak_panel_find_by_type_recursive(ak_panel_get_split_panel_1(pPanel), type);
         if (pResult != NULL) {
@@ -530,9 +530,9 @@ easygui_element* ak_panel_find_by_type_recursive(easygui_element* pPanel, const 
     return NULL;
 }
 
-bool ak_panel_is_of_type(easygui_element* pPanel, const char* type)
+bool ak_panel_is_of_type(drgui_element* pPanel, const char* type)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return false;
     }
@@ -541,9 +541,9 @@ bool ak_panel_is_of_type(easygui_element* pPanel, const char* type)
 }
 
 
-bool ak_panel_split(easygui_element* pPanel, ak_panel_split_axis splitAxis, float splitPos)
+bool ak_panel_split(drgui_element* pPanel, ak_panel_split_axis splitAxis, float splitPos)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return false;
     }
@@ -555,8 +555,8 @@ bool ak_panel_split(easygui_element* pPanel, ak_panel_split_axis splitAxis, floa
 
 
     // If children do not already exist we just create them. Otherwise we just reuse the existing ones and re-align them.
-    easygui_element* pChildPanel1 = NULL;
-    easygui_element* pChildPanel2 = NULL;
+    drgui_element* pChildPanel1 = NULL;
+    drgui_element* pChildPanel2 = NULL;
 
     if (pPanelData->splitAxis == ak_panel_split_axis_none)
     {
@@ -584,9 +584,9 @@ bool ak_panel_split(easygui_element* pPanel, ak_panel_split_axis splitAxis, floa
     return true;
 }
 
-void ak_panel_unsplit(easygui_element* pPanel)
+void ak_panel_unsplit(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return;
     }
@@ -596,21 +596,21 @@ void ak_panel_unsplit(easygui_element* pPanel)
     }
 
 
-    easygui_delete_element(pPanel->pFirstChild->pNextSibling);
-    easygui_delete_element(pPanel->pFirstChild);
+    drgui_delete_element(pPanel->pFirstChild->pNextSibling);
+    drgui_delete_element(pPanel->pFirstChild);
 
     pPanelData->splitAxis = ak_panel_split_axis_none;
     pPanelData->splitPos  = 0;
 }
 
-bool ak_panel_is_split(easygui_element* pPanel)
+bool ak_panel_is_split(drgui_element* pPanel)
 {
     return ak_panel_get_split_axis(pPanel) != ak_panel_split_axis_none;
 }
 
-ak_panel_split_axis ak_panel_get_split_axis(easygui_element* pPanel)
+ak_panel_split_axis ak_panel_get_split_axis(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return ak_panel_split_axis_none;
     }
@@ -618,9 +618,9 @@ ak_panel_split_axis ak_panel_get_split_axis(easygui_element* pPanel)
     return pPanelData->splitAxis;
 }
 
-float ak_panel_get_split_pos(easygui_element* pPanel)
+float ak_panel_get_split_pos(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return 0;
     }
@@ -628,9 +628,9 @@ float ak_panel_get_split_pos(easygui_element* pPanel)
     return pPanelData->splitPos;
 }
 
-easygui_element* ak_panel_get_split_panel_1(easygui_element* pPanel)
+drgui_element* ak_panel_get_split_panel_1(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
@@ -642,9 +642,9 @@ easygui_element* ak_panel_get_split_panel_1(easygui_element* pPanel)
     return pPanel->pFirstChild;
 }
 
-easygui_element* ak_panel_get_split_panel_2(easygui_element* pPanel)
+drgui_element* ak_panel_get_split_panel_2(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
@@ -656,9 +656,9 @@ easygui_element* ak_panel_get_split_panel_2(easygui_element* pPanel)
     return pPanel->pFirstChild->pNextSibling;
 }
 
-void ak_panel_enable_ratio_split(easygui_element* pPanel)
+void ak_panel_enable_ratio_split(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return;
     }
@@ -666,15 +666,15 @@ void ak_panel_enable_ratio_split(easygui_element* pPanel)
     pPanelData->maintainSplitRatio = true;
 
     if (pPanelData->splitAxis == ak_panel_split_axis_vertical) {
-        pPanelData->splitRatio = pPanelData->splitPos / easygui_get_width(pPanel);
+        pPanelData->splitRatio = pPanelData->splitPos / drgui_get_width(pPanel);
     } else {
-        pPanelData->splitRatio = pPanelData->splitPos / easygui_get_height(pPanel);
+        pPanelData->splitRatio = pPanelData->splitPos / drgui_get_height(pPanel);
     }
 }
 
-void ak_panel_disable_ratio_split(easygui_element* pPanel)
+void ak_panel_disable_ratio_split(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return;
     }
@@ -684,9 +684,9 @@ void ak_panel_disable_ratio_split(easygui_element* pPanel)
 }
 
 
-bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
+bool ak_panel_attach_tool(drgui_element* pPanel, drgui_element* pTool)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return false;
     }
@@ -714,7 +714,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
 
     float innerScaleX;
     float innerScaleY;
-    easygui_get_absolute_inner_scale(pPanel, &innerScaleX, &innerScaleY);
+    drgui_get_absolute_inner_scale(pPanel, &innerScaleX, &innerScaleY);
 
 
     // We need a tab bar and a tool container if we haven't already got one.
@@ -724,72 +724,72 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
         assert(pPanel->pFirstChild == NULL);            // Assume the panel does not have any children.
 
         // Tab bar first.
-        pPanelData->pTabBar = easygui_create_tab_bar(pPanel->pContext, pPanel, pPanelData->tabBarOrientation, sizeof(&pPanel), &pPanel);
+        pPanelData->pTabBar = drgui_create_tab_bar(pPanel->pContext, pPanel, pPanelData->tabBarOrientation, sizeof(&pPanel), &pPanel);
         if (pPanelData->pTabBar == NULL) {
             return false;
         }
 
         // Make sure the size of the tab bar is set such that it extends across the entire panel.
-        if (pPanelData->tabBarOrientation == tabbar_orientation_top)
+        if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_top)
         {
-            easygui_set_relative_position(pPanelData->pTabBar, 0, 0);
-            easygui_set_size(pPanelData->pTabBar, easygui_get_width(pPanel) / innerScaleX, 0);
+            drgui_set_relative_position(pPanelData->pTabBar, 0, 0);
+            drgui_set_size(pPanelData->pTabBar, drgui_get_width(pPanel) / innerScaleX, 0);
         }
-        else if (pPanelData->tabBarOrientation == tabbar_orientation_bottom)
+        else if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_bottom)
         {
-            easygui_set_relative_position(pPanelData->pTabBar, 0, easygui_get_height(pPanel) / innerScaleY);
-            easygui_set_size(pPanelData->pTabBar, easygui_get_width(pPanel) / innerScaleX, 0);
+            drgui_set_relative_position(pPanelData->pTabBar, 0, drgui_get_height(pPanel) / innerScaleY);
+            drgui_set_size(pPanelData->pTabBar, drgui_get_width(pPanel) / innerScaleX, 0);
         }
-        else if (pPanelData->tabBarOrientation == tabbar_orientation_left)
+        else if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_left)
         {
-            easygui_set_relative_position(pPanelData->pTabBar, 0, 0);
-            easygui_set_size(pPanelData->pTabBar, 0, easygui_get_height(pPanel) / innerScaleY);
+            drgui_set_relative_position(pPanelData->pTabBar, 0, 0);
+            drgui_set_size(pPanelData->pTabBar, 0, drgui_get_height(pPanel) / innerScaleY);
         }
-        else if (pPanelData->tabBarOrientation == tabbar_orientation_right)
+        else if (pPanelData->tabBarOrientation == drgui_tabbar_orientation_right)
         {
-            easygui_set_relative_position(pPanelData->pTabBar, easygui_get_width(pPanel) / innerScaleX, 0);
-            easygui_set_size(pPanelData->pTabBar, 0, easygui_get_height(pPanel) / innerScaleY);
+            drgui_set_relative_position(pPanelData->pTabBar, drgui_get_width(pPanel) / innerScaleX, 0);
+            drgui_set_size(pPanelData->pTabBar, 0, drgui_get_height(pPanel) / innerScaleY);
         }
 
-        tabbar_set_font(pPanelData->pTabBar, pTheme->pUIFont);
-        tabbar_enable_auto_size(pPanelData->pTabBar);
-        easygui_set_on_size(pPanelData->pTabBar, ak_panel_on_tab_bar_size);
-        tabbar_set_close_button_image(pPanelData->pTabBar, ak_get_red_cross_image(ak_get_application_image_manager(pPanelData->pApplication)));
-        tabbar_set_on_tab_deactivated(pPanelData->pTabBar, ak_panel_on_tab_deactivated);
-        tabbar_set_on_tab_activated(pPanelData->pTabBar, ak_panel_on_tab_activated);
-        tabbar_set_on_tab_closed(pPanelData->pTabBar, ak_panel_on_tab_close);
+        drgui_tabbar_set_font(pPanelData->pTabBar, pTheme->pUIFont);
+        drgui_tabbar_enable_auto_size(pPanelData->pTabBar);
+        drgui_set_on_size(pPanelData->pTabBar, ak_panel_on_tab_bar_size);
+        drgui_tabbar_set_close_button_image(pPanelData->pTabBar, ak_get_red_cross_image(ak_get_application_image_manager(pPanelData->pApplication)));
+        drgui_tabbar_set_on_tab_deactivated(pPanelData->pTabBar, ak_panel_on_tab_deactivated);
+        drgui_tabbar_set_on_tab_activated(pPanelData->pTabBar, ak_panel_on_tab_activated);
+        drgui_tabbar_set_on_tab_closed(pPanelData->pTabBar, ak_panel_on_tab_close);
 
         if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_TOOL_TABS) == 0) {
-            easygui_hide(pPanelData->pTabBar);
+            drgui_hide(pPanelData->pTabBar);
         }
 
 
 
         // Tool container.
-        pPanelData->pToolContainer = easygui_create_element(pPanel->pContext, pPanel, 0, NULL);
+        pPanelData->pToolContainer = drgui_create_element(pPanel->pContext, pPanel, 0, NULL);
         if (pPanelData->pToolContainer == NULL) {
             return false;
         }
-        easygui_set_size(pPanelData->pToolContainer, easygui_get_width(pPanel), easygui_get_height(pPanel));
+        drgui_set_size(pPanelData->pToolContainer, drgui_get_width(pPanel), drgui_get_height(pPanel));
 
-        easygui_set_on_size(pPanelData->pToolContainer, easygui_on_size_fit_children_to_parent);
+        drgui_set_on_size(pPanelData->pToolContainer, drgui_on_size_fit_children_to_parent);
     }
 
 
 
     assert(pPanelData->pToolContainer != NULL);
 
-    easygui_prepend(pTool, pPanelData->pToolContainer);
+    drgui_prepend(pTool, pPanelData->pToolContainer);
     ak_set_tool_panel(pTool, pPanel);
 
 
     // Initial size and position.
-    easygui_set_relative_position(pTool, 0, 0);
-    easygui_set_size(pTool, easygui_get_width(pPanelData->pToolContainer) / innerScaleX, easygui_get_height(pPanelData->pToolContainer) / innerScaleY);
+    drgui_set_relative_position(pTool, 0, 0);
+    drgui_set_size(pTool, drgui_get_width(pPanelData->pToolContainer) / innerScaleX, drgui_get_height(pPanelData->pToolContainer) / innerScaleY);
 
 
     // We need to create and prepend a tab for the tool.
-    easygui_tab* pToolTab = tabbar_create_and_prepend_tab(pPanelData->pTabBar, ak_get_tool_title(pTool), sizeof(&pTool), &pTool);
+    drgui_tab* pToolTab = drgui_tabbar_create_and_prepend_tab(pPanelData->pTabBar, ak_get_tool_title(pTool), sizeof(&pTool), &pTool);
     ak_set_tool_tab(pTool, pToolTab);
 
 
@@ -802,9 +802,9 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool)
     return true;
 }
 
-void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool)
+void ak_panel_detach_tool(drgui_element* pPanel, drgui_element* pTool)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return;
     }
@@ -825,19 +825,19 @@ void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool)
 
 
     // If the tab is the active one we need to switch to another.
-    easygui_tab* pTab = ak_get_tool_tab(pTool);
-    if (tabbar_get_active_tab(pPanelData->pTabBar) == pTab)
+    drgui_tab* pTab = ak_get_tool_tab(pTool);
+    if (drgui_tabbar_get_active_tab(pPanelData->pTabBar) == pTab)
     {
-        easygui_tab* pNextTab = tab_get_next_tab(pTab);
+        drgui_tab* pNextTab = tab_get_next_tab(pTab);
         if (pNextTab == NULL) {
             pNextTab = tab_get_prev_tab(pTab);
         }
 
-        tabbar_activate_tab(pPanelData->pTabBar, pNextTab);
+        drgui_tabbar_activate_tab(pPanelData->pTabBar, pNextTab);
     }
 
 
-    easygui_detach(pTool);
+    drgui_detach(pTool);
     ak_set_tool_panel(pTool, NULL);
 
     tab_delete(ak_get_tool_tab(pTool));
@@ -849,9 +849,9 @@ void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool)
 }
 
 
-bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool)
+bool ak_panel_activate_tool(drgui_element* pPanel, drgui_element* pTool)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return false;
     }
@@ -862,14 +862,14 @@ bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool)
 
     // To activate a tool we just activate the associated tab on the tab bar control which will in turn post
     // activate and deactivate events which is where the actual swith will occur.
-    tabbar_activate_tab(pPanelData->pTabBar, ak_get_tool_tab(pTool));
+    drgui_tabbar_activate_tab(pPanelData->pTabBar, ak_get_tool_tab(pTool));
 
     return true;
 }
 
-easygui_element* ak_panel_get_active_tool(easygui_element* pPanel)
+drgui_element* ak_panel_get_active_tool(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return false;
     }
@@ -878,9 +878,9 @@ easygui_element* ak_panel_get_active_tool(easygui_element* pPanel)
 }
 
 
-easygui_element* ak_panel_get_first_tool(easygui_element* pPanel)
+drgui_element* ak_panel_get_first_tool(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
@@ -892,9 +892,9 @@ easygui_element* ak_panel_get_first_tool(easygui_element* pPanel)
     return pPanelData->pToolContainer->pFirstChild;
 }
 
-easygui_element* ak_panel_get_next_tool(easygui_element* pPanel, easygui_element* pTool)
+drgui_element* ak_panel_get_next_tool(drgui_element* pPanel, drgui_element* pTool)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return NULL;
     }
@@ -911,9 +911,9 @@ easygui_element* ak_panel_get_next_tool(easygui_element* pPanel, easygui_element
 }
 
 
-void ak_panel_set_tab_options(easygui_element* pPanel, unsigned int options)
+void ak_panel_set_tab_options(drgui_element* pPanel, unsigned int options)
 {
-    ak_panel_data* pPanelData = easygui_get_extra_data(pPanel);
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     if (pPanelData == NULL) {
         return;
     }

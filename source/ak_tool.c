@@ -5,8 +5,8 @@
 #include "../include/easy_appkit/ak_application.h"
 #include "../include/easy_appkit/ak_build_config.h"
 #include "ak_tool_private.h"
-#include <easy_gui/easy_gui.h>
-#include <easy_gui/wip/easygui_tab_bar.h>
+#include <dr_libs/dr_gui.h>
+#include <dr_libs/wip/dr_gui_tab_bar.h>
 #include <assert.h>
 
 #ifndef PRIVATE
@@ -26,10 +26,10 @@ typedef struct
     char title[256];
 
     /// The tool's tab that will be shown on the tab bar.
-    easygui_tab* pTab;
+    drgui_tab* pTab;
 
     /// The panel the tab is attached to, if any.
-    easygui_element* pPanel;
+    drgui_element* pPanel;
 
 
     /// The function to call when the tool needs to handle an action.
@@ -45,15 +45,15 @@ typedef struct
 } ak_tool_data;
 
 
-easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* pParent, const char* type, size_t extraDataSize, const void* pExtraData)
+drgui_element* ak_create_tool(ak_application* pApplication, drgui_element* pParent, const char* type, size_t extraDataSize, const void* pExtraData)
 {
-    easygui_element* pElement = easygui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_tool_data) - sizeof(char) + extraDataSize, NULL);
+    drgui_element* pElement = drgui_create_element(ak_get_application_gui(pApplication), pParent, sizeof(ak_tool_data) - sizeof(char) + extraDataSize, NULL);
     if (pElement != NULL)
     {
-        easygui_hide(pElement);
+        drgui_hide(pElement);
 
 
-        ak_tool_data* pToolData = easygui_get_extra_data(pElement);
+        ak_tool_data* pToolData = drgui_get_extra_data(pElement);
         assert(pToolData != NULL);
 
         pToolData->pApplication = pApplication;
@@ -76,14 +76,14 @@ easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* p
     return pElement;
 }
 
-void ak_delete_tool(easygui_element* pTool)
+void ak_delete_tool(drgui_element* pTool)
 {
-    easygui_delete_element(pTool);
+    drgui_delete_element(pTool);
 }
 
-ak_application* ak_get_tool_application(easygui_element* pTool)
+ak_application* ak_get_tool_application(drgui_element* pTool)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return NULL;
     }
@@ -91,9 +91,9 @@ ak_application* ak_get_tool_application(easygui_element* pTool)
     return pToolData->pApplication;
 }
 
-const char* ak_get_tool_type(easygui_element* pTool)
+const char* ak_get_tool_type(drgui_element* pTool)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return NULL;
     }
@@ -102,9 +102,9 @@ const char* ak_get_tool_type(easygui_element* pTool)
 }
 
 
-size_t ak_get_tool_extra_data_size(easygui_element* pTool)
+size_t ak_get_tool_extra_data_size(drgui_element* pTool)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return 0;
     }
@@ -112,9 +112,9 @@ size_t ak_get_tool_extra_data_size(easygui_element* pTool)
     return pToolData->extraDataSize;
 }
 
-void* ak_get_tool_extra_data(easygui_element* pTool)
+void* ak_get_tool_extra_data(drgui_element* pTool)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return NULL;
     }
@@ -128,9 +128,9 @@ bool ak_is_of_tool_type(const char* pToolType, const char* pBaseToolType)
     return strncmp(pToolType, pBaseToolType, strlen(pBaseToolType)) == 0;
 }
 
-bool ak_is_tool_of_type(easygui_element* pTool, const char* type)
+bool ak_is_tool_of_type(drgui_element* pTool, const char* type)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return false;
     }
@@ -139,9 +139,9 @@ bool ak_is_tool_of_type(easygui_element* pTool, const char* type)
 }
 
 
-easygui_tab* ak_get_tool_tab(easygui_element* pTool)
+drgui_tab* ak_get_tool_tab(drgui_element* pTool)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return NULL;
     }
@@ -149,9 +149,9 @@ easygui_tab* ak_get_tool_tab(easygui_element* pTool)
     return pToolData->pTab;
 }
 
-easygui_element* ak_get_tool_panel(easygui_element* pTool)
+drgui_element* ak_get_tool_panel(drgui_element* pTool)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return NULL;
     }
@@ -160,9 +160,9 @@ easygui_element* ak_get_tool_panel(easygui_element* pTool)
 }
 
 
-void ak_set_tool_title(easygui_element* pTool, const char* title)
+void ak_set_tool_title(drgui_element* pTool, const char* title)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return;
     }
@@ -172,9 +172,9 @@ void ak_set_tool_title(easygui_element* pTool, const char* title)
     tab_set_text(pToolData->pTab, title);
 }
 
-const char* ak_get_tool_title(easygui_element* pTool)
+const char* ak_get_tool_title(drgui_element* pTool)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return NULL;
     }
@@ -183,9 +183,9 @@ const char* ak_get_tool_title(easygui_element* pTool)
 }
 
 
-void ak_tool_handle_action(easygui_element* pTool, const char* pActionName)
+void ak_tool_handle_action(drgui_element* pTool, const char* pActionName)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return;
     }
@@ -195,9 +195,9 @@ void ak_tool_handle_action(easygui_element* pTool, const char* pActionName)
     }
 }
 
-void ak_tool_set_on_handle_action(easygui_element* pTool, ak_tool_on_handle_action_proc proc)
+void ak_tool_set_on_handle_action(drgui_element* pTool, ak_tool_on_handle_action_proc proc)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return;
     }
@@ -207,9 +207,9 @@ void ak_tool_set_on_handle_action(easygui_element* pTool, ak_tool_on_handle_acti
 
 
 
-void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab)
+void ak_set_tool_tab(drgui_element* pTool, drgui_tab* pTab)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return;
     }
@@ -217,9 +217,9 @@ void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab)
     pToolData->pTab = pTab;
 }
 
-void ak_set_tool_panel(easygui_element* pTool, easygui_element* pPanel)
+void ak_set_tool_panel(drgui_element* pTool, drgui_element* pPanel)
 {
-    ak_tool_data* pToolData = easygui_get_extra_data(pTool);
+    ak_tool_data* pToolData = drgui_get_extra_data(pTool);
     if (pToolData == NULL) {
         return;
     }

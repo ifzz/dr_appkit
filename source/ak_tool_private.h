@@ -9,19 +9,19 @@
 extern "C" {
 #endif
 
-typedef struct easygui_element easygui_element;
+typedef struct drgui_element drgui_element;
 
 /// Sets the tab to associate with the given tool.
 ///
 /// @remarks
 ///     This is only used by panels when the tool is attached to it.
-void ak_set_tool_tab(easygui_element* pTool, easygui_tab* pTab);
+void ak_set_tool_tab(drgui_element* pTool, drgui_tab* pTab);
 
 /// Sets the panel the tool is attached to.
 ///
 /// @remarks
 ///     This is only used by panels when the tool is attached to it. This is just a basic setter.
-void ak_set_tool_panel(easygui_element* pTool, easygui_element* pPanel);
+void ak_set_tool_panel(drgui_element* pTool, drgui_element* pPanel);
 
 
 #ifdef __cplusplus

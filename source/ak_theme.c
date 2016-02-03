@@ -5,13 +5,13 @@
 #include "../include/easy_appkit/ak_build_config.h"
 #include <assert.h>
 
-ak_text_theme ak_init_text_theme(ak_application* pApplication, const char* family, unsigned int size, easygui_font_weight weight, easygui_font_slant slant, easygui_color textColor, easygui_color backgroundColor)
+ak_text_theme ak_init_text_theme(ak_application* pApplication, const char* family, unsigned int size, drgui_font_weight weight, drgui_font_slant slant, drgui_color textColor, drgui_color backgroundColor)
 {
     ak_text_theme result;
     result.textColor = textColor;
     result.backgroundColor = backgroundColor;
 
-    result.pFont = easygui_create_font(ak_get_application_gui(pApplication), family, size, weight, slant, 0);
+    result.pFont = drgui_create_font(ak_get_application_gui(pApplication), family, size, weight, slant, 0);
     if (result.pFont == NULL) {
         ak_logf(pApplication, "[ERROR] Failed to load font \"%s\"", family);
     }
@@ -21,7 +21,7 @@ ak_text_theme ak_init_text_theme(ak_application* pApplication, const char* famil
 
 void ak_uninit_text_theme(ak_text_theme theme)
 {
-    easygui_delete_font(theme.pFont);
+    drgui_delete_font(theme.pFont);
 }
 
 
@@ -50,15 +50,15 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
 
 
     //// Colors ////
-    pTheme->baseColor = easygui_rgb(52, 52, 52);
+    pTheme->baseColor = drgui_rgb(52, 52, 52);
 
 
     //// Tabs ////
-    //pTheme->tabColor         = easygui_rgb(64, 64, 64);
-    pTheme->tabColor         = easygui_rgb(58, 58, 58);
-    pTheme->tabHoveredColor  = easygui_rgb(0, 128, 255);
-    //pTheme->tabActiveColor   = easygui_rgb(0, 101, 202);
-    pTheme->tabActiveColor   = easygui_rgb(80, 80, 80);
+    //pTheme->tabColor         = drgui_rgb(64, 64, 64);
+    pTheme->tabColor         = drgui_rgb(58, 58, 58);
+    pTheme->tabHoveredColor  = drgui_rgb(0, 128, 255);
+    //pTheme->tabActiveColor   = drgui_rgb(0, 101, 202);
+    pTheme->tabActiveColor   = drgui_rgb(80, 80, 80);
     pTheme->tabPaddingLeft   = 4;
     pTheme->tabPaddingTop    = 4;
     pTheme->tabPaddingRight  = 4;
@@ -72,16 +72,16 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
 
 
     //// Fonts ////
-    pTheme->pUIFont = easygui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, easygui_font_weight_normal, easygui_font_slant_none, 0);
-    pTheme->uiFontColor = easygui_rgb(240, 240, 240);
-    easygui_get_glyph_metrics(pTheme->pUIFont, 'X', 1, 1, &pTheme->uiCrossMetrics);
+    pTheme->pUIFont = drgui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, drgui_font_weight_normal, drgui_font_slant_none, 0);
+    pTheme->uiFontColor = drgui_rgb(240, 240, 240);
+    drgui_get_glyph_metrics(pTheme->pUIFont, 'X', 1, 1, &pTheme->uiCrossMetrics);
 
 
 
     //// Default Text Editor ///
 
     // Default text editor.
-    pTheme->defaultText = ak_init_text_theme(pApplication, defaultMonospaceFontFamily, defaultMonospaceFontSize, easygui_font_weight_default, easygui_font_slant_none, easygui_rgb(224, 224, 224), easygui_rgb(48, 48, 48));
+    pTheme->defaultText = ak_init_text_theme(pApplication, defaultMonospaceFontFamily, defaultMonospaceFontSize, drgui_font_weight_default, drgui_font_slant_none, drgui_rgb(224, 224, 224), drgui_rgb(48, 48, 48));
 }
 
 void ak_theme_load_from_file(ak_application* pApplication, ak_theme* pTheme, const char* absolutePath)
@@ -101,7 +101,7 @@ void ak_theme_unload(ak_theme* pTheme)
 
     ak_uninit_text_theme(pTheme->defaultText);
 
-    easygui_delete_font(pTheme->pUIFont);
+    drgui_delete_font(pTheme->pUIFont);
     pTheme->pUIFont = NULL;
 }
 

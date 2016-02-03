@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <easy_gui/easy_gui.h>
+#include <dr_libs/dr_gui.h>
 
 // This flag is posted on on_hide events when a popup window is automatically hidden as a result of the user clicking
 // outside of it's region.
@@ -72,8 +72,8 @@ typedef void (* ak_window_on_mouse_enter_proc)       (ak_window* pWindow);
 typedef void (* ak_window_on_mouse_leave_proc)       (ak_window* pWindow);
 typedef void (* ak_window_on_mouse_button_proc)      (ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY);
 typedef void (* ak_window_on_mouse_wheel_proc)       (ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
-typedef void (* ak_window_on_key_down_proc)          (ak_window* pWindow, easygui_key key, int stateFlags);
-typedef void (* ak_window_on_key_up_proc)            (ak_window* pWindow, easygui_key key, int stateFlags);
+typedef void (* ak_window_on_key_down_proc)          (ak_window* pWindow, drgui_key key, int stateFlags);
+typedef void (* ak_window_on_key_up_proc)            (ak_window* pWindow, drgui_key key, int stateFlags);
 typedef void (* ak_window_on_printable_key_down_proc)(ak_window* pWindow, unsigned int character, int stateFlags);
 
 
@@ -105,7 +105,7 @@ size_t ak_get_window_extra_data_size(ak_window* pWindow);
 void* ak_get_window_extra_data(ak_window* pWindow);
 
 /// Retrieves a pointer to the top-level GUI element associated with the given window.
-easygui_element* ak_get_window_panel(ak_window* pWindow);
+drgui_element* ak_get_window_panel(ak_window* pWindow);
 
 /// Retrieves a pointer to the easy_draw surface the window will be drawing to.
 dr2d_surface* ak_get_window_surface(ak_window* pWindow);
@@ -178,7 +178,7 @@ bool ak_is_window_ancestor(ak_window* pAncestor, ak_window* pDescendant);
 
 
 /// Retrieves a pointer to the window that is associated with the given panel.
-ak_window* ak_get_panel_window(easygui_element* pPanel);
+ak_window* ak_get_panel_window(drgui_element* pPanel);
 
 
 /// Sets the cursor to use with the given window.
@@ -243,10 +243,10 @@ void ak_window_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int
 void ak_window_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY);
 
 /// Calls the on_key_down event handler for the given window.
-void ak_window_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags);
+void ak_window_on_key_down(ak_window* pWindow, drgui_key key, int stateFlags);
 
 /// Calls the on_key_up event handlers for the given window.
-void ak_window_on_key_up(ak_window* pWindow, easygui_key key, int stateFlags);
+void ak_window_on_key_up(ak_window* pWindow, drgui_key key, int stateFlags);
 
 /// Calls the on_printable_key_down for the given window.
 void ak_window_on_printable_key_down(ak_window* pWindow, unsigned int character, int stateFlags);

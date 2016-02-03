@@ -10,7 +10,7 @@
 #include "ak_window_private.h"
 #include "ak_config.h"
 #include <dr_libs/dr_util.h>
-#include <easy_gui/easy_gui.h>
+#include <dr_libs/dr_gui.h>
 #include <dr_libs/dr_vfs.h>
 #include <dr_libs/dr_path.h>
 #include <stdlib.h>
@@ -45,7 +45,7 @@ struct ak_application
     dr2d_context* pDrawingContext;
 
     /// A pointer to the GUI context.
-    easygui_context* pGUI;
+    drgui_context* pGUI;
 
     /// A pointer to the GUI image manager.
     ak_gui_image_manager* pGUIImageManager;
@@ -122,10 +122,10 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication);
 PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig);
 
 /// Applies the given layout object to the given application object.
-PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, easygui_element* pElement);
+PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, drgui_element* pElement);
 
 /// Recursively deletes the tools that are within the given panel.
-PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, easygui_element* pPanel);
+PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, drgui_element* pPanel);
 
 
 #ifdef AK_USE_WIN32
@@ -202,7 +202,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
             return NULL;
         }
 
-        pApplication->pGUI = easygui_create_context_easy_draw(pApplication->pDrawingContext);
+        pApplication->pGUI = drgui_create_context_easy_draw(pApplication->pDrawingContext);
         if (pApplication->pGUI == NULL) {
             dr2d_delete_context(pApplication->pDrawingContext);
             free(pApplication);
@@ -211,7 +211,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
         pApplication->pGUIImageManager = ak_create_gui_image_manager(pApplication->pVFS, pApplication->pGUI);
         if (pApplication->pGUIImageManager == NULL) {
-            easygui_delete_context(pApplication->pGUI);
+            drgui_delete_context(pApplication->pGUI);
             dr2d_delete_context(pApplication->pDrawingContext);
             free(pApplication);
             return NULL;
@@ -291,7 +291,7 @@ void ak_delete_application(ak_application* pApplication)
 
     // GUI.
     ak_delete_gui_image_manager(pApplication->pGUIImageManager);
-    easygui_delete_context(pApplication->pGUI);
+    drgui_delete_context(pApplication->pGUI);
     dr2d_delete_context(pApplication->pDrawingContext);
 
     // Logs.
@@ -420,7 +420,7 @@ dr2d_context* ak_get_application_drawing_context(ak_application* pApplication)
     return pApplication->pDrawingContext;
 }
 
-easygui_context* ak_get_application_gui(ak_application* pApplication)
+drgui_context* ak_get_application_gui(ak_application* pApplication)
 {
     if (pApplication == NULL) {
         return NULL;
@@ -630,13 +630,13 @@ ak_layout_config_proc ak_get_on_default_config(ak_application* pApplication)
 }
 
 
-ak_window* ak_get_element_window(easygui_element* pElement)
+ak_window* ak_get_element_window(drgui_element* pElement)
 {
     if (pElement == NULL) {
         return NULL;
     }
 
-    return ak_get_panel_window(easygui_find_top_level_element(pElement));
+    return ak_get_panel_window(drgui_find_top_level_element(pElement));
 }
 
 ak_window* ak_get_window_by_name(ak_application* pApplication, const char* pName)
@@ -710,7 +710,7 @@ ak_window* ak_get_primary_window(ak_application* pApplication)
 }
 
 
-easygui_element* ak_get_first_panel(ak_application* pApplication)
+drgui_element* ak_get_first_panel(ak_application* pApplication)
 {
     // The first panel is the first panel of the first window.
     ak_window* pFirstWindow = ak_get_first_window(pApplication);
@@ -721,7 +721,7 @@ easygui_element* ak_get_first_panel(ak_application* pApplication)
     return ak_get_window_panel(pFirstWindow);
 }
 
-PRIVATE easygui_element* ak_get_next_non_child_panel(ak_application* pApplication, easygui_element* pPanel)
+PRIVATE drgui_element* ak_get_next_non_child_panel(ak_application* pApplication, drgui_element* pPanel)
 {
     if (pPanel == NULL) {
         return NULL;
@@ -749,7 +749,7 @@ PRIVATE easygui_element* ak_get_next_non_child_panel(ak_application* pApplicatio
     }
 }
 
-easygui_element* ak_get_next_panel(ak_application* pApplication, easygui_element* pPanel)
+drgui_element* ak_get_next_panel(ak_application* pApplication, drgui_element* pPanel)
 {
     // The next panel depends on where <pPanel> is in relation to it's parent, and whether or not it is split. If it's a split panel we just return the first of
     // the split children. If it's not split, it's a bit more complex.
@@ -767,9 +767,9 @@ easygui_element* ak_get_next_panel(ak_application* pApplication, easygui_element
 }
 
 
-easygui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelType)
+drgui_element* ak_find_first_panel_by_type(ak_application* pApplication, const char* pPanelType)
 {
-    for (easygui_element* pPanel = ak_get_first_panel(pApplication); pPanel != NULL; pPanel = ak_get_next_panel(pApplication, pPanel))
+    for (drgui_element* pPanel = ak_get_first_panel(pApplication); pPanel != NULL; pPanel = ak_get_next_panel(pApplication, pPanel))
     {
         if (ak_panel_is_of_type(pPanel, pPanelType)) {
             return pPanel;
@@ -779,9 +779,9 @@ easygui_element* ak_find_first_panel_by_type(ak_application* pApplication, const
     return NULL;
 }
 
-easygui_element* ak_find_next_panel_by_type(ak_application* pApplication, easygui_element* pPanel, const char* pPanelType)
+drgui_element* ak_find_next_panel_by_type(ak_application* pApplication, drgui_element* pPanel, const char* pPanelType)
 {
-    for (easygui_element* pNextPanel = ak_get_next_panel(pApplication, pPanel); pNextPanel != NULL; pNextPanel = ak_get_next_panel(pApplication, pNextPanel))
+    for (drgui_element* pNextPanel = ak_get_next_panel(pApplication, pPanel); pNextPanel != NULL; pNextPanel = ak_get_next_panel(pApplication, pNextPanel))
     {
         if (ak_panel_is_of_type(pNextPanel, pPanelType)) {
             return pNextPanel;
@@ -849,7 +849,7 @@ ak_delete_tool_proc ak_get_on_delete_tool(ak_application* pApplication)
 }
 
 
-easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes)
+drgui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes)
 {
     if (pApplication == NULL || type == NULL) {
         return false;
@@ -867,7 +867,7 @@ easygui_element* ak_create_tool_by_type_and_attributes(ak_application* pApplicat
     return NULL;
 }
 
-bool ak_application_delete_tool(ak_application* pApplication, easygui_element* pTool, bool force)
+bool ak_application_delete_tool(ak_application* pApplication, drgui_element* pTool, bool force)
 {
     if (pApplication == NULL || pTool == NULL) {
         return false;
@@ -1179,7 +1179,7 @@ PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig)
     return ak_apply_layout(pApplication, pInitialLayout, NULL);
 }
 
-PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, easygui_element* pWorkingPanel)
+PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, drgui_element* pWorkingPanel)
 {
     assert(pApplication != NULL);
     assert(pLayout      != NULL);
@@ -1298,10 +1298,10 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
         const char* toolAttributes = dr_first_non_whitespace(dr_next_token(pLayout->attributes, toolType, sizeof(toolType)));
         if (toolAttributes != NULL)
         {
-            easygui_element* pTool = ak_create_tool_by_type_and_attributes(pApplication, ak_get_element_window(pWorkingPanel), toolType, toolAttributes);
+            drgui_element* pTool = ak_create_tool_by_type_and_attributes(pApplication, ak_get_element_window(pWorkingPanel), toolType, toolAttributes);
             if (pTool != NULL) {
                 if (ak_panel_attach_tool(pWorkingPanel, pTool)) {
-                    easygui_show(pTool);
+                    drgui_show(pTool);
                 }
             }
         }
@@ -1310,7 +1310,7 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, e
     return true;
 }
 
-PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, easygui_element* pPanel)
+PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, drgui_element* pPanel)
 {
     if (pApplication == NULL || pPanel == NULL) {
         return;
@@ -1324,7 +1324,7 @@ PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, easygui_ele
     }
     else
     {
-        easygui_element* pFirstTool = NULL;
+        drgui_element* pFirstTool = NULL;
         while ((pFirstTool = ak_panel_get_first_tool(pPanel)) != NULL)
         {
             ak_application_delete_tool(pApplication, pFirstTool, true);    // "true" means to force deletion of the tool.
@@ -1431,7 +1431,7 @@ void ak_application_on_mouse_leave(ak_window* pWindow)
     ak_window_on_mouse_leave(pWindow);
 
     // Let the GUI know about the event.
-    easygui_post_inbound_event_mouse_leave(ak_get_window_panel(pWindow));
+    drgui_post_inbound_event_mouse_leave(ak_get_window_panel(pWindow));
 }
 
 void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
@@ -1444,7 +1444,7 @@ void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, in
     ak_application_hide_non_ancestor_popups(pWindow);
 
     // Let the GUI know about the event.
-    easygui_post_inbound_event_mouse_button_down(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY, stateFlags);
+    drgui_post_inbound_event_mouse_button_down(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY, stateFlags);
 }
 
 void ak_application_on_mouse_button_up(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
@@ -1454,7 +1454,7 @@ void ak_application_on_mouse_button_up(ak_window* pWindow, int mouseButton, int 
     ak_window_on_mouse_button_up(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
 
     // Let the GUI know about the event.
-    easygui_post_inbound_event_mouse_button_up(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY, stateFlags);
+    drgui_post_inbound_event_mouse_button_up(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY, stateFlags);
 }
 
 void ak_application_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
@@ -1464,7 +1464,7 @@ void ak_application_on_mouse_button_dblclick(ak_window* pWindow, int mouseButton
     ak_window_on_mouse_button_dblclick(pWindow, mouseButton, relativeMousePosX, relativeMousePosY);
 
     // Let the GUI know about the event.
-    easygui_post_inbound_event_mouse_button_dblclick(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY, stateFlags);
+    drgui_post_inbound_event_mouse_button_dblclick(ak_get_window_panel(pWindow), mouseButton, relativeMousePosX, relativeMousePosY, stateFlags);
 }
 
 void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMousePosX, int relativeMousePosY, int stateFlags)
@@ -1474,15 +1474,15 @@ void ak_application_on_mouse_wheel(ak_window* pWindow, int delta, int relativeMo
     ak_window_on_mouse_wheel(pWindow, delta, relativeMousePosX, relativeMousePosY);
 
     // Let the GUI know about the event.
-    easygui_post_inbound_event_mouse_wheel(ak_get_window_panel(pWindow), delta, relativeMousePosX, relativeMousePosY, stateFlags);
+    drgui_post_inbound_event_mouse_wheel(ak_get_window_panel(pWindow), delta, relativeMousePosX, relativeMousePosY, stateFlags);
 }
 
-void ak_application_on_key_down(ak_window* pWindow, easygui_key key, int stateFlags)
+void ak_application_on_key_down(ak_window* pWindow, drgui_key key, int stateFlags)
 {
     assert(pWindow != NULL);
 
     ak_window_on_key_down(pWindow, key, stateFlags);
-    easygui_post_inbound_event_key_down(ak_get_window_panel(pWindow)->pContext, key, stateFlags);
+    drgui_post_inbound_event_key_down(ak_get_window_panel(pWindow)->pContext, key, stateFlags);
 
     ak_application* pApplication = ak_get_window_application(pWindow);
     if (pApplication != NULL && pApplication->onKeyDown) {
@@ -1490,12 +1490,12 @@ void ak_application_on_key_down(ak_window* pWindow, easygui_key key, int stateFl
     }
 }
 
-void ak_application_on_key_up(ak_window* pWindow, easygui_key key, int stateFlags)
+void ak_application_on_key_up(ak_window* pWindow, drgui_key key, int stateFlags)
 {
     assert(pWindow != NULL);
 
     ak_window_on_key_up(pWindow, key, stateFlags);
-    easygui_post_inbound_event_key_up(ak_get_window_panel(pWindow)->pContext, key, stateFlags);
+    drgui_post_inbound_event_key_up(ak_get_window_panel(pWindow)->pContext, key, stateFlags);
 
     ak_application* pApplication = ak_get_window_application(pWindow);
     if (pApplication != NULL && pApplication->onKeyUp) {
@@ -1508,11 +1508,11 @@ void ak_application_on_printable_key_down(ak_window* pWindow, unsigned int chara
     assert(pWindow != NULL);
 
     ak_window_on_printable_key_down(pWindow, character, stateFlags);
-    easygui_post_inbound_event_printable_key_down(ak_get_window_panel(pWindow)->pContext, character, stateFlags);
+    drgui_post_inbound_event_printable_key_down(ak_get_window_panel(pWindow)->pContext, character, stateFlags);
 }
 
 
-void ak_application_on_panel_activated(ak_application* pApplication, easygui_element* pPanel)
+void ak_application_on_panel_activated(ak_application* pApplication, drgui_element* pPanel)
 {
     if (pApplication == NULL || pPanel == NULL) {
         return;
@@ -1523,7 +1523,7 @@ void ak_application_on_panel_activated(ak_application* pApplication, easygui_ele
     }
 }
 
-void ak_application_on_panel_deactivated(ak_application* pApplication, easygui_element* pPanel)
+void ak_application_on_panel_deactivated(ak_application* pApplication, drgui_element* pPanel)
 {
     if (pApplication == NULL || pPanel == NULL) {
         return;
@@ -1535,7 +1535,7 @@ void ak_application_on_panel_deactivated(ak_application* pApplication, easygui_e
 }
 
 
-void ak_application_on_tool_activated(ak_application* pApplication, easygui_element* pTool)
+void ak_application_on_tool_activated(ak_application* pApplication, drgui_element* pTool)
 {
     if (pApplication == NULL || pTool == NULL) {
         return;
@@ -1546,7 +1546,7 @@ void ak_application_on_tool_activated(ak_application* pApplication, easygui_elem
     }
 }
 
-void ak_application_on_tool_deactivated(ak_application* pApplication, easygui_element* pTool)
+void ak_application_on_tool_deactivated(ak_application* pApplication, drgui_element* pTool)
 {
     if (pApplication == NULL || pTool == NULL) {
         return;

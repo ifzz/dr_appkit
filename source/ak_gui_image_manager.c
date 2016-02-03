@@ -4,7 +4,7 @@
 #include "nanosvg.h"
 #include "nanosvgrast.h"
 #include <dr_libs/dr_vfs.h>
-#include <easy_gui/easy_gui.h>
+#include <dr_libs/dr_gui.h>
 #include <dr_libs/dr_path.h>
 
 #ifndef PRIVATE
@@ -17,24 +17,24 @@ struct ak_gui_image_manager
     drvfs_context* pVFS;
 
     /// A pointer to the GUI context.
-    easygui_context* pGUI;
+    drgui_context* pGUI;
 
 
     /// The right-facing arrow image.
-    easygui_image* pArrowRight;
+    drgui_image* pArrowRight;
 
     /// The right-down-facing arrow image.
-    easygui_image* pArrowRightDown;
+    drgui_image* pArrowRightDown;
 
     /// The red cross image.
-    easygui_image* pRedCross;
+    drgui_image* pRedCross;
 };
 
 /// Creates an image from an SVG string.
-PRIVATE easygui_image* ak_load_svg_from_string(ak_gui_image_manager* pIM, char* svg, unsigned int width, unsigned int height);
+PRIVATE drgui_image* ak_load_svg_from_string(ak_gui_image_manager* pIM, char* svg, unsigned int width, unsigned int height);
 
 
-ak_gui_image_manager* ak_create_gui_image_manager(drvfs_context* pVFS, easygui_context* pGUI)
+ak_gui_image_manager* ak_create_gui_image_manager(drvfs_context* pVFS, drgui_context* pGUI)
 {
     if (pVFS == NULL || pGUI == NULL) {
         return NULL;
@@ -71,7 +71,7 @@ void ak_delete_gui_image_manager(ak_gui_image_manager* pIM)
 }
 
 
-easygui_image* ak_load_vector_image_from_file(ak_gui_image_manager* pIM, const char* fileName, unsigned int width, unsigned int height)
+drgui_image* ak_load_vector_image_from_file(ak_gui_image_manager* pIM, const char* fileName, unsigned int width, unsigned int height)
 {
     if (pIM == NULL || fileName == NULL || width == 0 || height == 0) {
         return NULL;
@@ -89,13 +89,13 @@ easygui_image* ak_load_vector_image_from_file(ak_gui_image_manager* pIM, const c
         return NULL;
     }
 
-    easygui_image* pImage = ak_load_svg_from_string(pIM, svg, width, height);
+    drgui_image* pImage = ak_load_svg_from_string(pIM, svg, width, height);
 
     drvfs_free(svg);
     return pImage;
 }
 
-void ak_unload_image(ak_gui_image_manager* pIM, easygui_image* pImage)
+void ak_unload_image(ak_gui_image_manager* pIM, drgui_image* pImage)
 {
     if (pIM == NULL || pImage == NULL) {
         return;
@@ -103,10 +103,10 @@ void ak_unload_image(ak_gui_image_manager* pIM, easygui_image* pImage)
 
     // TODO: Reference count.
 
-    easygui_delete_image(pImage);
+    drgui_delete_image(pImage);
 }
 
-easygui_image* ak_get_arrow_right_image(ak_gui_image_manager* pIM)
+drgui_image* ak_get_arrow_right_image(ak_gui_image_manager* pIM)
 {
     if (pIM == NULL) {
         return NULL;
@@ -216,7 +216,7 @@ easygui_image* ak_get_arrow_right_image(ak_gui_image_manager* pIM)
     return pIM->pArrowRight;
 }
 
-easygui_image* ak_get_arrow_right_down_image(ak_gui_image_manager* pIM)
+drgui_image* ak_get_arrow_right_down_image(ak_gui_image_manager* pIM)
 {
     if (pIM == NULL) {
         return NULL;
@@ -332,7 +332,7 @@ easygui_image* ak_get_arrow_right_down_image(ak_gui_image_manager* pIM)
     return pIM->pArrowRightDown;
 }
 
-easygui_image* ak_get_red_cross_image(ak_gui_image_manager* pIM)
+drgui_image* ak_get_red_cross_image(ak_gui_image_manager* pIM)
 {
     if (pIM == NULL) {
         return NULL;
@@ -545,7 +545,7 @@ easygui_image* ak_get_red_cross_image(ak_gui_image_manager* pIM)
 
 
 
-PRIVATE easygui_image* ak_load_svg_from_string(ak_gui_image_manager* pIM, char* svg, unsigned int width, unsigned int height)
+PRIVATE drgui_image* ak_load_svg_from_string(ak_gui_image_manager* pIM, char* svg, unsigned int width, unsigned int height)
 {
     NSVGimage* pSVGImage = nsvgParse(svg, "px", 96);
     if (pSVGImage == NULL) {
@@ -576,8 +576,8 @@ PRIVATE easygui_image* ak_load_svg_from_string(ak_gui_image_manager* pIM, char* 
     nsvgDelete(pSVGImage);
 
 
-    // At this point we have the rasterized image and we can create the easy_gui image resource.
-    easygui_image* pImage = easygui_create_image(pIM->pGUI, width, height, svgWidth*4, pImageData);
+    // At this point we have the rasterized image and we can create the dr_gui image resource.
+    drgui_image* pImage = drgui_create_image(pIM->pGUI, width, height, svgWidth*4, pImageData);
 
     free(pImageData);
     return pImage;

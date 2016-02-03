@@ -18,35 +18,35 @@
 extern "C" {
 #endif
 
-typedef struct easygui_element easygui_element;
+typedef struct drgui_element drgui_element;
 typedef struct ak_application ak_application;
-typedef struct easygui_tab easygui_tab;
+typedef struct drgui_tab drgui_tab;
 
-typedef void (* ak_tool_on_handle_action_proc)(easygui_element* pTool, const char* pActionName);
+typedef void (* ak_tool_on_handle_action_proc)(drgui_element* pTool, const char* pActionName);
 
 /// Creates a tool.
 ///
 /// @remarks
 ///     Specific types of tools will call this inside their own creation function.
-easygui_element* ak_create_tool(ak_application* pApplication, easygui_element* pParent, const char* type, size_t extraDataSize, const void* pExtraData);
+drgui_element* ak_create_tool(ak_application* pApplication, drgui_element* pParent, const char* type, size_t extraDataSize, const void* pExtraData);
 
 /// Deletes the given tool.
 ///
 /// @remarks
-///     This is equivalent to easygui_delete_element(), but is included for consistency with ak_delete_tool().
-void ak_delete_tool(easygui_element* pTool);
+///     This is equivalent to drgui_delete_element(), but is included for consistency with ak_delete_tool().
+void ak_delete_tool(drgui_element* pTool);
 
 /// Retrieves a pointer to the application that owns the given tool.
-ak_application* ak_get_tool_application(easygui_element* pTool);
+ak_application* ak_get_tool_application(drgui_element* pTool);
 
 /// Retrieves the type string of the tool.
-const char* ak_get_tool_type(easygui_element* pTool);
+const char* ak_get_tool_type(drgui_element* pTool);
 
 /// Retrieves the size of the extra data.
-size_t ak_get_tool_extra_data_size(easygui_element* pTool);
+size_t ak_get_tool_extra_data_size(drgui_element* pTool);
 
 /// Retrieves a pointer to the extra data.
-void* ak_get_tool_extra_data(easygui_element* pTool);
+void* ak_get_tool_extra_data(drgui_element* pTool);
 
 
 /// Determines whether the given tool type is of the given type.
@@ -57,31 +57,31 @@ bool ak_is_of_tool_type(const char* pToolType, const char* pBaseToolType);
 /// @remarks
 ///     This returns true for sub-types. For example, if the type of a tool is "Editor.Text.CPP", true will be returned
 ///     if this function is called with a type of "Editor.Text".
-bool ak_is_tool_of_type(easygui_element* pTool, const char* type);
+bool ak_is_tool_of_type(drgui_element* pTool, const char* type);
 
 
 /// Retrieves the tab associated with the given tool.
-easygui_tab* ak_get_tool_tab(easygui_element* pTool);
+drgui_tab* ak_get_tool_tab(drgui_element* pTool);
 
 /// Retrieves the panel the tool is attached to, if any.
-easygui_element* ak_get_tool_panel(easygui_element* pTool);
+drgui_element* ak_get_tool_panel(drgui_element* pTool);
 
 
 /// Sets the title of the tool.
 ///
 /// @remarks
 ///     This is what will be shown on the tab.
-void ak_set_tool_title(easygui_element* pTool, const char* title);
+void ak_set_tool_title(drgui_element* pTool, const char* title);
 
 /// Retrieves the title of the tool.
-const char* ak_get_tool_title(easygui_element* pTool);
+const char* ak_get_tool_title(drgui_element* pTool);
 
 
 /// Allows the tool to handle the given action.
-void ak_tool_handle_action(easygui_element* pTool, const char* pActionName);
+void ak_tool_handle_action(drgui_element* pTool, const char* pActionName);
 
 /// Sets the function to call when an action needs to be handled.
-void ak_tool_set_on_handle_action(easygui_element* pTool, ak_tool_on_handle_action_proc proc);
+void ak_tool_set_on_handle_action(drgui_element* pTool, ak_tool_on_handle_action_proc proc);
 
 
 #ifdef __cplusplus

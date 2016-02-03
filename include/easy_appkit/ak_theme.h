@@ -3,7 +3,7 @@
 #ifndef ak_theme_h
 #define ak_theme_h
 
-#include <easy_gui/easy_gui.h>    // For easygui_color, easygui_font
+#include <dr_libs/dr_gui.h>    // For drgui_color, drgui_font
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,13 +16,13 @@ typedef struct ak_text_theme ak_text_theme;
 struct ak_text_theme
 {
     /// The font.
-    easygui_font* pFont;
+    drgui_font* pFont;
 
     /// The text color.
-    easygui_color textColor;
+    drgui_color textColor;
 
     /// The background color.
-    easygui_color backgroundColor;
+    drgui_color backgroundColor;
 };
 
 struct ak_theme
@@ -30,20 +30,20 @@ struct ak_theme
     //// Colors ////
 
     // TESTING
-    easygui_color baseColor;
+    drgui_color baseColor;
 
 
 
     //// Tabs ////
 
     /// The default color of the background of a tab.
-    easygui_color tabColor;
+    drgui_color tabColor;
 
     /// The background color of hovered tabs.
-    easygui_color tabHoveredColor;
+    drgui_color tabHoveredColor;
 
     /// The background color of active tabs.
-    easygui_color tabActiveColor;
+    drgui_color tabActiveColor;
 
     /// The padding of each tab.
     float tabPaddingLeft;
@@ -67,13 +67,13 @@ struct ak_theme
     //// Fonts ////
 
     /// The font to use for normal UI elements, but not text editors.
-    easygui_font* pUIFont;
+    drgui_font* pUIFont;
 
     /// The color to use for the normal UI elements, but not text editor.
-    easygui_color uiFontColor;
+    drgui_color uiFontColor;
 
     /// The metrics of the cross glyph.
-    easygui_glyph_metrics uiCrossMetrics;
+    drgui_glyph_metrics uiCrossMetrics;
 
 
 

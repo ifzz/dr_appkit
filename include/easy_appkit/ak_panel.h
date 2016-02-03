@@ -17,8 +17,8 @@
 // - Tools are unaware of the panel they are attached to and are designed such that they can be used
 //   independantly.
 // - Both panels and tools are just GUI elements with associated user-data. There is no "ak_panel" or
-//   "ak_tool" object - they are just easygui_element objects.
-// - Tools and panels should be deleted with easygui_delete_element(), however they should be first
+//   "ak_tool" object - they are just drgui_element objects.
+// - Tools and panels should be deleted with drgui_delete_element(), however they should be first
 //   disassociated with the relevant parts of the application.
 // 
 
@@ -27,13 +27,13 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <easy_gui/wip/easygui_tab_bar.h>
+#include <dr_libs/wip/dr_gui_tab_bar.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct easygui_element easygui_element;
+typedef struct drgui_element drgui_element;
 typedef struct ak_application ak_application;
 
 #define AK_PANEL_OPTION_SHOW_TOOL_TABS             1
@@ -56,66 +56,66 @@ typedef enum
 ///
 /// @remarks
 ///     An empty panel contains no children and no tools.
-easygui_element* ak_create_panel(ak_application* pApplication, easygui_element* pParent, size_t extraDataSize, const void* pExtraData);
+drgui_element* ak_create_panel(ak_application* pApplication, drgui_element* pParent, size_t extraDataSize, const void* pExtraData);
 
 
 /// Retrieves a pointer to the application that owns the given panel.
-ak_application* ak_get_panel_application(easygui_element* pPanel);
+ak_application* ak_get_panel_application(drgui_element* pPanel);
 
 /// Retrieves the parent panel of the given panel.
-easygui_element* ak_panel_get_parent(easygui_element* pPanel);
+drgui_element* ak_panel_get_parent(drgui_element* pPanel);
 
 
 /// Retrieves the size of the panel's extra data.
-size_t ak_panel_get_extra_data_size(easygui_element* pPanel);
+size_t ak_panel_get_extra_data_size(drgui_element* pPanel);
 
 /// Retrieves a pointer to the panel's extra data.
 ///
 /// @remarks
-///     Note that this is different from easygui_get_extra_data() and is of the size specified when the panel was created with create_panel().
-void* ak_panel_get_extra_data(easygui_element* pPanel);
+///     Note that this is different from drgui_get_extra_data() and is of the size specified when the panel was created with create_panel().
+void* ak_panel_get_extra_data(drgui_element* pPanel);
 
 
 /// Sets the name of the panel.
-void ak_panel_set_type(easygui_element* pPanel, const char* type);
+void ak_panel_set_type(drgui_element* pPanel, const char* type);
 
 /// Retrieves the type of the panel.
 ///
 /// @remarks
 ///     If the panel does not have a type, an empty string will be returned. Null will be returned on error.
-const char* ak_panel_get_type(easygui_element* pPanel);
+const char* ak_panel_get_type(drgui_element* pPanel);
 
 /// Recursively searches for a panel with the given type, including <pPanel>.
-easygui_element* ak_panel_find_by_type_recursive(easygui_element* pPanel, const char* type);
+drgui_element* ak_panel_find_by_type_recursive(drgui_element* pPanel, const char* type);
 
 /// Determines if the given panel is of the given type.
 ///
 /// @remarks
 ///     This returns true for sub-types. For example, if the type of a panel is "My.Panel.Type", true will be returned
 ///     if this function is called with a type of "My.Panel".
-bool ak_panel_is_of_type(easygui_element* pPanel, const char* type);
+bool ak_panel_is_of_type(drgui_element* pPanel, const char* type);
 
 
 /// Splits the given panel along the given axis at the given position.
 ///
 /// @remarks
 ///     This will fail if the panel has any tools attached.
-bool ak_panel_split(easygui_element* pPanel, ak_panel_split_axis splitAxis, float splitPos);
+bool ak_panel_split(drgui_element* pPanel, ak_panel_split_axis splitAxis, float splitPos);
 
 /// Unsplits the given panel.
 ///
 /// @remarks
 ///     This will delete any child elements, so ensure everything has been cleaned up appropriately beforehand.
-void ak_panel_unsplit(easygui_element* pPanel);
+void ak_panel_unsplit(drgui_element* pPanel);
 
 /// Determines whether or not the given panel is split.
-bool ak_panel_is_split(easygui_element* pPanel);
+bool ak_panel_is_split(drgui_element* pPanel);
 
 /// Retrieves the axis that the given panel is split along.
-ak_panel_split_axis ak_panel_get_split_axis(easygui_element* pPanel);
+ak_panel_split_axis ak_panel_get_split_axis(drgui_element* pPanel);
 
 /// Retrieves the split position of the given panel.
-float ak_panel_get_split_pos(easygui_element* pPanel);
+float ak_panel_get_split_pos(drgui_element* pPanel);
 
 /// Retrieves the first child panel of the given split panel.
 ///
@@ -123,7 +123,7 @@ float ak_panel_get_split_pos(easygui_element* pPanel);
 ///     This will fail if the panel is not split.
 ///     @par
 ///     The first split panel is the left one in the case of a horizontal split, and the top one for vertical splits.
-easygui_element* ak_panel_get_split_panel_1(easygui_element* pPanel);
+drgui_element* ak_panel_get_split_panel_1(drgui_element* pPanel);
 
 /// Retrieves the second child panel of the given split panel.
 ///
@@ -131,13 +131,13 @@ easygui_element* ak_panel_get_split_panel_1(easygui_element* pPanel);
 ///     This will fail if the panel is not split.
 ///     @par
 ///     The second split panel is the right one in the case of a horizontal split, and the bottom one for vertical splits.
-easygui_element* ak_panel_get_split_panel_2(easygui_element* pPanel);
+drgui_element* ak_panel_get_split_panel_2(drgui_element* pPanel);
 
 /// Enables ratio-based splitting based on the ratio at the time this function is called.
-void ak_panel_enable_ratio_split(easygui_element* pPanel);
+void ak_panel_enable_ratio_split(drgui_element* pPanel);
 
 /// Disables ratio-based splitting.
-void ak_panel_disable_ratio_split(easygui_element* pPanel);
+void ak_panel_disable_ratio_split(drgui_element* pPanel);
 
 
 /// Attaches a tool to the given panel.
@@ -146,7 +146,7 @@ void ak_panel_disable_ratio_split(easygui_element* pPanel);
 ///     This will fail if the given panel is a split panel.
 ///     @par
 ///     If the tool is already attached to another tool it will be detached first.
-bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool);
+bool ak_panel_attach_tool(drgui_element* pPanel, drgui_element* pTool);
 
 /// Detaches the given tool from the given panel.
 ///
@@ -155,7 +155,7 @@ bool ak_panel_attach_tool(easygui_element* pPanel, easygui_element* pTool);
 ///     @par
 ///     This does not delete the tool, it simply orphans it. You will typically want to either attach it to another panel or delete it after detaching
 ///     it from this one.
-void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool);
+void ak_panel_detach_tool(drgui_element* pPanel, drgui_element* pTool);
 
 
 /// Activates the given tool by deactivating the previously active tool and then activating this one.
@@ -164,24 +164,24 @@ void ak_panel_detach_tool(easygui_element* pPanel, easygui_element* pTool);
 ///     Activating a tab involves activating the tab and showing the tool.
 ///     @par
 ///     This will fail is <pTool> is not attached to <pPanel>.
-bool ak_panel_activate_tool(easygui_element* pPanel, easygui_element* pTool);
+bool ak_panel_activate_tool(drgui_element* pPanel, drgui_element* pTool);
 
 /// Retrieves a pointer to the active tool in the given panel, if any.
-easygui_element* ak_panel_get_active_tool(easygui_element* pPanel);
+drgui_element* ak_panel_get_active_tool(drgui_element* pPanel);
 
 
 /// Retrieves a pointer to the first tool that's attached to the given panel, if any.
-easygui_element* ak_panel_get_first_tool(easygui_element* pPanel);
+drgui_element* ak_panel_get_first_tool(drgui_element* pPanel);
 
 /// Retrieves a pointer to the next tool that's attached to the given panel.
-easygui_element* ak_panel_get_next_tool(easygui_element* pPanel, easygui_element* pTool);
+drgui_element* ak_panel_get_next_tool(drgui_element* pPanel, drgui_element* pTool);
 
 
 /// Sets the option flags to use for the tab bar.
 ///
 /// @remarks
 ///     This will refresh the tab bar. Usually you will want to only set this once.
-void ak_panel_set_tab_options(easygui_element* pPanel, unsigned int options);
+void ak_panel_set_tab_options(drgui_element* pPanel, unsigned int options);
 
 
 #ifdef __cplusplus
