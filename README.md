@@ -5,13 +5,10 @@ across this library you probably don't want to use it.
 
 # Building
 Compiling this library should just be a matter of building the dependenies and
-adding each .c file to the build. The dr_* and easy_* branded libraries are very
-simple and can be added to the source tree directly.
+adding each .c file to the build.
 
 ## Dependencies
- - dr_libs
- - easy_gui
- - easy_draw
+ - dr_libs (https://github.com/mackron/dr_libs)
  - nanosvg (https://github.com/memononen/nanosvg)
  - GTK+ 3 (Linux Only)
  
