@@ -22,10 +22,6 @@ typedef struct
     ak_application* pApplication;
 
 
-    /// The type of the panel.
-    char type[AK_MAX_PANEL_TYPE_LENGTH];
-
-
     /// The axis the two child panels are split along, if any. When this is not ak_panel_split_axis_none, it is assumed
     /// the panel has two child elements, both of which should be panels.
     ak_panel_split_axis splitAxis;
@@ -409,7 +405,6 @@ drgui_element* ak_create_panel(ak_application* pApplication, drgui_element* pPar
         assert(pPanelData != NULL);
 
         pPanelData->pApplication       = pApplication;
-        pPanelData->type[0]            = '\0';
         pPanelData->splitAxis          = ak_panel_split_axis_none;
         pPanelData->splitPos           = 0;
         pPanelData->splitRatio         = 0;
@@ -477,26 +472,12 @@ void* ak_panel_get_extra_data(drgui_element* pPanel)
 
 void ak_panel_set_type(drgui_element* pPanel, const char* type)
 {
-    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
-    if (pPanelData == NULL) {
-        return;
-    }
-
-    if (type == NULL) {
-        pPanelData->type[0] = '\0';
-    } else {
-        strcpy_s(pPanelData->type, sizeof(pPanelData->type), type);
-    }
+    drgui_set_type(pPanel, type);
 }
 
 const char* ak_panel_get_type(drgui_element* pPanel)
 {
-    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
-    if (pPanelData == NULL) {
-        return NULL;
-    }
-
-    return pPanelData->type;
+    return drgui_get_type(pPanel);
 }
 
 drgui_element* ak_panel_find_by_type_recursive(drgui_element* pPanel, const char* type)
@@ -511,7 +492,7 @@ drgui_element* ak_panel_find_by_type_recursive(drgui_element* pPanel, const char
     }
 
 
-    if (strcmp(pPanelData->type, type) == 0) {
+    if (strcmp(drgui_get_type(pPanel), type) == 0) {
         return pPanel;
     }
 
@@ -536,12 +517,7 @@ drgui_element* ak_panel_find_by_type_recursive(drgui_element* pPanel, const char
 
 bool ak_panel_is_of_type(drgui_element* pPanel, const char* type)
 {
-    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
-    if (pPanelData == NULL) {
-        return false;
-    }
-
-    return strncmp(pPanelData->type, type, strlen(type)) == 0;
+    return drgui_is_of_type(pPanel, type);
 }
 
 
@@ -669,10 +645,17 @@ void ak_panel_enable_ratio_split(drgui_element* pPanel)
 
     pPanelData->maintainSplitRatio = true;
 
+    float panelSize;
     if (pPanelData->splitAxis == ak_panel_split_axis_vertical) {
-        pPanelData->splitRatio = pPanelData->splitPos / drgui_get_width(pPanel);
+        panelSize = drgui_get_width(pPanel);
     } else {
-        pPanelData->splitRatio = pPanelData->splitPos / drgui_get_height(pPanel);
+        panelSize = drgui_get_height(pPanel);
+    }
+
+    if (panelSize == 0) {
+        pPanelData->splitRatio = 1;
+    } else {
+        pPanelData->splitRatio = pPanelData->splitPos / panelSize;
     }
 }
 

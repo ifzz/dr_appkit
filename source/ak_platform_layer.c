@@ -17,10 +17,10 @@ unsigned int ak_get_caret_blink_rate()
 
 unsigned int ak_get_caret_blink_rate()
 {
-    gint blinkTime = 600;
+    gint blinkTime = 1200;
     g_object_get(gtk_settings_get_default(), "gtk-cursor-blink-time", &blinkTime, NULL);
 
-    return (unsigned int)blinkTime;
+    return (unsigned int)blinkTime / 2;
 }
 #endif
 

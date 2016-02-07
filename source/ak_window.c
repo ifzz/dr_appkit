@@ -1818,7 +1818,12 @@ PRIVATE drgui_element* ak_create_window_panel(ak_application* pApplication, ak_w
         return NULL;
     }
 
-    ak_panel_set_type(pElement, "AK.RootWindowPanel");
+    ak_element_user_data_gtk* pUserData = ak_panel_get_extra_data(pElement);
+    assert(pUserData != NULL);
+
+    pUserData->pWindow = pWindow;
+
+    drgui_set_type(pElement, "AK.RootWindowPanel");
 
 
     float dpiScaleX;
@@ -1827,17 +1832,76 @@ PRIVATE drgui_element* ak_create_window_panel(ak_application* pApplication, ak_w
 
     drgui_set_inner_scale(pElement, dpiScaleX, dpiScaleY);
 
-    ak_element_user_data_gtk* pUserData = ak_panel_get_extra_data(pElement);
-    assert(pUserData != NULL);
-
-    pUserData->pWindow = pWindow;
-
     return pElement;
 }
 
 PRIVATE void ak_delete_window_panel(drgui_element* pTopLevelElement)
 {
     drgui_delete_element(pTopLevelElement);
+}
+
+
+static void ak_gtk_on_paint(GtkWidget* pGTKWindow, cairo_t* pCairoContext, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return;
+    }
+
+    // NOTE: Because we are using dr_2d to draw the GUI, the last argument to drgui_draw() must be a pointer
+    //       to the relevant dr2d_surface object.
+
+    double clipLeft;
+    double clipTop;
+    double clipRight;
+    double clipBottom;
+    cairo_clip_extents(pCairoContext, &clipLeft, &clipTop, &clipRight, &clipBottom);
+
+    drgui_rect drawRect;
+    drawRect.left   = (float)clipLeft;
+    drawRect.top    = (float)clipTop;
+    drawRect.right  = (float)clipRight;
+    drawRect.bottom = (float)clipBottom;
+    drgui_draw(pWindow->pPanel, drawRect, pWindow->pSurface);
+
+    // At this point the GUI has been drawn, however nothing has been drawn to the window yet. To do this we will
+    // use cairo directly with a cairo_set_source_surface() / cairo_paint() pair. We can get a pointer to dr_2d's
+    // internal cairo_surface_t object as shown below.
+    cairo_surface_t* pCairoSurface = dr2d_get_cairo_surface_t(pWindow->pSurface);
+    if (pCairoSurface != NULL)
+    {
+        cairo_set_source_surface(pCairoContext, pCairoSurface, 0, 0);
+        cairo_paint(pCairoContext);
+    }
+}
+
+static void ak_gtk_on_onfigure(GtkWidget* pGTKWindow, GdkEventConfigure* pEvent, gpointer pUserData)
+{
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return;
+    }
+
+    // If the window's size has changed, it's panel and surface need to be resized, and then redrawn.
+    if (pEvent->width != dr2d_get_surface_width(pWindow->pSurface) || pEvent->height != dr2d_get_surface_height(pWindow->pSurface))
+    {
+        // Size has changed.
+
+        // dr_2d does not support dynamic resizing of surfaces. Thus, we need to delete and recreate it.
+        if (pWindow->pSurface != NULL) {
+            dr2d_delete_surface(pWindow->pSurface);
+        }
+        pWindow->pSurface = dr2d_create_surface(ak_get_application_drawing_context(pWindow->pApplication), (float)pEvent->width, (float)pEvent->height);
+
+        // We'll also want to resize the root GUI element so that it's the same size as the parent window.
+        drgui_set_size(pWindow->pPanel, (float)pEvent->width, (float)pEvent->height);
+
+
+        // Invalidate the window to force a redraw.
+        gtk_widget_queue_draw(pGTKWindow);
+    }
 }
 
 
@@ -1894,6 +1958,17 @@ ak_window* ak_alloc_and_init_window_gtk(ak_application* pApplication, ak_window*
         free(pWindow);
         return NULL;
     }
+
+
+    // Because we are drawing the GUI ourselves rather than through GTK, we want to disable GTK's default painting
+    // procedure. To do this we use gtk_widget_set_app_paintable(pWindow, TRUE) which will disable GTK's default
+    // painting on the main window. We then connect to the "draw" signal which is where we'll do all of our custom
+    // painting.
+    gtk_widget_set_app_paintable(pGTKWindow, TRUE);
+
+    // Event handlers.
+    g_signal_connect(pGTKWindow, "draw",            G_CALLBACK(ak_gtk_on_paint),    pWindow);   // Paint
+    g_signal_connect(pGTKWindow, "configure-event", G_CALLBACK(ak_gtk_on_onfigure), pWindow);   // Reposition and resize.
 
 
     // The application needs to track this window.
@@ -2339,11 +2414,20 @@ PRIVATE void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
+    if (!drgui_is_of_type(pTopLevelElement, "AK.RootWindowPanel")) {
+        return;
+    }
+
     ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
-    if (pElementData != NULL)
+    if (pElementData != NULL && pElementData->pWindow != NULL && pElementData->pWindow->pGTKWindow != NULL)
     {
         drgui_rect absoluteRect = relativeRect;
         drgui_make_rect_absolute(pElement, &absoluteRect);
+
+        gtk_widget_queue_draw(pElementData->pWindow->pGTKWindow);
+
+        //gtk_widget_queue_draw_area(pElementData->pWindow->pGTKWindow,
+        //    (gint)absoluteRect.left, (gint)absoluteRect.top, (gint)(absoluteRect.right - absoluteRect.left), (gint)(absoluteRect.bottom - absoluteRect.top));
     }
 }
 
