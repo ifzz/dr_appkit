@@ -1702,10 +1702,8 @@ unsigned int g_Win32ClassRegCounter = 0;
 
 void ak_init_platform()
 {
-    if (g_Win32ClassRegCounter > 0)
-    {
+    if (g_Win32ClassRegCounter > 0) {
         g_Win32ClassRegCounter += 1;
-        return true;
     }
 
 
@@ -1719,9 +1717,8 @@ void ak_init_platform()
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
     wc.hIcon         = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(101));
     wc.style         = CS_DBLCLKS;
-    if (!RegisterClassExA(&wc))
-    {
-        return false;
+    if (!RegisterClassExA(&wc)) {
+        return;
     }
 
     // Dialog windows.
@@ -1733,10 +1730,9 @@ void ak_init_platform()
     wcDialog.lpszClassName = g_WindowClass_Dialog;
     wcDialog.hCursor       = LoadCursor(NULL, IDC_ARROW);
     wcDialog.style         = CS_DBLCLKS;
-    if (!RegisterClassExA(&wcDialog))
-    {
+    if (!RegisterClassExA(&wcDialog)) {
         UnregisterClassA(g_WindowClass, NULL);
-        return false;
+        return;
     }
 
     // Popup windows.
@@ -1748,11 +1744,10 @@ void ak_init_platform()
     wcPopup.lpszClassName = g_WindowClass_Popup;
     wcPopup.hCursor       = LoadCursor(NULL, IDC_ARROW);
     wcPopup.style         = CS_DBLCLKS | CS_DROPSHADOW;
-    if (!RegisterClassExA(&wcPopup))
-    {
+    if (!RegisterClassExA(&wcPopup)) {
         UnregisterClassA(g_WindowClass, NULL);
         UnregisterClassA(g_WindowClass_Popup, NULL);
-        return false;
+        return;
     }
 
 

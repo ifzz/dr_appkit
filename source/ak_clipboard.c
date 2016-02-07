@@ -107,10 +107,10 @@ char* ak_clipboard_get_text()
     GlobalUnlock(hTextMem);
     CloseClipboard();
 
-    return textRNLength;
+    return result;
 }
 
-void ak_clipboard_free_text(const char* text)
+void ak_clipboard_free_text(char* text)
 {
     free(text);
 }
