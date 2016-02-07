@@ -16,7 +16,7 @@
 #define PRIVATE static
 #endif
 
-typedef struct 
+typedef struct
 {
     /// A pointer to the main application.
     ak_application* pApplication;
@@ -88,7 +88,7 @@ PRIVATE void ak_panel_refresh_child_alignments(drgui_element* pPanel)
     ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     assert(pPanelData != NULL);
     assert(pPanelData->splitAxis != ak_panel_split_axis_none);
-    
+
     assert(pPanel->pFirstChild != NULL);
     assert(pPanel->pFirstChild->pNextSibling != NULL);
 
@@ -182,7 +182,7 @@ PRIVATE void ak_panel_refresh_tool_container_layout(drgui_element* pPanel)
     if (drgui_get_relative_position_x(pPanelData->pToolContainer) != posX || drgui_get_relative_position_y(pPanelData->pToolContainer) != posY) {
         drgui_set_relative_position(pPanelData->pToolContainer, posX / innerScaleX, posY / innerScaleY);
     }
-    
+
     if (drgui_get_width(pPanelData->pToolContainer) != width || drgui_get_height(pPanelData->pToolContainer) != height) {
         drgui_set_size(pPanelData->pToolContainer, width / innerScaleX, height / innerScaleY);
     }
@@ -263,7 +263,7 @@ PRIVATE void ak_panel_on_paint(drgui_element* pPanel, drgui_rect relativeRect, v
     if (pTheme == NULL) {
         return;
     }
-    
+
 
     // Only draw the background if we have no children.
     if (pPanel->pFirstChild == NULL || (pPanelData->pToolContainer != NULL && pPanelData->pToolContainer->pFirstChild == NULL))
@@ -327,6 +327,7 @@ PRIVATE void ak_panel_on_mouse_move(drgui_element* pElement, int relativeMousePo
 PRIVATE void ak_panel_on_mouse_button_down(drgui_element* pElement, int button, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     (void)stateFlags;
+    (void)button;
 
     ak_panel_data* pPanelData = drgui_get_extra_data(pElement);
     assert(pPanelData != NULL);
@@ -339,6 +340,9 @@ PRIVATE void ak_panel_on_mouse_button_down(drgui_element* pElement, int button, 
 
 PRIVATE void ak_panel_on_tab_bar_size(drgui_element* pTBElement, float newWidth, float newHeight)
 {
+    (void)newWidth;
+    (void)newHeight;
+
     drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
 
@@ -515,7 +519,7 @@ drgui_element* ak_panel_find_by_type_recursive(drgui_element* pPanel, const char
     if (pPanelData->splitAxis != ak_panel_split_axis_none)
     {
         drgui_element* pResult = NULL;
-        
+
         pResult = ak_panel_find_by_type_recursive(ak_panel_get_split_panel_1(pPanel), type);
         if (pResult != NULL) {
             return pResult;
@@ -575,7 +579,7 @@ bool ak_panel_split(drgui_element* pPanel, ak_panel_split_axis splitAxis, float 
 
     pPanelData->splitAxis = splitAxis;
     pPanelData->splitPos  = splitPos;
-    
+
     assert(pChildPanel1 != NULL);
     assert(pChildPanel2 != NULL);
 
@@ -795,7 +799,7 @@ bool ak_panel_attach_tool(drgui_element* pPanel, drgui_element* pTool)
 
     // Activate the new tool.
     ak_panel_activate_tool(pPanel, pTool);
-    
+
     // The tab bar might need to be refreshed.
     ak_panel_refresh_tabs(pPanel);
 

@@ -1,8 +1,9 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
 #include "../include/dr_appkit/ak_platform_layer.h"
+#include "../include/dr_appkit/ak_build_config.h"
 
-#ifdef _WIN32
+#ifdef AK_USE_WIN32
 #include <windows.h>
 
 unsigned int ak_get_caret_blink_rate()
@@ -10,6 +11,19 @@ unsigned int ak_get_caret_blink_rate()
     return GetCaretBlinkTime();
 }
 #endif
+
+#ifdef AK_USE_GTK
+#include <gtk/gtk.h>
+
+unsigned int ak_get_caret_blink_rate()
+{
+    gint blinkTime = 600;
+    g_object_get(gtk_settings_get_default(), "gtk-cursor-blink-time", &blinkTime, NULL);
+
+    return (unsigned int)blinkTime;
+}
+#endif
+
 
 /*
 This is free and unencumbered software released into the public domain.

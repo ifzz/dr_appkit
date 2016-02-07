@@ -15,11 +15,17 @@
 #endif
 
 #ifdef AK_USE_WIN32
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
+
+#ifdef AK_USE_GTK
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
+#endif
 
 struct ak_window
 {
+#ifdef AK_USE_WIN32
     /// The Win32 window handle.
     HWND hWnd;
 
@@ -41,7 +47,19 @@ struct ak_window
 
     /// Keeps track of whether or not the window is marked as deleted.
     bool isMarkedAsDeleted;
+#endif
 
+#ifdef AK_USE_GTK
+    /// A pointer to the GTK window.
+    GtkWidget* pGTKWindow;
+
+    /// The cursor to use with this window.
+    GdkCursor* pGTKCursor;
+
+
+    /// Keeps track of whether or not the cursor is over this window.
+    bool isCursorOver;
+#endif
 
 
     /// A pointer to the application that owns this window.
@@ -72,7 +90,7 @@ struct ak_window
 
     /// The function to call when the window is about to be shown. If false is returned, the window is prevented from being shown.
     ak_window_on_show_proc onShow;
-    
+
     /// The function to call when the window has been activated.
     ak_window_on_activate_proc onActivate;
 
@@ -130,7 +148,56 @@ struct ak_window
     char pExtraData[1];
 };
 
+PRIVATE void ak_detach_window(ak_window* pWindow)
+{
+    if (pWindow->pParent != NULL)
+    {
+        if (pWindow->pParent->pFirstChild == pWindow) {
+            pWindow->pParent->pFirstChild = pWindow->pNextSibling;
+        }
 
+        if (pWindow->pParent->pLastChild == pWindow) {
+            pWindow->pParent->pLastChild = pWindow->pPrevSibling;
+        }
+
+
+        if (pWindow->pPrevSibling != NULL) {
+            pWindow->pPrevSibling->pNextSibling = pWindow->pNextSibling;
+        }
+
+        if (pWindow->pNextSibling != NULL) {
+            pWindow->pNextSibling->pPrevSibling = pWindow->pPrevSibling;
+        }
+    }
+
+    pWindow->pParent      = NULL;
+    pWindow->pPrevSibling = NULL;
+    pWindow->pNextSibling = NULL;
+}
+
+PRIVATE void ak_append_window(ak_window* pWindow, ak_window* pParent)
+{
+    // Detach the child from it's current parent first.
+    ak_detach_window(pWindow);
+
+    pWindow->pParent = pParent;
+    assert(pWindow->pParent != NULL);
+
+    if (pWindow->pParent->pLastChild != NULL) {
+        pWindow->pPrevSibling = pWindow->pParent->pLastChild;
+        pWindow->pPrevSibling->pNextSibling = pWindow;
+    }
+
+    if (pWindow->pParent->pFirstChild == NULL) {
+        pWindow->pParent->pFirstChild = pWindow;
+    }
+
+    pWindow->pParent->pLastChild = pWindow;
+}
+
+
+
+#ifdef AK_USE_WIN32
 static const char* g_WindowClass        = "AK_WindowClass";
 static const char* g_WindowClass_Dialog = "AK_WindowClass_Dialog";
 static const char* g_WindowClass_Popup  = "AK_WindowClass_Popup";
@@ -242,7 +309,7 @@ PRIVATE drgui_element* ak_create_window_panel(ak_application* pApplication, ak_w
         dpiScaleY = 2;
     }
 #endif
-    
+
     drgui_set_inner_scale(pElement, dpiScaleX, dpiScaleY);
 
     element_user_data* pUserData = ak_panel_get_extra_data(pElement);
@@ -260,55 +327,6 @@ PRIVATE void ak_delete_window_panel(drgui_element* pTopLevelElement)
 }
 
 
-PRIVATE void ak_detach_window(ak_window* pWindow)
-{
-    if (pWindow->pParent != NULL)
-    {
-        if (pWindow->pParent->pFirstChild == pWindow) {
-            pWindow->pParent->pFirstChild = pWindow->pNextSibling;
-        }
-
-        if (pWindow->pParent->pLastChild == pWindow) {
-            pWindow->pParent->pLastChild = pWindow->pPrevSibling;
-        }
-
-
-        if (pWindow->pPrevSibling != NULL) {
-            pWindow->pPrevSibling->pNextSibling = pWindow->pNextSibling;
-        }
-
-        if (pWindow->pNextSibling != NULL) {
-            pWindow->pNextSibling->pPrevSibling = pWindow->pPrevSibling;
-        }
-    }
-
-    pWindow->pParent      = NULL;
-    pWindow->pPrevSibling = NULL;
-    pWindow->pNextSibling = NULL;
-}
-
-PRIVATE void ak_append_window(ak_window* pWindow, ak_window* pParent)
-{
-    // Detach the child from it's current parent first.
-    ak_detach_window(pWindow);
-
-    pWindow->pParent = pParent;
-    assert(pWindow->pParent != NULL);
-
-    if (pWindow->pParent->pLastChild != NULL) {
-        pWindow->pPrevSibling = pWindow->pParent->pLastChild;
-        pWindow->pPrevSibling->pNextSibling = pWindow;
-    }
-
-    if (pWindow->pParent->pFirstChild == NULL) {
-        pWindow->pParent->pFirstChild = pWindow;
-    }
-
-    pWindow->pParent->pLastChild = pWindow;
-}
-
-
-
 
 ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_window* pParent, ak_window_type type, HWND hWnd, size_t extraDataSize, const void* pExtraData)
 {
@@ -316,8 +334,6 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     if (pWindow == NULL)
     {
         ak_errorf(pApplication, "Failed to allocate memory for window.");
-
-        DestroyWindow(hWnd);
         return NULL;
     }
 
@@ -327,7 +343,6 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
         ak_errorf(pApplication, "Failed to create drawing surface for window.");
 
         free(pWindow);
-        DestroyWindow(hWnd);
         return NULL;
     }
 
@@ -336,8 +351,8 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     {
         ak_errorf(pApplication, "Failed to create panel element for window.");
 
+        dr2d_delete_surface(pWindow->pSurface);
         free(pWindow);
-        DestroyWindow(hWnd);
         return NULL;
     }
 
@@ -396,7 +411,7 @@ ak_window* ak_alloc_and_init_window_win32(ak_application* pApplication, ak_windo
     } else {
         ak_append_window(pWindow, pParent);
     }
-    
+
 
     return pWindow;
 }
@@ -408,7 +423,7 @@ void ak_uninit_and_free_window_win32(ak_window* pWindow)
     } else {
         ak_detach_window(pWindow);
     }
-    
+
 
 
     SetWindowLongPtrA(pWindow->hWnd, 0, (LONG_PTR)NULL);
@@ -428,7 +443,7 @@ void ak_uninit_and_free_window_win32(ak_window* pWindow)
 PRIVATE void ak_refresh_popup_position(ak_window* pPopupWindow)
 {
     // This function will place the given window (which is assumed to be a popup window) relative to the client area of it's parent.
-    
+
     assert(pPopupWindow != NULL);
     assert(pPopupWindow->type == ak_window_type_popup);
 
@@ -527,7 +542,7 @@ drgui_key ak_win32_to_drgui_key(WPARAM wParam)
 int ak_win32_get_modifier_key_state_flags()
 {
     int stateFlags = 0;
-    
+
     SHORT keyState = GetAsyncKeyState(VK_SHIFT);
     if (keyState & 0x8000) {
         stateFlags |= AK_KEY_STATE_SHIFT_DOWN;
@@ -585,7 +600,7 @@ int ak_win32_get_mouse_event_state_flags(WPARAM wParam)
         stateFlags |= AK_KEY_STATE_ALT_DOWN;
     }
 
-    
+
     return stateFlags;
 }
 
@@ -662,7 +677,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                         pWindowPos->flags &= ~SWP_SHOWWINDOW;
                     }
                 }
-                
+
 
                 break;
             }
@@ -1126,7 +1141,7 @@ PRIVATE ak_window* ak_create_application_window(ak_application* pApplication, ak
 PRIVATE ak_window* ak_create_child_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     assert(pApplication  != NULL);
-    
+
     // A child window must always have a parent.
     if (pParent == NULL)
     {
@@ -1287,91 +1302,7 @@ void ak_delete_window(ak_window* pWindow)
 }
 
 
-ak_application* ak_get_window_application(ak_window* pWindow)
-{
-    if (pWindow == NULL) {
-        return NULL;
-    }
 
-    return pWindow->pApplication;
-}
-
-ak_window_type ak_get_window_type(ak_window* pWindow)
-{
-    if (pWindow == NULL) {
-        return ak_window_type_unknown;
-    }
-
-    return pWindow->type;
-}
-
-ak_window* ak_get_parent_window(ak_window* pWindow)
-{
-    if (pWindow == NULL) {
-        return NULL;
-    }
-
-    return pWindow->pParent;
-}
-
-size_t ak_get_window_extra_data_size(ak_window* pWindow)
-{
-    if (pWindow == NULL) {
-        return 0;
-    }
-
-    return pWindow->extraDataSize;
-}
-
-void* ak_get_window_extra_data(ak_window* pWindow)
-{
-    if (pWindow == NULL) {
-        return NULL;
-    }
-
-    return pWindow->pExtraData;
-}
-
-drgui_element* ak_get_window_panel(ak_window* pWindow)
-{
-    if (pWindow == NULL) {
-        return NULL;
-    }
-
-    return pWindow->pPanel;
-}
-
-dr2d_surface* ak_get_window_surface(ak_window* pWindow)
-{
-    if (pWindow == NULL) {
-        return NULL;
-    }
-
-    return pWindow->pSurface;
-}
-
-
-bool ak_set_window_name(ak_window* pWindow, const char* pName)
-{
-    if (pWindow == NULL) {
-        return false;
-    }
-
-    if (pName == NULL) {
-        return strcpy_s(pWindow->name, sizeof(pWindow->name), "") == 0;
-    } else {
-        return strcpy_s(pWindow->name, sizeof(pWindow->name), pName) == 0;
-    }
-}
-
-const char* ak_get_window_name(ak_window* pWindow)
-{
-    if (pWindow == NULL) {
-        return NULL;
-    }
-
-    return pWindow->name;
-}
 
 
 void ak_set_window_title(ak_window* pWindow, const char* pTitle)
@@ -1438,7 +1369,7 @@ void ak_get_window_size(ak_window* pWindow, int* pWidthOut, int* pHeightOut)
         GetClientRect(pWindow->hWnd, &rect);
     }
 
-    
+
     if (pWidthOut != NULL) {
         *pWidthOut = rect.right - rect.left;
     }
@@ -1485,7 +1416,7 @@ void ak_get_window_position(ak_window* pWindow, int* pPosXOut, int* pPosYOut)
         MapWindowPoints(HWND_DESKTOP, GetParent(pWindow->hWnd), (LPPOINT)&rect, 2);
     }
 
-    
+
     if (pPosXOut != NULL) {
         *pPosXOut = rect.left;
     }
@@ -1606,7 +1537,7 @@ bool ak_is_window_ancestor(ak_window* pAncestor, ak_window* pDescendant)
             return ak_is_window_ancestor(pAncestor, pParent);
         }
     }
-    
+
     return false;
 }
 
@@ -1753,6 +1684,764 @@ void ak_get_window_dpi_scale(ak_window* pWindow, float* pDPIScaleXOut, float* pD
     if (pDPIScaleYOut) {
         *pDPIScaleYOut = scaleY;
     }
+}
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Private APIs
+//
+///////////////////////////////////////////////////////////////////////////////
+
+unsigned int g_Win32ClassRegCounter = 0;
+
+void ak_init_platform()
+{
+    if (g_Win32ClassRegCounter > 0)
+    {
+        g_Win32ClassRegCounter += 1;
+        return true;
+    }
+
+
+    // Standard windows.
+    WNDCLASSEXA wc;
+    ZeroMemory(&wc, sizeof(wc));
+    wc.cbSize        = sizeof(wc);
+    wc.cbWndExtra    = sizeof(ak_window*);
+    wc.lpfnWndProc   = (WNDPROC)GenericWindowProc;
+    wc.lpszClassName = g_WindowClass;
+    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wc.hIcon         = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(101));
+    wc.style         = CS_DBLCLKS;
+    if (!RegisterClassExA(&wc))
+    {
+        return false;
+    }
+
+    // Dialog windows.
+    WNDCLASSEXA wcDialog;
+    ZeroMemory(&wcDialog, sizeof(wcDialog));
+    wcDialog.cbSize        = sizeof(wcDialog);
+    wcDialog.cbWndExtra    = sizeof(ak_window*);
+    wcDialog.lpfnWndProc   = (WNDPROC)GenericWindowProc;
+    wcDialog.lpszClassName = g_WindowClass_Dialog;
+    wcDialog.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wcDialog.style         = CS_DBLCLKS;
+    if (!RegisterClassExA(&wcDialog))
+    {
+        UnregisterClassA(g_WindowClass, NULL);
+        return false;
+    }
+
+    // Popup windows.
+    WNDCLASSEXA wcPopup;
+    ZeroMemory(&wcPopup, sizeof(wcPopup));
+    wcPopup.cbSize        = sizeof(wcPopup);
+    wcPopup.cbWndExtra    = sizeof(ak_window*);
+    wcPopup.lpfnWndProc   = (WNDPROC)GenericWindowProc;
+    wcPopup.lpszClassName = g_WindowClass_Popup;
+    wcPopup.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wcPopup.style         = CS_DBLCLKS | CS_DROPSHADOW;
+    if (!RegisterClassExA(&wcPopup))
+    {
+        UnregisterClassA(g_WindowClass, NULL);
+        UnregisterClassA(g_WindowClass_Popup, NULL);
+        return false;
+    }
+
+
+    g_Win32ClassRegCounter += 1;
+}
+
+void ak_uninit_platform()
+{
+    if (g_Win32ClassRegCounter > 0)
+    {
+        g_Win32ClassRegCounter -= 1;
+
+        if (g_Win32ClassRegCounter == 0)
+        {
+            UnregisterClassA(g_WindowClass,        NULL);
+            UnregisterClassA(g_WindowClass_Dialog, NULL);
+            UnregisterClassA(g_WindowClass_Popup,  NULL);
+        }
+    }
+}
+
+
+void ak_win32_post_quit_message(int exitCode)
+{
+    PostQuitMessage(exitCode);
+}
+
+#endif  //!AK_USE_WIN32
+
+
+#ifdef AK_USE_GTK
+static int g_GTKResultCode = 0;
+static int g_GTKInitCounter = 0;
+
+static GdkCursor* g_GTKCursor_Default = NULL;
+static GdkCursor* g_GTKCursor_IBeam   = NULL;
+
+typedef struct
+{
+    /// A pointer to the window object itself.
+    ak_window* pWindow;
+
+} ak_element_user_data_gtk;
+
+
+void ak_init_platform()
+{
+    if (g_GTKInitCounter == 0) {
+        gtk_init(NULL, NULL);
+    }
+
+    g_GTKInitCounter += 1;
+}
+
+void ak_uninit_platform()
+{
+    if (g_GTKInitCounter > 0) {
+        g_GTKInitCounter -= 1;
+    }
+}
+
+
+
+PRIVATE drgui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow)
+{
+    drgui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(ak_element_user_data_gtk), NULL);
+    if (pElement == NULL) {
+        return NULL;
+    }
+
+    ak_panel_set_type(pElement, "AK.RootWindowPanel");
+
+
+    float dpiScaleX;
+    float dpiScaleY;
+    ak_get_window_dpi_scale(pWindow, &dpiScaleX, &dpiScaleY);
+
+    drgui_set_inner_scale(pElement, dpiScaleX, dpiScaleY);
+
+    ak_element_user_data_gtk* pUserData = ak_panel_get_extra_data(pElement);
+    assert(pUserData != NULL);
+
+    pUserData->pWindow = pWindow;
+
+    return pElement;
+}
+
+PRIVATE void ak_delete_window_panel(drgui_element* pTopLevelElement)
+{
+    drgui_delete_element(pTopLevelElement);
+}
+
+
+ak_window* ak_alloc_and_init_window_gtk(ak_application* pApplication, ak_window* pParent, ak_window_type type, GtkWidget* pGTKWindow, size_t extraDataSize, const void* pExtraData)
+{
+    ak_window* pWindow = malloc(sizeof(*pWindow) + extraDataSize - sizeof(pWindow->pExtraData));
+    if (pWindow == NULL)
+    {
+        ak_errorf(pApplication, "Failed to allocate memory for window.");
+        return NULL;
+    }
+
+    pWindow->pGTKWindow            = pGTKWindow;
+    pWindow->pGTKCursor            = g_GTKCursor_Default;
+    pWindow->isCursorOver          = false;
+    pWindow->pApplication          = pApplication;
+    pWindow->type                  = type;
+    pWindow->pSurface              = NULL;
+    pWindow->name[0]               = '\0';
+    pWindow->onHideFlags           = 0;
+    pWindow->onClose               = NULL;
+    pWindow->onHide                = NULL;
+    pWindow->onShow                = NULL;
+    pWindow->onActivate            = NULL;
+    pWindow->onDeactivate          = NULL;
+    pWindow->onMouseEnter          = NULL;
+    pWindow->onMouseLeave          = NULL;
+    pWindow->onMouseButtonDown     = NULL;
+    pWindow->onMouseButtonUp       = NULL;
+    pWindow->onMouseButtonDblClick = NULL;
+    pWindow->onMouseWheel          = NULL;
+    pWindow->onKeyDown             = NULL;
+    pWindow->onKeyUp               = NULL;
+    pWindow->onPrintableKeyDown    = NULL;
+    pWindow->pParent               = NULL;
+    pWindow->pFirstChild           = NULL;
+    pWindow->pLastChild            = NULL;
+    pWindow->pNextSibling          = NULL;
+    pWindow->pPrevSibling          = NULL;
+    pWindow->extraDataSize         = extraDataSize;
+
+    if (pExtraData != NULL) {
+        memcpy(pWindow->pExtraData, pExtraData, extraDataSize);
+    }
+
+
+    // All windows have a panel assigned to them which is what we use as the root GUI element. The panel is just
+    // a drgui_element.
+    pWindow->pPanel = ak_create_window_panel(pApplication, pWindow);
+    if (pWindow->pPanel == NULL)
+    {
+        ak_errorf(pApplication, "Failed to create panel element for window.");
+
+        free(pWindow);
+        return NULL;
+    }
+
+
+    // The application needs to track this window.
+    if (pParent == NULL) {
+        ak_application_track_top_level_window(pWindow);
+    } else {
+        ak_append_window(pWindow, pParent);
+    }
+
+
+    return pWindow;
+}
+
+void ak_uninit_and_free_window_win32(ak_window* pWindow)
+{
+    if (pWindow->pParent == NULL) {
+        ak_application_untrack_top_level_window(pWindow);
+    } else {
+        ak_detach_window(pWindow);
+    }
+
+
+    ak_delete_window_panel(pWindow->pPanel);
+    pWindow->pPanel = NULL;
+
+    dr2d_delete_surface(pWindow->pSurface);
+    pWindow->pSurface = NULL;
+
+    free(pWindow);
+}
+
+
+PRIVATE ak_window* ak_create_application_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    assert(pApplication != NULL);
+
+    GtkWidget* pGTKWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    if (pGTKWindow == NULL) {
+        return NULL;
+    }
+
+    ak_window* pWindow = ak_alloc_and_init_window_gtk(pApplication, pParent, ak_window_type_application, pGTKWindow, extraDataSize, pExtraData);
+    if (pWindow == NULL) {
+        gtk_widget_destroy(pGTKWindow);
+        return NULL;
+    }
+
+    return pWindow;
+}
+
+PRIVATE ak_window* ak_create_child_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    assert(pApplication  != NULL);
+
+    // TODO: Implement Me.
+    // gtk_window_set_attached_to()???
+    return NULL;
+}
+
+PRIVATE ak_window* ak_create_dialog_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    assert(pApplication != NULL);
+
+    // A dialog window must always have a parent.
+    if (pParent == NULL) {
+        ak_errorf(pApplication, "Attempting to create a dialog window without a parent.");
+        return NULL;
+    }
+
+    GtkWidget* pGTKWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    if (pGTKWindow == NULL) {
+        return NULL;
+    }
+
+    gtk_window_set_type_hint(GTK_WINDOW(pGTKWindow), GDK_WINDOW_TYPE_HINT_DIALOG);
+    gtk_window_set_transient_for(GTK_WINDOW(pGTKWindow), GTK_WINDOW(pParent->pGTKWindow));
+
+    ak_window* pWindow = ak_alloc_and_init_window_gtk(pApplication, pParent, ak_window_type_application, pGTKWindow, extraDataSize, pExtraData);
+    if (pWindow == NULL) {
+        gtk_widget_destroy(pGTKWindow);
+        return NULL;
+    }
+
+    return pWindow;
+}
+
+PRIVATE ak_window* ak_create_popup_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    assert(pApplication != NULL);
+
+    GtkWidget* pGTKWindow = gtk_window_new(GTK_WINDOW_POPUP);
+    if (pGTKWindow == NULL) {
+        return NULL;
+    }
+
+    ak_window* pWindow = ak_alloc_and_init_window_gtk(pApplication, pParent, ak_window_type_application, pGTKWindow, extraDataSize, pExtraData);
+    if (pWindow == NULL) {
+        gtk_widget_destroy(pGTKWindow);
+        return NULL;
+    }
+
+    return pWindow;
+}
+
+
+ak_window* ak_create_window(ak_application* pApplication, ak_window_type type, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+{
+    if (pApplication == NULL || type == ak_window_type_unknown) {
+        return NULL;
+    }
+
+    switch (type)
+    {
+        case ak_window_type_application:
+        {
+            return ak_create_application_window(pApplication, pParent, extraDataSize, pExtraData);
+        }
+
+        case ak_window_type_child:
+        {
+            return ak_create_child_window(pApplication, pParent, extraDataSize, pExtraData);
+        }
+
+        case ak_window_type_dialog:
+        {
+            return ak_create_dialog_window(pApplication, pParent, extraDataSize, pExtraData);
+        }
+
+        case ak_window_type_popup:
+        {
+            return ak_create_popup_window(pApplication, pParent, extraDataSize, pExtraData);
+        }
+
+        case ak_window_type_unknown:
+        default:
+        {
+            return NULL;
+        }
+    }
+}
+
+void ak_delete_window(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+}
+
+
+
+
+
+void ak_set_window_title(ak_window* pWindow, const char* pTitle)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    gtk_window_set_title(GTK_WINDOW(pWindow->pGTKWindow), pTitle);
+}
+
+void ak_get_window_title(ak_window* pWindow, char* pTitleOut, size_t titleOutSize)
+{
+    if (pTitleOut == NULL || titleOutSize == 0) {
+        return;
+    }
+
+    if (pWindow == NULL) {
+        pTitleOut[0] = '\0';
+        return;
+    }
+
+    const char* pTitle = gtk_window_get_title(GTK_WINDOW(pWindow->pGTKWindow));
+    dr_strncpy_s(pTitleOut, titleOutSize, pTitle, _TRUNCATE);
+}
+
+
+void ak_set_window_size(ak_window* pWindow, int width, int height)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    gtk_window_resize(GTK_WINDOW(pWindow->pGTKWindow), width, height);
+}
+
+void ak_get_window_size(ak_window* pWindow, int* pWidthOut, int* pHeightOut)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    gtk_window_get_size(GTK_WINDOW(pWindow->pGTKWindow), pWidthOut, pHeightOut);
+}
+
+
+void ak_set_window_position(ak_window* pWindow, int posX, int posY)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    gtk_window_move(GTK_WINDOW(pWindow->pGTKWindow), posX, posY);
+}
+
+void ak_get_window_position(ak_window* pWindow, int* pPosXOut, int* pPosYOut)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    gtk_window_get_position(GTK_WINDOW(pWindow->pGTKWindow), pPosXOut, pPosYOut);
+}
+
+void ak_center_window(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    gtk_window_set_position(GTK_WINDOW(pWindow->pGTKWindow), GTK_WIN_POS_CENTER);
+}
+
+
+void ak_show_window(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    gtk_window_present(GTK_WINDOW(pWindow->pGTKWindow));
+}
+
+void ak_show_window_maximized(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    gtk_window_present(GTK_WINDOW(pWindow->pGTKWindow));    // <-- Is this needed?
+    gtk_window_maximize(GTK_WINDOW(pWindow->pGTKWindow));
+}
+
+void show_window_sized(ak_window* pWindow, int width, int height)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    // Set the size first.
+    ak_set_window_size(pWindow, width, height);
+
+    // Now show the window in it's default state.
+    ak_show_window(pWindow);
+}
+
+void ak_hide_window(ak_window* pWindow, unsigned int flags)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    pWindow->onHideFlags = flags;
+    gtk_widget_hide(GTK_WIDGET(pWindow->pGTKWindow));
+}
+
+
+bool ak_is_window_descendant(ak_window* pDescendant, ak_window* pAncestor)
+{
+    if (pDescendant == NULL || pAncestor == NULL) {
+        return false;
+    }
+
+    return ak_is_window_ancestor(pAncestor, pDescendant);
+}
+
+bool ak_is_window_ancestor(ak_window* pAncestor, ak_window* pDescendant)
+{
+    if (pAncestor == NULL || pDescendant == NULL) {
+        return false;
+    }
+
+    ak_window* pParent = ak_get_parent_window(pDescendant);
+    if (pParent != NULL)
+    {
+        if (pParent == pAncestor) {
+            return true;
+        } else {
+            return ak_is_window_ancestor(pAncestor, pParent);
+        }
+    }
+
+    return false;
+}
+
+
+ak_window* ak_get_panel_window(drgui_element* pPanel)
+{
+    drgui_element* pTopLevelPanel = drgui_find_top_level_element(pPanel);
+    if (pTopLevelPanel == NULL) {
+        return NULL;
+    }
+
+    if (!ak_panel_is_of_type(pTopLevelPanel, "AK.RootWindowPanel")) {
+        return NULL;
+    }
+
+    ak_element_user_data_gtk* pWindowData = ak_panel_get_extra_data(pTopLevelPanel);
+    assert(pWindowData != NULL);
+
+    assert(ak_panel_get_extra_data_size(pTopLevelPanel) == sizeof(ak_element_user_data_gtk));      // A loose check to help ensure we're working with the right kind of panel.
+    return pWindowData->pWindow;
+}
+
+
+void ak_set_window_cursor(ak_window* pWindow, ak_cursor_type cursor)
+{
+    assert(pWindow != NULL);
+
+    switch (cursor)
+    {
+        case ak_cursor_type_ibeam:
+        {
+            pWindow->pGTKCursor = g_GTKCursor_IBeam;
+        } break;
+
+
+        case ak_cursor_type_none:
+        {
+            pWindow->pGTKCursor = NULL;
+        } break;
+
+        //case cursor_type_arrow:
+        case ak_cursor_type_default:
+        default:
+        {
+            pWindow->pGTKCursor = g_GTKCursor_Default;
+        } break;
+    }
+
+    // If the cursor is currently inside the window it needs to be changed right now.
+    if (ak_is_cursor_over_window(pWindow))
+    {
+        gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(pWindow->pGTKWindow)), pWindow->pGTKCursor);
+    }
+}
+
+bool ak_is_cursor_over_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+    return pWindow->isCursorOver;
+}
+
+
+void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut)
+{
+    (void)pWindow;
+
+    if (pDPIXOut) {
+        *pDPIXOut = 96;
+    }
+    if (pDPIYOut) {
+        *pDPIYOut = 96;
+    }
+}
+
+void ak_get_window_dpi_scale(ak_window* pWindow, float* pDPIScaleXOut, float* pDPIScaleYOut)
+{
+    float scaleX = 1;
+    float scaleY = 1;
+
+    if (pWindow != NULL)
+    {
+        // TODO: Add support for scaling to GTK.
+        scaleX = 1;
+        scaleY = 1;
+    }
+
+    if (pDPIScaleXOut) {
+        *pDPIScaleXOut = scaleX;
+    }
+    if (pDPIScaleYOut) {
+        *pDPIScaleYOut = scaleY;
+    }
+}
+
+
+PRIVATE void ak_on_global_capture_mouse(drgui_element* pElement)
+{
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL) {
+        //gdk_device_grab();
+    }
+}
+
+PRIVATE void ak_on_global_release_mouse(drgui_element* pElement)
+{
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL) {
+        //ReleaseCapture();
+    }
+}
+
+PRIVATE void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_element* pPrevCapturedElement)
+{
+    (void)pPrevCapturedElement;
+
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL) {
+        gtk_widget_grab_focus(GTK_WIDGET(pElementData->pWindow->pGTKWindow));
+    }
+}
+
+PRIVATE void ak_on_global_release_keyboard(drgui_element* pElement, drgui_element* pNewCapturedElement)
+{
+    (void)pNewCapturedElement;
+
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL) {
+        gtk_widget_grab_focus(NULL);
+    }
+}
+
+PRIVATE void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
+{
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData != NULL)
+    {
+        drgui_rect absoluteRect = relativeRect;
+        drgui_make_rect_absolute(pElement, &absoluteRect);
+    }
+}
+
+void ak_gtk_post_quit_message(int resultCode)
+{
+    g_GTKResultCode = resultCode;
+    gtk_main_quit();
+}
+#endif
+
+
+
+//// Functions below are cross-platform ////
+
+ak_application* ak_get_window_application(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->pApplication;
+}
+
+ak_window_type ak_get_window_type(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return ak_window_type_unknown;
+    }
+
+    return pWindow->type;
+}
+
+ak_window* ak_get_parent_window(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->pParent;
+}
+
+size_t ak_get_window_extra_data_size(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return 0;
+    }
+
+    return pWindow->extraDataSize;
+}
+
+void* ak_get_window_extra_data(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->pExtraData;
+}
+
+drgui_element* ak_get_window_panel(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->pPanel;
+}
+
+dr2d_surface* ak_get_window_surface(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->pSurface;
+}
+
+
+bool ak_set_window_name(ak_window* pWindow, const char* pName)
+{
+    if (pWindow == NULL) {
+        return false;
+    }
+
+    if (pName == NULL) {
+        return strcpy_s(pWindow->name, sizeof(pWindow->name), "") == 0;
+    } else {
+        return strcpy_s(pWindow->name, sizeof(pWindow->name), pName) == 0;
+    }
+}
+
+const char* ak_get_window_name(ak_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
+    return pWindow->name;
 }
 
 
@@ -1942,108 +2631,6 @@ void ak_window_on_printable_key_down(ak_window* pWindow, unsigned int character,
     }
 }
 
-
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// Private APIs
-//
-///////////////////////////////////////////////////////////////////////////////
-
-unsigned int g_Win32ClassRegCounter = 0;
-
-bool ak_win32_register_window_classes()
-{
-    if (g_Win32ClassRegCounter > 0)
-    {
-        g_Win32ClassRegCounter += 1;
-        return true;
-    }
-
-
-    // Standard windows.
-    WNDCLASSEXA wc;
-    ZeroMemory(&wc, sizeof(wc));
-    wc.cbSize        = sizeof(wc);
-    wc.cbWndExtra    = sizeof(ak_window*);
-    wc.lpfnWndProc   = (WNDPROC)GenericWindowProc;
-    wc.lpszClassName = g_WindowClass;
-    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wc.hIcon         = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(101));
-    wc.style         = CS_DBLCLKS;
-    if (!RegisterClassExA(&wc))
-    {
-        return false;
-    }
-
-    // Dialog windows.
-    WNDCLASSEXA wcDialog;
-    ZeroMemory(&wcDialog, sizeof(wcDialog));
-    wcDialog.cbSize        = sizeof(wcDialog);
-    wcDialog.cbWndExtra    = sizeof(ak_window*);
-    wcDialog.lpfnWndProc   = (WNDPROC)GenericWindowProc;
-    wcDialog.lpszClassName = g_WindowClass_Dialog;
-    wcDialog.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wcDialog.style         = CS_DBLCLKS;
-    if (!RegisterClassExA(&wcDialog))
-    {
-        UnregisterClassA(g_WindowClass, NULL);
-        return false;
-    }
-
-    // Popup windows.
-    WNDCLASSEXA wcPopup;
-    ZeroMemory(&wcPopup, sizeof(wcPopup));
-    wcPopup.cbSize        = sizeof(wcPopup);
-    wcPopup.cbWndExtra    = sizeof(ak_window*);
-    wcPopup.lpfnWndProc   = (WNDPROC)GenericWindowProc;
-    wcPopup.lpszClassName = g_WindowClass_Popup;
-    wcPopup.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wcPopup.style         = CS_DBLCLKS | CS_DROPSHADOW;
-    if (!RegisterClassExA(&wcPopup))
-    {
-        UnregisterClassA(g_WindowClass, NULL);
-        UnregisterClassA(g_WindowClass_Popup, NULL);
-        return false;
-    }
-
-
-    g_Win32ClassRegCounter += 1;
-    return true;
-}
-
-void ak_win32_unregister_window_classes()
-{
-    if (g_Win32ClassRegCounter > 0)
-    {
-        g_Win32ClassRegCounter -= 1;
-
-        if (g_Win32ClassRegCounter == 0)
-        {
-            UnregisterClassA(g_WindowClass,        NULL);
-            UnregisterClassA(g_WindowClass_Dialog, NULL);
-            UnregisterClassA(g_WindowClass_Popup,  NULL);
-        }
-    }
-}
-
-void ak_win32_post_quit_message(int exitCode)
-{
-    PostQuitMessage(exitCode);
-}
-
-#endif  //!AK_USE_WIN32
-
-#ifdef AK_USE_GTK
-#endif
-
-
-
-//// Functions below are cross-platform ////
 
 void ak_connect_gui_to_window_system(drgui_context* pGUI)
 {

@@ -1,8 +1,9 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
 #include "../include/dr_appkit/ak_clipboard.h"
+#include "../include/dr_appkit/ak_build_config.h"
 
-#ifdef _WIN32
+#ifdef AK_USE_WIN32
 #include <windows.h>
 
 bool ak_clipboard_set_text(const char* text, size_t textLength)
@@ -61,7 +62,7 @@ bool ak_clipboard_set_text(const char* text, size_t textLength)
     }
 
     *textRN = '\0';
-    
+
 
     GlobalUnlock(hTextMem);
 
@@ -77,7 +78,7 @@ bool ak_clipboard_set_text(const char* text, size_t textLength)
     return true;
 }
 
-size_t ak_clipboard_get_text(char* textOut, size_t textOutSize)
+char* ak_clipboard_get_text()
 {
     if (!IsClipboardFormatAvailable(CF_TEXT)) {
         return 0;
@@ -100,16 +101,48 @@ size_t ak_clipboard_get_text(char* textOut, size_t textOutSize)
     }
 
     size_t textRNLength = strlen(textRN);
-    if (textOut != NULL) {
-        strncpy_s(textOut, textOutSize, textRN, _TRUNCATE);
-    }
+    char* result = malloc(textRNLength + 1);
+    strcpy_s(result, textRNLength + 1, textRN);
 
     GlobalUnlock(hTextMem);
     CloseClipboard();
 
     return textRNLength;
 }
+
+void ak_clipboard_free_text(const char* text)
+{
+    free(text);
+}
 #endif
+
+
+#ifdef AK_USE_GTK
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
+#include <string.h>
+
+bool ak_clipboard_set_text(const char* text, size_t textLength)
+{
+    if (textLength == (size_t)-1) {
+        textLength = strlen(text);
+    }
+
+    gtk_clipboard_set_text(gtk_clipboard_get_default(gdk_display_get_default()), text, textLength);
+    return true;
+}
+
+char* ak_clipboard_get_text()
+{
+    return gtk_clipboard_wait_for_text(gtk_clipboard_get_default(gdk_display_get_default()));
+}
+
+void ak_clipboard_free_text(char* text)
+{
+    g_free(text);
+}
+#endif
+
 
 /*
 This is free and unencumbered software released into the public domain.

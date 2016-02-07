@@ -184,7 +184,7 @@ bool ak_parse_config_from_file(ak_config* pConfig, drvfs_file* pFile, ak_on_conf
     context.pCurrentLayout   = pConfig->pRootLayout;
     context.onError          = onError;
     context.pOnErrorUserData = pOnErrorUserData;
-    dr_parse_key_value_pairs(ak_config_on_read_from_file_proc, ak_config_on_pair, NULL, &context);
+    dr_parse_key_value_pairs(ak_config_on_read_from_file_proc, ak_config_on_pair, ak_config_on_error, &context);
 
     if (context.foundError) {
         ak_uninit_config(pConfig);
@@ -203,7 +203,7 @@ bool ak_parse_config_from_string(ak_config* pConfig, const char* configString, a
     if (!ak_init_config(pConfig)) {
         return false;
     }
-    
+
 
     ak_config_parse_context context;
     memset(&context, 0, sizeof(context));

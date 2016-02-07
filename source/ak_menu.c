@@ -82,7 +82,7 @@ struct ak_menu
     /// The size of the sub-menu arrow, assuming it's square.
     float arrowSize;
 
-    
+
 
 
     /// The function to call when an item needs to be measured.
@@ -153,7 +153,7 @@ struct ak_menu_item
     /// Whether or not the item is a separator.
     bool isSeparator;
 
-    
+
     /// Whether or not the item is disabled.
     bool isDisabled;
 
@@ -545,6 +545,8 @@ void ak_menu_on_mouse_move(drgui_element* pMenuElement, int relativeMousePosX, i
 void ak_menu_on_mouse_button_up(drgui_element* pMenuElement, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     (void)stateFlags;
+    (void)relativeMousePosX;
+    (void)relativeMousePosY;
 
     ak_menu* pMenu = ak_get_window_extra_data(ak_get_panel_window(pMenuElement));
     if (pMenu == NULL) {
@@ -592,7 +594,7 @@ void ak_menu_on_paint(drgui_element* pMenuElement, drgui_rect relativeClippingRe
     float scaleY;
     drgui_get_inner_scale(pMenuElement, &scaleX, &scaleY);
 
-    
+
     // Top and bottom padding.
     float menuWidth;
     float menuHeight;
@@ -604,7 +606,7 @@ void ak_menu_on_paint(drgui_element* pMenuElement, drgui_rect relativeClippingRe
     drgui_draw_rect(pMenuElement, drgui_make_rect(borderWidth, borderWidth, menuWidth - borderWidth, borderWidth + pMenu->paddingY), pMenu->backgroundColor, pPaintData);
     drgui_draw_rect(pMenuElement, drgui_make_rect(borderWidth, menuHeight - borderWidth - pMenu->paddingY, menuWidth - borderWidth, menuHeight - borderWidth), pMenu->backgroundColor, pPaintData);
 
-    
+
 
     // Border.
 
@@ -616,7 +618,7 @@ void ak_menu_on_paint(drgui_element* pMenuElement, drgui_rect relativeClippingRe
             if (pMenu->borderMaskOffset > 0) {
                 drgui_draw_rect(pMenuElement, drgui_make_rect(borderRect.left, borderRect.top, borderRect.left + pMenu->borderMaskOffset, borderRect.bottom), pMenu->borderColor, pPaintData);
             }
-            
+
             drgui_draw_rect(pMenuElement, drgui_make_rect(borderRect.left + pMenu->borderMaskOffset, borderRect.top, borderRect.left + pMenu->borderMaskOffset + pMenu->borderMaskLength, borderRect.bottom), pMenu->backgroundColor, pPaintData);
             drgui_draw_rect(pMenuElement, drgui_make_rect(borderRect.left + pMenu->borderMaskOffset + pMenu->borderMaskLength, borderRect.top, borderRect.right, borderRect.bottom), pMenu->borderColor, pPaintData);
         }
@@ -625,7 +627,7 @@ void ak_menu_on_paint(drgui_element* pMenuElement, drgui_rect relativeClippingRe
             drgui_draw_rect(pMenuElement, borderRect, pMenu->borderColor, pPaintData);
         }
     }
-    
+
     // Bottom
     {
         drgui_rect borderRect = drgui_make_rect(0, menuHeight - borderWidth, menuWidth, menuHeight);
@@ -754,6 +756,9 @@ PRIVATE void ak_menu_on_measure_item_default(ak_menu_item* pMI, float* pWidthOut
 
 PRIVATE void ak_menu_on_paint_item_default(drgui_element* pMenuElement, ak_menu_item* pMI, drgui_rect relativeClippingRect, float posX, float posY, float width, float height, void* pPaintData)
 {
+    (void)relativeClippingRect;
+    (void)width;
+
     assert(pMI != NULL);
 
     ak_menu* pMenu = ak_get_window_extra_data(pMI->pMenuWindow);
@@ -778,7 +783,7 @@ PRIVATE void ak_menu_on_paint_item_default(drgui_element* pMenuElement, ak_menu_
 
     drgui_color bgcolor   = pMenu->backgroundColor;
     drgui_color textColor = pMenu->textColor;
-    
+
     // Separators are treated differently to normal items.
     if (pMI->isSeparator)
     {
@@ -857,7 +862,7 @@ PRIVATE void ak_menu_on_paint_item_default(drgui_element* pMenuElement, ak_menu_
 
         // Space between the main text and the shortcut.
         drgui_draw_rect(pMenuElement, drgui_make_rect(posX + pMenu->textDrawPosX + textWidth, posY + pMenu->itemPadding, posX + pMenu->shortcutTextDrawPosX, posY + height - padding), bgcolor, pPaintData);
-    
+
 
         // Shortcut text.
         float shortcutTextWidth = 0;
@@ -966,7 +971,7 @@ PRIVATE void ak_menu_resize_by_items(ak_window* pMenuWindow)
             menuHeight += itemHeight;
         }
     }
-    
+
     menuWidth  += borderWidth*2;
     menuHeight += pMenu->paddingY*2 + borderWidth*2;
 
@@ -999,7 +1004,7 @@ PRIVATE ak_menu_item* ak_menu_find_item_under_point(ak_window* pMenuWindow, floa
         {
             return pMI;
         }
-        
+
         runningPosY += itemHeight;
     }
 
@@ -1037,7 +1042,7 @@ ak_menu_item* ak_create_menu_item(ak_window* pMenuWindow, size_t extraDataSize, 
     pMI->isSeparator     = false;
     pMI->isDisabled      = false;
     pMI->onPicked        = NULL;
-    
+
     pMI->extraDataSize = extraDataSize;
     if (pExtraData != NULL) {
         memcpy(pMI->pExtraData, pExtraData, extraDataSize);
@@ -1147,7 +1152,7 @@ drgui_image* ak_mi_get_icon(ak_menu_item* pMI)
     if (pMI == NULL) {
         return NULL;
     }
-    
+
     return pMI->pIcon;
 }
 

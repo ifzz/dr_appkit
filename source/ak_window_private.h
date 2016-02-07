@@ -12,28 +12,23 @@ extern "C" {
 typedef struct drgui_context drgui_context;
 typedef struct ak_window ak_window;
 
+
+/// Initializes the underlying platform layer.
+void ak_init_platform();
+
+/// Uninitializes the underlying platform layer.
+void ak_uninit_platform();
+
+
 #ifdef AK_USE_WIN32
-
-/// Win32 Only. Registers the Win32 window classes.
-///
-/// @remarks
-///     This will return true if the window classes have already been initialized.
-///     @par
-///     This is not thread safe.
-///     @par
-///     This can be called multiple times, however each call must be paired with a call to ak_win32_unregister_window_classes().
-bool ak_win32_register_window_classes();
-
-/// Win32 Only. Unregisters the Win32 window classes.
-///
-/// @remarks
-///     This is not thread safe.
-void ak_win32_unregister_window_classes();
-
 /// Win32 Only. Posts a quit message to the main loop.
 void ak_win32_post_quit_message(int resultCode);
-
 #endif  //!AK_USE_WIN32
+
+#ifdef AK_USE_GTK
+/// GTK Only. Exists the main loop.
+void ak_gtk_post_quit_message(int resultCode);
+#endif  //!AK_USE_GTK
 
 
 /// Connects the given GUI context to the undering windowing system by registering the appropriate global outboud event handlers.

@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <assert.h>
 
 #ifndef PRIVATE
@@ -39,7 +40,7 @@ struct ak_application
 
     /// The log callback.
     ak_log_proc onLog;
-    
+
 
     /// The drawing context.
     dr2d_context* pDrawingContext;
@@ -158,7 +159,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
         // Logging
         pApplication->onLog = NULL;
-        
+
         char logDirPath[DRVFS_MAX_PATH];
         if (ak_get_log_file_folder_path(pApplication, logDirPath, sizeof(logDirPath)))
         {
@@ -263,12 +264,10 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         }
 
 
+        // Everything looks good at this point, so now is a good time to setup the window system. This is the part that makes
+        // ak_create_application() not thread safe.
+        ak_init_platform();
 
-        // Everything looks good at this point, so now is a good time to setup the window system.
-#ifdef AK_USE_WIN32
-        // On Windows, we need to register the window classes. This is the part that makes ak_create_application() not thread safe.
-        ak_win32_register_window_classes();
-#endif
 
         // The GUI needs to be connected to the window system.
         ak_connect_gui_to_window_system(pApplication->pGUI);
@@ -302,12 +301,13 @@ void ak_delete_application(ak_application* pApplication)
 
 
 #ifdef AK_USE_WIN32
-    // On Windows, we need to unregister the window classes. This is the part that makes ak_delete_application() not thread safe.
-    ak_win32_unregister_window_classes();
-
     // The timer window.
     DestroyWindow(pApplication->hTimerWnd);
 #endif
+
+    // The platform layer needs to be uninitialized at the end just before freeing the application. This ensures all window
+    // and whatnot are destroyed first.
+    ak_uninit_platform();
 
 
     // Free the application object last.
@@ -481,7 +481,7 @@ void ak_logf(ak_application* pApplication, const char* format, ...)
     {
         char msg[4096];
         vsnprintf(msg, sizeof(msg), format, args);
-        
+
         ak_log(pApplication, msg);
     }
     va_end(args);
@@ -499,7 +499,7 @@ void ak_warningf(ak_application* pApplication, const char* format, ...)
     {
         char msg[4096];
         vsnprintf(msg, sizeof(msg), format, args);
-        
+
         ak_warning(pApplication, msg);
     }
     va_end(args);
@@ -517,7 +517,7 @@ void ak_errorf(ak_application* pApplication, const char* format, ...)
     {
         char msg[4096];
         vsnprintf(msg, sizeof(msg), format, args);
-        
+
         ak_error(pApplication, msg);
     }
     va_end(args);
@@ -1066,6 +1066,70 @@ void ak_delete_timer(ak_timer* pTimer)
 }
 #endif
 
+#ifdef AK_USE_GTK
+#include <gtk/gtk.h>
+
+struct ak_timer
+{
+    /// The GTK timer ID.
+    guint timerID;
+
+    /// The timeout in milliseconds.
+    unsigned int timeoutInMilliseconds;
+
+    /// The callback function.
+    ak_timer_proc callback;
+
+    /// The user data passed to ak_create_timer().
+    void* pUserData;
+};
+
+static gboolean ak_timer_proc_gtk(gpointer data)
+{
+    ak_timer* pTimer = (ak_timer*)data;
+    if (pTimer == NULL) {
+        assert(false);
+        return 0;
+    }
+
+    if (pTimer->callback != NULL) {
+        pTimer->callback(pTimer, pTimer->pUserData);
+    }
+
+    return true;
+}
+
+
+ak_timer* ak_create_timer(ak_application* pApplication, unsigned int timeoutInMilliseconds, ak_timer_proc callback, void* pUserData)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    ak_timer* pTimer = malloc(sizeof(*pTimer));
+    if (pTimer == NULL) {
+        return NULL;
+    }
+
+    pTimer->timerID               = g_timeout_add(timeoutInMilliseconds, ak_timer_proc_gtk, pTimer);
+    pTimer->timeoutInMilliseconds = timeoutInMilliseconds;
+    pTimer->callback              = callback;
+    pTimer->pUserData             = pUserData;
+
+    return pTimer;
+}
+
+void ak_delete_timer(ak_timer* pTimer)
+{
+    if (pTimer == NULL) {
+        return;
+    }
+
+    g_source_remove(pTimer->timerID);
+    free(pTimer);
+}
+#endif
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1098,7 +1162,8 @@ PRIVATE int ak_main_loop(ak_application* pApplication)
 
 #ifdef AK_USE_GTK
     (void)pApplication;
-    return -1;
+    gtk_main();
+    return 0;   // TODO: Return proper error codes.
 #endif
 }
 
@@ -1135,7 +1200,7 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
             if (ak_parse_config_from_file(&config, pConfigFile, ak_on_config_error, pApplication))
             {
                 bool result = ak_apply_config(pApplication, &config);
-                
+
                 ak_uninit_config(&config);
                 return result;
             }
@@ -1217,7 +1282,7 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, d
         ak_set_window_title(pWindow, attr.title);
         ak_set_window_position(pWindow, attr.posX, attr.posY);
         ak_set_window_size(pWindow, attr.width, attr.height);
-        
+
         if (attr.maximized) {
             ak_show_window_maximized(pWindow);
         } else {
@@ -1252,7 +1317,7 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, d
                 ak_warning(pApplication, "Attempting to set panel type of a top-level panel which is illegal.");
             }
         }
-        
+
 
         if (attr.splitAxis == ak_panel_split_axis_none)
         {

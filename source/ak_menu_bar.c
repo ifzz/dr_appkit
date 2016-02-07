@@ -2,7 +2,9 @@
 
 #include "../include/dr_appkit/ak_menu_bar.h"
 #include "../include/dr_appkit/ak_window.h"
+#include <dr_libs/dr_util.h>
 #include <math.h>
+#include <string.h>
 #include <assert.h>
 
 #ifndef PRIVATE
@@ -463,7 +465,7 @@ void ak_mb_on_mouse_move(drgui_element* pMBElement, int relativeMousePosX, int r
 
     ak_menu_bar_item* pOldFocusedItem = pMB->pFocusedItem;
     ak_menu_bar_item* pNewFocusedItem = ak_mb_find_item_under_point(pMBElement, (float)relativeMousePosX, (float)relativeMousePosY);
-    
+
     if (pOldFocusedItem != pNewFocusedItem)
     {
         if (pMB->isExpanded) {
@@ -481,6 +483,9 @@ void ak_mb_on_mouse_move(drgui_element* pMBElement, int relativeMousePosX, int r
 void ak_mb_on_mouse_button_down(drgui_element* pMBElement, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     (void)stateFlags;
+    (void)mouseButton;
+    (void)relativeMousePosX;
+    (void)relativeMousePosY;
 
     ak_menu_bar* pMB = drgui_get_extra_data(pMBElement);
     if (pMB == NULL) {
@@ -629,6 +634,8 @@ PRIVATE void ak_on_mmbi_measure_default(ak_menu_bar_item* pMBI, float* pWidthOut
 
 PRIVATE void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_item* pMBI, drgui_rect clippingRect, float offsetX, float offsetY, float width, float height, void* pPaintData)
 {
+    (void)clippingRect;
+
     ak_menu_bar* pMB = drgui_get_extra_data(pMBI->pMBElement);
     if (pMB == NULL) {
         return;
@@ -657,7 +664,7 @@ PRIVATE void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_ite
         }
     }
 
-    
+
 
     float textPosX = pMB->itemPaddingX;
     float textPosY = (height - textHeight) / 2;
@@ -680,6 +687,8 @@ PRIVATE void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_ite
 
 PRIVATE void ak_mb_on_menu_hide(ak_window* pMenu, unsigned int flags, void* pUserData)
 {
+    (void)pMenu;
+
     drgui_element* pMBElement = pUserData;
     if (pMBElement == NULL) {
         return;
@@ -711,7 +720,7 @@ PRIVATE void ak_mb_on_menu_show(ak_window* pMenu, void* pUserData)
     if (pMBElement == NULL) {
         return;
     }
-    
+
     ak_menu_bar* pMB = drgui_get_extra_data(pMBElement);
     if (pMB == NULL) {
         return;
@@ -906,7 +915,7 @@ PRIVATE void ak_mbi_detach(ak_menu_bar_item* pMBI)
     pMBI->pPrevItem  = NULL;
     pMBI->pMBElement = NULL;
 
-    
+
     // The content of the menu has changed so we'll need to schedule a redraw.
     drgui_dirty(pMBI->pMBElement, drgui_get_local_rect(pMBI->pMBElement));
 }
