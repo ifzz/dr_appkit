@@ -203,7 +203,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
             return NULL;
         }
 
-        pApplication->pGUI = drgui_create_context_easy_draw(pApplication->pDrawingContext);
+        pApplication->pGUI = drgui_create_context_dr_2d(pApplication->pDrawingContext);
         if (pApplication->pGUI == NULL) {
             dr2d_delete_context(pApplication->pDrawingContext);
             free(pApplication);
