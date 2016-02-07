@@ -1948,6 +1948,11 @@ PRIVATE ak_window* ak_create_child_window(ak_application* pApplication, ak_windo
 {
     assert(pApplication  != NULL);
 
+    (void)pApplication;
+    (void)pParent;
+    (void)extraDataSize;
+    (void)pExtraData;
+
     // TODO: Implement Me.
     // gtk_window_set_attached_to()???
     return NULL;
