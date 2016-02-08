@@ -668,7 +668,6 @@ PRIVATE void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_ite
 
     float textPosX = pMB->itemPaddingX;
     float textPosY = (height - textHeight) / 2;
-    drgui_draw_text(pMBElement, pMB->pFont, pMBI->text, (int)strlen(pMBI->text), offsetX + textPosX, offsetY + textPosY, pMB->textColor, bgcolor /*drgui_rgb(255, 128, 128)*/, pPaintData);
 
     // Padding around text.
     drgui_draw_rect(pMBElement, drgui_make_rect(offsetX + 0,                    offsetY + 0,                     offsetX + textPosX,                                 offsetY + height),   bgcolor, pPaintData); // Left
@@ -683,6 +682,9 @@ PRIVATE void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_ite
         drgui_draw_rect(pMBElement, drgui_make_rect(offsetX + 0,                   offsetY + 0, offsetX + borderWidth,         offsetY + height),      pMB->borderColorExpanded, pPaintData);
         drgui_draw_rect(pMBElement, drgui_make_rect(offsetX + width - borderWidth, offsetY + 0, offsetX + width,               offsetY + height),      pMB->borderColorExpanded, pPaintData);
     }
+
+    // Text.
+    drgui_draw_text(pMBElement, pMB->pFont, pMBI->text, (int)strlen(pMBI->text), offsetX + textPosX, offsetY + textPosY, pMB->textColor, bgcolor /*drgui_rgb(255, 128, 128)*/, pPaintData);
 }
 
 PRIVATE void ak_mb_on_menu_hide(ak_window* pMenu, unsigned int flags, void* pUserData)

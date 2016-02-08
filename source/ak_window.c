@@ -1871,17 +1871,39 @@ static drgui_key ak_gtk_to_drgui_key(guint keyval)
     return (drgui_key)keyval;
 }
 
-static int ak_gtk_get_modifier_key_state_flags(guint stateFromGTK)
+static int ak_gtk_get_modifier_state_flags(guint stateFromGTK)
 {
-    // TODO: Implement Me.
-    return 0;
+    int result = 0;
+
+    if ((stateFromGTK & GDK_SHIFT_MASK) != 0) {
+        result |= AK_KEY_STATE_SHIFT_DOWN;
+    }
+    if ((stateFromGTK & GDK_CONTROL_MASK) != 0) {
+        result |= AK_KEY_STATE_CTRL_DOWN;
+    }
+    if ((stateFromGTK & GDK_MOD1_MASK) != 0) {
+        result |= AK_KEY_STATE_ALT_DOWN;
+    }
+
+    if ((stateFromGTK & GDK_BUTTON1_MASK) != 0) {
+        result |= AK_MOUSE_BUTTON_LEFT_DOWN;
+    }
+    if ((stateFromGTK & GDK_BUTTON2_MASK) != 0) {
+        result |= AK_MOUSE_BUTTON_MIDDLE_DOWN;
+    }
+    if ((stateFromGTK & GDK_BUTTON3_MASK) != 0) {
+        result |= AK_MOUSE_BUTTON_RIGHT_DOWN;
+    }
+    if ((stateFromGTK & GDK_BUTTON4_MASK) != 0) {
+        result |= AK_MOUSE_BUTTON_4_DOWN;
+    }
+    if ((stateFromGTK & GDK_BUTTON5_MASK) != 0) {
+        result |= AK_MOUSE_BUTTON_5_DOWN;
+    }
+
+    return result;
 }
 
-static int ak_gtk_get_mouse_event_state_flags(guint stateFromGTK)
-{
-    // TODO: Implement Me.
-    return 0;
-}
 
 static int ak_from_gtk_mouse_button(guint buttonGTK)
 {
@@ -2031,7 +2053,7 @@ static gboolean ak_gtk_on_mouse_move(GtkWidget* pGTKWindow, GdkEventMotion* pEve
         return true;
     }
 
-    drgui_post_inbound_event_mouse_move(pWindow->pPanel, pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+    drgui_post_inbound_event_mouse_move(pWindow->pPanel, pEvent->x, pEvent->y, ak_gtk_get_modifier_state_flags(pEvent->state));
     return false;
 }
 
@@ -2045,12 +2067,11 @@ static gboolean ak_gtk_on_mouse_button_down(GtkWidget* pGTKWindow, GdkEventButto
     }
 
     if (pEvent->type == GDK_BUTTON_PRESS) {
-        ak_application_on_mouse_button_down(pWindow, ak_from_gtk_mouse_button(pEvent->button), pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+        ak_application_on_mouse_button_down(pWindow, ak_from_gtk_mouse_button(pEvent->button), pEvent->x, pEvent->y, ak_gtk_get_modifier_state_flags(pEvent->state));
     } else if (pEvent->type == GDK_2BUTTON_PRESS) {
-        ak_application_on_mouse_button_dblclick(pWindow, ak_from_gtk_mouse_button(pEvent->button), pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+        ak_application_on_mouse_button_dblclick(pWindow, ak_from_gtk_mouse_button(pEvent->button), pEvent->x, pEvent->y, ak_gtk_get_modifier_state_flags(pEvent->state));
     }
 
-    printf("TESTING %d\n", ak_from_gtk_mouse_button(pEvent->button));
     return true;
 }
 
@@ -2063,9 +2084,7 @@ static gboolean ak_gtk_on_mouse_button_up(GtkWidget* pGTKWindow, GdkEventButton*
         return true;
     }
 
-    printf("Up\n");
-
-    ak_application_on_mouse_button_up(pWindow, ak_from_gtk_mouse_button(pEvent->button), pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+    ak_application_on_mouse_button_up(pWindow, ak_from_gtk_mouse_button(pEvent->button), pEvent->x, pEvent->y, ak_gtk_get_modifier_state_flags(pEvent->state));
     return true;
 }
 
@@ -2078,19 +2097,6 @@ static gboolean ak_gtk_on_mouse_wheel(GtkWidget* pGTKWindow, GdkEventScroll* pEv
         return true;
     }
 
-    if ((pEvent->direction == GDK_SCROLL_UP || pEvent->direction == GDK_SCROLL_DOWN) && pEvent->delta_y != 0) {
-        //ak_application_on_mouse_wheel(pWindow, pEvent->delta_y, pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
-    } else if (pEvent->direction == GDK_SCROLL_SMOOTH) {
-
-    }
-
-    /*gdouble delta_x = 0;
-    gdouble delta_y = 0;
-    if (!gdk_event_get_scroll_deltas((GdkEvent*)pEvent, &delta_x, &delta_y)) {
-
-    }*/
-
-    gdouble delta_x = 0;
     gdouble delta_y = 0;
     if (pEvent->direction == GDK_SCROLL_UP) {
         delta_y = -1;
@@ -2098,10 +2104,8 @@ static gboolean ak_gtk_on_mouse_wheel(GtkWidget* pGTKWindow, GdkEventScroll* pEv
         delta_y = 1;
     }
 
-    ak_application_on_mouse_wheel(pWindow, (int)-delta_y, pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+    ak_application_on_mouse_wheel(pWindow, (int)-delta_y, pEvent->x, pEvent->y, ak_gtk_get_modifier_state_flags(pEvent->state));
 
-
-    //printf("Mouse Wheel: %f", pEvent->delta_y);
     return true;
 }
 
@@ -2114,7 +2118,7 @@ static gboolean ak_gtk_on_key_down(GtkWidget* pGTKWindow, GdkEventKey* pEvent, g
         return true;
     }
 
-    int stateFlags = ak_gtk_get_modifier_key_state_flags(pEvent->state);
+    int stateFlags = ak_gtk_get_modifier_state_flags(pEvent->state);
     // TODO: Check here if key is auto-repeated.
 
     ak_application_on_key_down(pWindow, ak_gtk_to_drgui_key(pEvent->keyval), stateFlags);
@@ -2126,7 +2130,7 @@ static gboolean ak_gtk_on_key_down(GtkWidget* pGTKWindow, GdkEventKey* pEvent, g
         }
     }
 
-    if (utf32 != 0) {
+    if (utf32 != 0 && (stateFlags & AK_KEY_STATE_CTRL_DOWN) == 0 && (stateFlags & AK_KEY_STATE_ALT_DOWN) == 0) {
         if (!(utf32 < 32 || utf32 == 127) || utf32 == '\t' || utf32 == '\r') {
             ak_application_on_printable_key_down(pWindow, (unsigned int)utf32, stateFlags);
         }
@@ -2144,7 +2148,7 @@ static gboolean ak_gtk_on_key_up(GtkWidget* pGTKWindow, GdkEventKey* pEvent, gpo
         return true;
     }
 
-    ak_application_on_key_up(pWindow, ak_gtk_to_drgui_key(pEvent->keyval), ak_gtk_get_modifier_key_state_flags(pEvent->state));
+    ak_application_on_key_up(pWindow, ak_gtk_to_drgui_key(pEvent->keyval), ak_gtk_get_modifier_state_flags(pEvent->state));
     return true;
 }
 
