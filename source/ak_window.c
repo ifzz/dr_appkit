@@ -44,7 +44,6 @@ struct ak_window
     /// Keeps track of whether or not the cursor is over this window.
     bool isCursorOver;
 
-
     /// Keeps track of whether or not the window is marked as deleted.
     bool isMarkedAsDeleted;
 #endif
@@ -59,6 +58,9 @@ struct ak_window
 
     /// Keeps track of whether or not the cursor is over this window.
     bool isCursorOver;
+
+    /// Keeps track of whether or not the window is marked as deleted.
+    bool isMarkedAsDeleted;
 #endif
 
 
@@ -1792,11 +1794,16 @@ typedef struct
 
 } ak_element_user_data_gtk;
 
+void ak_uninit_and_free_window_gtk(ak_window* pWindow);
+
 
 void ak_init_platform()
 {
     if (g_GTKInitCounter == 0) {
         gtk_init(NULL, NULL);
+
+        g_GTKCursor_Default = gdk_cursor_new_for_display(gdk_display_get_default(), GDK_LEFT_PTR);
+        g_GTKCursor_IBeam   = gdk_cursor_new_for_display(gdk_display_get_default(), GDK_XTERM);
     }
 
     g_GTKInitCounter += 1;
@@ -1840,6 +1847,85 @@ PRIVATE void ak_delete_window_panel(drgui_element* pTopLevelElement)
     drgui_delete_element(pTopLevelElement);
 }
 
+static drgui_key ak_gtk_to_drgui_key(guint keyval)
+{
+    switch (keyval)
+    {
+    case GDK_KEY_BackSpace: return DRGUI_BACKSPACE;
+    case GDK_KEY_Shift_L:   return DRGUI_SHIFT;
+    case GDK_KEY_Shift_R:   return DRGUI_SHIFT;
+    case GDK_KEY_Escape:    return DRGUI_ESCAPE;
+    case GDK_KEY_Page_Up:   return DRGUI_PAGE_UP;
+    case GDK_KEY_Page_Down: return DRGUI_PAGE_DOWN;
+    case GDK_KEY_End:       return DRGUI_END;
+    case GDK_KEY_Begin:     return DRGUI_HOME;
+    case GDK_KEY_Left:      return DRGUI_ARROW_LEFT;
+    case GDK_KEY_Up:        return DRGUI_ARROW_UP;
+    case GDK_KEY_Right:     return DRGUI_ARROW_RIGHT;
+    case GDK_KEY_Down:      return DRGUI_ARROW_DOWN;
+    case GDK_KEY_Delete:    return DRGUI_DELETE;
+
+    default: break;
+    }
+
+    return (drgui_key)keyval;
+}
+
+static int ak_gtk_get_modifier_key_state_flags(guint stateFromGTK)
+{
+    // TODO: Implement Me.
+    return 0;
+}
+
+static int ak_gtk_get_mouse_event_state_flags(guint stateFromGTK)
+{
+    // TODO: Implement Me.
+    return 0;
+}
+
+static int ak_from_gtk_mouse_button(guint buttonGTK)
+{
+    switch (buttonGTK) {
+        case 1: return DRGUI_MOUSE_BUTTON_LEFT;
+        case 2: return DRGUI_MOUSE_BUTTON_MIDDLE;
+        case 3: return DRGUI_MOUSE_BUTTON_RIGHT;
+        default: return (int)buttonGTK;
+    }
+}
+
+
+static void ak_gtk_on_show(GtkWidget* pGTKWindow, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if (!ak_application_on_show_window(pWindow)) {
+        ak_hide_window(pWindow, AK_HIDE_BLOCKED);    // The event handler returned false, so prevent the window from being shown.
+    }
+}
+
+static void ak_gtk_on_hide(GtkWidget* pGTKWindow, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return;
+    }
+
+    if ((pWindow->onHideFlags & AK_HIDE_BLOCKED) != 0) {
+        pWindow->onHideFlags &= ~AK_HIDE_BLOCKED;
+        return;
+    }
+
+    if (!ak_application_on_hide_window(pWindow, pWindow->onHideFlags)) {
+        ak_show_window(pWindow);    // The event handler returned false, so prevent the window from being hidden.
+    }
+}
 
 static void ak_gtk_on_paint(GtkWidget* pGTKWindow, cairo_t* pCairoContext, gpointer pUserData)
 {
@@ -1904,6 +1990,224 @@ static void ak_gtk_on_onfigure(GtkWidget* pGTKWindow, GdkEventConfigure* pEvent,
     }
 }
 
+static gboolean ak_gtk_on_mouse_enter(GtkWidget* pGTKWindow, GdkEventCrossing* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+    (void)pEvent;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    pWindow->isCursorOver = true;
+
+    ak_application_on_mouse_enter(pWindow);
+    return true;
+}
+
+static gboolean ak_gtk_on_mouse_leave(GtkWidget* pGTKWindow, GdkEventCrossing* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+    (void)pEvent;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    pWindow->isCursorOver = false;
+
+    ak_application_on_mouse_leave(pWindow);
+    return true;
+}
+
+static gboolean ak_gtk_on_mouse_move(GtkWidget* pGTKWindow, GdkEventMotion* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    drgui_post_inbound_event_mouse_move(pWindow->pPanel, pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+    return false;
+}
+
+static gboolean ak_gtk_on_mouse_button_down(GtkWidget* pGTKWindow, GdkEventButton* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    if (pEvent->type == GDK_BUTTON_PRESS) {
+        ak_application_on_mouse_button_down(pWindow, ak_from_gtk_mouse_button(pEvent->button), pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+    } else if (pEvent->type == GDK_2BUTTON_PRESS) {
+        ak_application_on_mouse_button_dblclick(pWindow, ak_from_gtk_mouse_button(pEvent->button), pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+    }
+
+    printf("TESTING %d\n", ak_from_gtk_mouse_button(pEvent->button));
+    return true;
+}
+
+static gboolean ak_gtk_on_mouse_button_up(GtkWidget* pGTKWindow, GdkEventButton* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    printf("Up\n");
+
+    ak_application_on_mouse_button_up(pWindow, ak_from_gtk_mouse_button(pEvent->button), pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+    return true;
+}
+
+static gboolean ak_gtk_on_mouse_wheel(GtkWidget* pGTKWindow, GdkEventScroll* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    if ((pEvent->direction == GDK_SCROLL_UP || pEvent->direction == GDK_SCROLL_DOWN) && pEvent->delta_y != 0) {
+        //ak_application_on_mouse_wheel(pWindow, pEvent->delta_y, pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+    } else if (pEvent->direction == GDK_SCROLL_SMOOTH) {
+
+    }
+
+    /*gdouble delta_x = 0;
+    gdouble delta_y = 0;
+    if (!gdk_event_get_scroll_deltas((GdkEvent*)pEvent, &delta_x, &delta_y)) {
+
+    }*/
+
+    gdouble delta_x = 0;
+    gdouble delta_y = 0;
+    if (pEvent->direction == GDK_SCROLL_UP) {
+        delta_y = -1;
+    } else if (pEvent->direction == GDK_SCROLL_DOWN) {
+        delta_y = 1;
+    }
+
+    ak_application_on_mouse_wheel(pWindow, (int)-delta_y, pEvent->x, pEvent->y, ak_gtk_get_mouse_event_state_flags(pEvent->state));
+
+
+    //printf("Mouse Wheel: %f", pEvent->delta_y);
+    return true;
+}
+
+static gboolean ak_gtk_on_key_down(GtkWidget* pGTKWindow, GdkEventKey* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    int stateFlags = ak_gtk_get_modifier_key_state_flags(pEvent->state);
+    // TODO: Check here if key is auto-repeated.
+
+    ak_application_on_key_down(pWindow, ak_gtk_to_drgui_key(pEvent->keyval), stateFlags);
+
+    guint32 utf32 = gdk_keyval_to_unicode(pEvent->keyval);
+    if (utf32 == 0) {
+        if (pEvent->keyval == GDK_KEY_KP_Enter) {
+            utf32 = '\r';
+        }
+    }
+
+    if (utf32 != 0) {
+        if (!(utf32 < 32 || utf32 == 127) || utf32 == '\t' || utf32 == '\r') {
+            ak_application_on_printable_key_down(pWindow, (unsigned int)utf32, stateFlags);
+        }
+    }
+
+    return true;
+}
+
+static gboolean ak_gtk_on_key_up(GtkWidget* pGTKWindow, GdkEventKey* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    ak_application_on_key_up(pWindow, ak_gtk_to_drgui_key(pEvent->keyval), ak_gtk_get_modifier_key_state_flags(pEvent->state));
+    return true;
+}
+
+static gboolean ak_gtk_on_close(GtkWidget* pGTKWindow, GdkEvent* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+    (void)pEvent;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    ak_application_on_close_window(pWindow);
+    return true;
+}
+
+static void ak_gtk_on_destroy(GtkWidget* pGTKWindow, gpointer pUserData)
+{
+    (void)pGTKWindow;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return;
+    }
+
+    ak_uninit_and_free_window_gtk(pWindow);
+    return;
+}
+
+static gboolean ak_gtk_on_receive_focus(GtkWidget* pGTKWindow, GdkEventFocus* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+    (void)pEvent;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    // TODO: Do something.
+    printf("Receive Focus\n");
+
+    return true;
+}
+
+static gboolean ak_gtk_on_lose_focus(GtkWidget* pGTKWindow, GdkEventFocus* pEvent, gpointer pUserData)
+{
+    (void)pGTKWindow;
+    (void)pEvent;
+
+    ak_window* pWindow = pUserData;
+    if (pWindow == NULL) {
+        return true;
+    }
+
+    // TODO: Do something.
+    printf("Lose Focus\n");
+
+    return true;
+}
+
+
 
 ak_window* ak_alloc_and_init_window_gtk(ak_application* pApplication, ak_window* pParent, ak_window_type type, GtkWidget* pGTKWindow, size_t extraDataSize, const void* pExtraData)
 {
@@ -1917,6 +2221,7 @@ ak_window* ak_alloc_and_init_window_gtk(ak_application* pApplication, ak_window*
     pWindow->pGTKWindow            = pGTKWindow;
     pWindow->pGTKCursor            = g_GTKCursor_Default;
     pWindow->isCursorOver          = false;
+    pWindow->isMarkedAsDeleted     = false;
     pWindow->pApplication          = pApplication;
     pWindow->type                  = type;
     pWindow->pSurface              = NULL;
@@ -1966,10 +2271,39 @@ ak_window* ak_alloc_and_init_window_gtk(ak_application* pApplication, ak_window*
     // painting.
     gtk_widget_set_app_paintable(pGTKWindow, TRUE);
 
-    // Event handlers.
-    g_signal_connect(pGTKWindow, "draw",            G_CALLBACK(ak_gtk_on_paint),    pWindow);   // Paint
-    g_signal_connect(pGTKWindow, "configure-event", G_CALLBACK(ak_gtk_on_onfigure), pWindow);   // Reposition and resize.
+    gtk_widget_add_events(pGTKWindow,
+        GDK_ENTER_NOTIFY_MASK   |
+        GDK_LEAVE_NOTIFY_MASK   |
+        GDK_POINTER_MOTION_MASK |
+        GDK_BUTTON_PRESS_MASK   |
+        GDK_BUTTON_RELEASE_MASK |
+        GDK_SCROLL_MASK         |
+        GDK_KEY_PRESS_MASK      |
+        GDK_KEY_RELEASE_MASK    |
+        GDK_FOCUS_CHANGE_MASK);
 
+    // Event handlers.
+    g_signal_connect(pGTKWindow, "show",                 G_CALLBACK(ak_gtk_on_show),              pWindow);     // Show.
+    g_signal_connect(pGTKWindow, "hide",                 G_CALLBACK(ak_gtk_on_hide),              pWindow);     // Hide.
+    g_signal_connect(pGTKWindow, "draw",                 G_CALLBACK(ak_gtk_on_paint),             pWindow);     // Paint
+    g_signal_connect(pGTKWindow, "configure-event",      G_CALLBACK(ak_gtk_on_onfigure),          pWindow);     // Reposition and resize.
+    g_signal_connect(pGTKWindow, "enter-notify-event",   G_CALLBACK(ak_gtk_on_mouse_enter),       pWindow);     // Mouse enter.
+    g_signal_connect(pGTKWindow, "leave-notify-event",   G_CALLBACK(ak_gtk_on_mouse_leave),       pWindow);     // Mouse leave.
+    g_signal_connect(pGTKWindow, "motion-notify-event",  G_CALLBACK(ak_gtk_on_mouse_move),        pWindow);     // Mouse move.
+    g_signal_connect(pGTKWindow, "button-press-event",   G_CALLBACK(ak_gtk_on_mouse_button_down), pWindow);     // Mouse button down.
+    g_signal_connect(pGTKWindow, "button-release-event", G_CALLBACK(ak_gtk_on_mouse_button_up),   pWindow);     // Mouse button up.
+    g_signal_connect(pGTKWindow, "scroll-event",         G_CALLBACK(ak_gtk_on_mouse_wheel),       pWindow);     // Mouse wheel.
+    g_signal_connect(pGTKWindow, "key-press-event",      G_CALLBACK(ak_gtk_on_key_down),          pWindow);     // Key down.
+    g_signal_connect(pGTKWindow, "key-release-event",    G_CALLBACK(ak_gtk_on_key_up),            pWindow);     // Key up.
+    g_signal_connect(pGTKWindow, "delete-event",         G_CALLBACK(ak_gtk_on_close),             pWindow);     // Close.
+    g_signal_connect(pGTKWindow, "destroy",              G_CALLBACK(ak_gtk_on_destroy),           pWindow);     // Fired when the widget is deleted for real.
+    g_signal_connect(pGTKWindow, "focus-in-event",       G_CALLBACK(ak_gtk_on_receive_focus),     pWindow);     // Receive focus.
+    g_signal_connect(pGTKWindow, "focus-out-event",      G_CALLBACK(ak_gtk_on_lose_focus),        pWindow);     // Lose focus.
+
+    if (pParent != NULL) {
+        gtk_window_set_transient_for(GTK_WINDOW(pGTKWindow), GTK_WINDOW(pParent->pGTKWindow));
+        gtk_window_set_destroy_with_parent(GTK_WINDOW(pGTKWindow), true);
+    }
 
     // The application needs to track this window.
     if (pParent == NULL) {
@@ -1982,7 +2316,7 @@ ak_window* ak_alloc_and_init_window_gtk(ak_application* pApplication, ak_window*
     return pWindow;
 }
 
-void ak_uninit_and_free_window_win32(ak_window* pWindow)
+void ak_uninit_and_free_window_gtk(ak_window* pWindow)
 {
     if (pWindow->pParent == NULL) {
         ak_application_untrack_top_level_window(pWindow);
@@ -2049,9 +2383,8 @@ PRIVATE ak_window* ak_create_dialog_window(ak_application* pApplication, ak_wind
     }
 
     gtk_window_set_type_hint(GTK_WINDOW(pGTKWindow), GDK_WINDOW_TYPE_HINT_DIALOG);
-    gtk_window_set_transient_for(GTK_WINDOW(pGTKWindow), GTK_WINDOW(pParent->pGTKWindow));
 
-    ak_window* pWindow = ak_alloc_and_init_window_gtk(pApplication, pParent, ak_window_type_application, pGTKWindow, extraDataSize, pExtraData);
+    ak_window* pWindow = ak_alloc_and_init_window_gtk(pApplication, pParent, ak_window_type_dialog, pGTKWindow, extraDataSize, pExtraData);
     if (pWindow == NULL) {
         gtk_widget_destroy(pGTKWindow);
         return NULL;
@@ -2069,11 +2402,13 @@ PRIVATE ak_window* ak_create_popup_window(ak_application* pApplication, ak_windo
         return NULL;
     }
 
-    ak_window* pWindow = ak_alloc_and_init_window_gtk(pApplication, pParent, ak_window_type_application, pGTKWindow, extraDataSize, pExtraData);
+    ak_window* pWindow = ak_alloc_and_init_window_gtk(pApplication, pParent, ak_window_type_popup, pGTKWindow, extraDataSize, pExtraData);
     if (pWindow == NULL) {
         gtk_widget_destroy(pGTKWindow);
         return NULL;
     }
+
+    gtk_window_set_attached_to(GTK_WINDOW(pGTKWindow), pParent->pGTKWindow);
 
     return pWindow;
 }
@@ -2117,9 +2452,15 @@ ak_window* ak_create_window(ak_application* pApplication, ak_window_type type, a
 
 void ak_delete_window(ak_window* pWindow)
 {
-    if (pWindow == NULL) {
+    if (pWindow == NULL/* || pWindow->isMarkedAsDeleted*/) {
         return;
     }
+
+    assert(pWindow->isMarkedAsDeleted == false);        // <-- If you've hit this assert it means you're trying to delete a window multiple times.
+    pWindow->isMarkedAsDeleted = true;
+
+    // We just destroy the GtkWindow. This will post a destroy-event message which is where we delete our own window data structure.
+    gtk_widget_destroy(pWindow->pGTKWindow);
 }
 
 
@@ -2368,7 +2709,8 @@ PRIVATE void ak_on_global_capture_mouse(drgui_element* pElement)
 
     ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
-        //gdk_device_grab();
+        //gdk_device_grab(gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default())),
+        //    GDK_WINDOW(pElementData->pWindow->pGTKWindow), GDK_OWNERSHIP_APPLICATION, false, GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK, NULL, GDK_CURRENT_TIME);
     }
 }
 
@@ -2379,7 +2721,7 @@ PRIVATE void ak_on_global_release_mouse(drgui_element* pElement)
 
     ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
-        //ReleaseCapture();
+        //gdk_device_ungrab(gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default())), GDK_CURRENT_TIME);
     }
 }
 
@@ -2424,10 +2766,8 @@ PRIVATE void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect
         drgui_rect absoluteRect = relativeRect;
         drgui_make_rect_absolute(pElement, &absoluteRect);
 
-        gtk_widget_queue_draw(pElementData->pWindow->pGTKWindow);
-
-        //gtk_widget_queue_draw_area(pElementData->pWindow->pGTKWindow,
-        //    (gint)absoluteRect.left, (gint)absoluteRect.top, (gint)(absoluteRect.right - absoluteRect.left), (gint)(absoluteRect.bottom - absoluteRect.top));
+        gtk_widget_queue_draw_area(pElementData->pWindow->pGTKWindow,
+            (gint)absoluteRect.left, (gint)absoluteRect.top, (gint)(absoluteRect.right - absoluteRect.left), (gint)(absoluteRect.bottom - absoluteRect.top));
     }
 }
 

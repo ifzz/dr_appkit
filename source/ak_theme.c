@@ -3,6 +3,7 @@
 #include "../include/dr_appkit/ak_theme.h"
 #include "../include/dr_appkit/ak_application.h"
 #include "../include/dr_appkit/ak_build_config.h"
+#include "../include/dr_appkit/ak_platform_layer.h"
 #include <assert.h>
 
 ak_text_theme ak_init_text_theme(ak_application* pApplication, const char* family, unsigned int size, drgui_font_weight weight, drgui_font_slant slant, drgui_color textColor, drgui_color backgroundColor)
@@ -33,6 +34,11 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     //dr2d_context* pDrawingContext = ak_get_application_drawing_context(pApplication);
     //assert(pDrawingContext != NULL);
 
+    char  defaultUIFontFamily[256];
+    float defaultUIFontSize;
+    drgui_font_weight defaultUIFontWeight;
+    drgui_font_slant defaultUIFontSlant;
+
 #ifdef AK_USE_WIN32
     const char*  defaultUIFontFamily = "Segoe UI";
     unsigned int defaultUIFontSize   = 12;
@@ -41,11 +47,10 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     unsigned int defaultMonospaceFontSize   = 13;
 #endif
 #ifdef AK_USE_GTK
-    const char*  defaultUIFontFamily = "Deja Vu Sans";          // TODO: Use GTK theme.
-    unsigned int defaultUIFontSize   = 13;                      // TODO: Use GTK theme.
+    ak_platform_get_default_font(defaultUIFontFamily, sizeof(defaultUIFontFamily), &defaultUIFontSize, &defaultUIFontWeight, &defaultUIFontSlant);
 
     const char*  defaultMonospaceFontFamily = "Monospace";      // TODO: Use GTK theme.
-    unsigned int defaultMonospaceFontSize   = 15;               // TODO: Use GTK theme.
+    unsigned int defaultMonospaceFontSize   = 13;               // TODO: Use GTK theme.
 #endif
 
 
@@ -64,7 +69,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     pTheme->tabPaddingRight  = 4;
     pTheme->tabPaddingBottom = 4;
 
-    
+
     //// Menus ////
     pTheme->menuBarHeight = 22;
     pTheme->menuBarItemPaddingX = 8;
@@ -72,7 +77,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
 
 
     //// Fonts ////
-    pTheme->pUIFont = drgui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, drgui_font_weight_normal, drgui_font_slant_none, 0);
+    pTheme->pUIFont = drgui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, defaultUIFontWeight, defaultUIFontSlant, 0);
     pTheme->uiFontColor = drgui_rgb(240, 240, 240);
     drgui_get_glyph_metrics(pTheme->pUIFont, 'X', 1, 1, &pTheme->uiCrossMetrics);
 

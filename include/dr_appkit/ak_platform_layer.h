@@ -3,8 +3,14 @@
 #ifndef ak_platform_layer_h
 #define ak_platform_layer_h
 
+#include <stddef.h>
+#include <dr_libs/dr_gui.h>
+
 /// Retrieves the blink rate in milliseconds for text cursors/carets.
 unsigned int ak_get_caret_blink_rate();
+
+/// Retrieves information about the default font to use for things like menus, etc.
+void ak_platform_get_default_font(char* familyOut, size_t familyOutSize, float* sizeOut, drgui_font_weight* weightOut, drgui_font_slant* slantOut);
 
 #endif
 

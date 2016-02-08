@@ -687,7 +687,7 @@ bool ak_menu_on_show(ak_window* pMenuWindow)
 {
     ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
     if (pMenu == NULL) {
-        return false;;
+        return false;
     }
 
     if (pMenu->onShow) {

@@ -624,7 +624,8 @@ PRIVATE void ak_on_mmbi_measure_default(ak_menu_bar_item* pMBI, float* pWidthOut
 
 
     float textWidth;
-    if (!drgui_measure_string(pMB->pFont, pMBI->text, strlen(pMBI->text), innerScaleX, innerScaleY, &textWidth, NULL)) {
+    float textHeight;
+    if (!drgui_measure_string(pMB->pFont, pMBI->text, strlen(pMBI->text), innerScaleX, innerScaleY, &textWidth, &textHeight)) {
         textWidth = 0;
     }
 
@@ -665,10 +666,9 @@ PRIVATE void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_ite
     }
 
 
-
     float textPosX = pMB->itemPaddingX;
     float textPosY = (height - textHeight) / 2;
-    drgui_draw_text(pMBElement, pMB->pFont, pMBI->text, (int)strlen(pMBI->text), offsetX + textPosX, offsetY + textPosY, pMB->textColor, bgcolor, pPaintData);
+    drgui_draw_text(pMBElement, pMB->pFont, pMBI->text, (int)strlen(pMBI->text), offsetX + textPosX, offsetY + textPosY, pMB->textColor, bgcolor /*drgui_rgb(255, 128, 128)*/, pPaintData);
 
     // Padding around text.
     drgui_draw_rect(pMBElement, drgui_make_rect(offsetX + 0,                    offsetY + 0,                     offsetX + textPosX,                                 offsetY + height),   bgcolor, pPaintData); // Left

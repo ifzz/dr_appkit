@@ -14,6 +14,7 @@ unsigned int ak_get_caret_blink_rate()
 
 #ifdef AK_USE_GTK
 #include <gtk/gtk.h>
+#include <dr_libs/dr_util.h>
 
 unsigned int ak_get_caret_blink_rate()
 {
@@ -21,6 +22,121 @@ unsigned int ak_get_caret_blink_rate()
     g_object_get(gtk_settings_get_default(), "gtk-cursor-blink-time", &blinkTime, NULL);
 
     return (unsigned int)blinkTime / 2;
+}
+
+void ak_platform_get_default_font(char* familyOut, size_t familyOutSize, float* sizeOut, drgui_font_weight* weightOut, drgui_font_slant* slantOut)
+{
+    char family[256] = {'\0'};
+    float size = 10;
+    drgui_font_weight weight = drgui_font_weight_default;
+    drgui_font_slant slant = drgui_font_slant_none;
+    char condensed[256] = {'\0'};
+
+    // With GTK, the font name is formatted like "<family><space><weight and slant (optional)><space><size>". We'll use out trusty tokenizer for this.
+    char* fontNameAndSize = NULL;
+    g_object_get(gtk_settings_get_default(), "gtk-font-name", &fontNameAndSize, NULL);
+
+    const char* prevToken = fontNameAndSize;
+    if (prevToken != NULL)
+    {
+        char token[256];
+
+        const char* nextToken = dr_next_token(prevToken, token, sizeof(token));
+        while (nextToken != NULL)
+        {
+            if (token[0] >= '0' && token[0] <= '9')
+            {
+                // We found the size.
+                size = (float)atof(token);
+
+                // If we haven't set the family yet, we need to do so now. It will be the entirety of fontNameAndSize, up to this token.
+                if (family[0] == '\0') {
+                    strncpy_s(family, sizeof(family), fontNameAndSize, prevToken - fontNameAndSize);
+                }
+            }
+            else
+            {
+                // Check for weight or slant.
+                bool foundWeightOrSlant = false;
+                if (_stricmp(token, "regular") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_normal;
+                } else if (_stricmp(token, "roman") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_normal;
+                } else if (_stricmp(token, "book") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_normal;
+                } else if (_stricmp(token, "semibold") == 0 || _stricmp(token, "semi-bold") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_semi_bold;
+                } else if (_stricmp(token, "bold") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_bold;
+                } else if (_stricmp(token, "extrabold") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_extra_bold;
+                } else if (_stricmp(token, "heavy") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_heavy;
+                } else if (_stricmp(token, "thin") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_thin;
+                } else if (_stricmp(token, "light") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_light;
+                } else if (_stricmp(token, "extralight") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_extra_light;
+                } else if (_stricmp(token, "oblique") == 0) {
+                    foundWeightOrSlant = true;
+                    slant = drgui_font_slant_oblique;
+                } else if (_stricmp(token, "italic") == 0) {
+                    foundWeightOrSlant = true;
+                    slant = drgui_font_slant_italic;
+                } else if (_stricmp(token, "bold-oblique") == 0) {
+                    foundWeightOrSlant = true;
+                    weight = drgui_font_weight_bold;
+                    slant = drgui_font_slant_oblique;
+                } else if (_stricmp(token, "condensed") == 0 || _stricmp(token, "semi-condensed") == 0) {
+                    strcpy_s(condensed, sizeof(condensed), token);
+                }
+
+
+                // If we haven't set the family yet, we need to do so now. It will be the entirety of fontNameAndSize, up to this token.
+                if (foundWeightOrSlant && family[0] == '\0') {
+                    strncpy_s(family, sizeof(family), fontNameAndSize, prevToken - fontNameAndSize);
+                }
+            }
+
+            prevToken = nextToken;
+            nextToken = dr_next_token(prevToken, token, sizeof(token));
+        }
+    }
+
+    if (familyOut) {
+        if (family[0] != '\0') {
+            strcpy_s(familyOut, familyOutSize, family);
+        } else {
+            strcpy_s(familyOut, familyOutSize, "Sans");
+        }
+
+        if (condensed[0] != '\0') {
+            strcat_s(familyOut, familyOutSize, " ");
+            strcat_s(familyOut, familyOutSize, condensed);
+        }
+    }
+    if (sizeOut) {
+        *sizeOut = size * (96.0/72.0);
+    }
+    if (weightOut) {
+        *weightOut = weight;
+    }
+    if (slantOut) {
+        *slantOut = slant;
+    }
+
+    g_free(fontNameAndSize);
 }
 #endif
 
