@@ -23,7 +23,7 @@
 
 // This flag is posted on on_hide events when a popup window is automatically hidden as a result of the user clicking
 // outside of it's region.
-#define AK_AUTO_HIDE_FROM_OUTSIDE_CLICK     (1 << 0)
+#define AK_AUTO_HIDE_FROM_LOST_FOCUS        (1 << 0)
 #define AK_HIDE_BLOCKED                     (1 << 1)
 
 // The flags below are posted on on key down and up events.

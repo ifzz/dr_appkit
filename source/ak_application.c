@@ -97,6 +97,9 @@ struct ak_application
     /// first window is considered to be the primary window.
     ak_window* pFirstWindow;
 
+    /// The window that previously had the keyboard focus. This is only used for auto-hiding management of popup windows.
+    ak_window* pPrevFocusedWindow;
+
 
     // Platform Specific.
 #ifdef AK_USE_WIN32
@@ -237,7 +240,8 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
 
         // Windows.
-        pApplication->pFirstWindow = NULL;
+        pApplication->pFirstWindow       = NULL;
+        pApplication->pPrevFocusedWindow = NULL;
 
 
         // Platform Specific
@@ -1479,7 +1483,32 @@ void ak_application_on_deactivate_window(ak_window* pWindow)
     assert(pWindow != NULL);
 
     ak_window_on_deactivate(pWindow);
-    ak_application_hide_non_ancestor_popups(pWindow);
+    //ak_application_hide_non_ancestor_popups(pWindow);
+}
+
+void ak_application_on_focus_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_application* pApplication = ak_get_window_application(pWindow);
+    assert(pApplication != NULL);
+
+    pApplication->pPrevFocusedWindow = NULL;
+}
+
+void ak_application_on_unfocus_window(ak_window* pWindow)
+{
+    assert(pWindow != NULL);
+
+    ak_application* pApplication = ak_get_window_application(pWindow);
+    assert(pApplication != NULL);
+
+    pApplication->pPrevFocusedWindow = pWindow;
+
+    // Popup window's that lose focus need to be hidden.
+    if (ak_get_window_type(pWindow) == ak_window_type_popup) {
+        ak_hide_window(pWindow, AK_AUTO_HIDE_FROM_LOST_FOCUS);
+    }
 }
 
 void ak_application_on_mouse_enter(ak_window* pWindow)
@@ -1497,6 +1526,14 @@ void ak_application_on_mouse_leave(ak_window* pWindow)
 
     // Let the GUI know about the event.
     drgui_post_inbound_event_mouse_leave(ak_get_window_panel(pWindow));
+}
+
+void ak_application_on_mouse_move(ak_window* pWindow, int relativeMousePosX, int relativeMousePosY, int stateFlags)
+{
+    assert(pWindow != NULL);
+
+    // Let the GUI know about the event.
+    drgui_post_inbound_event_mouse_move(ak_get_window_panel(pWindow), relativeMousePosX, relativeMousePosY, stateFlags);
 }
 
 void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags)
@@ -1677,7 +1714,7 @@ void ak_application_hide_non_ancestor_popups(ak_window* pWindow)
     {
         if (pOtherWindow != pWindow && ak_get_window_type(pOtherWindow) == ak_window_type_popup && !ak_is_window_ancestor(pOtherWindow, pWindow))
         {
-            ak_hide_window(pOtherWindow, AK_AUTO_HIDE_FROM_OUTSIDE_CLICK);
+            ak_hide_window(pOtherWindow, AK_AUTO_HIDE_FROM_LOST_FOCUS);
         }
     }
 }

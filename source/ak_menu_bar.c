@@ -703,7 +703,7 @@ PRIVATE void ak_mb_on_menu_hide(ak_window* pMenu, unsigned int flags, void* pUse
 
     ak_menu_bar_item* pItemUnderPoint = ak_mb_find_item_under_point(pMBElement, (float)pMB->relativeMousePosX, (float)pMB->relativeMousePosY);
 
-    pMB->blockNextMouseDown = pMB->isMouseOver && pItemUnderPoint && (flags & AK_AUTO_HIDE_FROM_OUTSIDE_CLICK) != 0;
+    pMB->blockNextMouseDown = pMB->isMouseOver && pItemUnderPoint && (flags & AK_AUTO_HIDE_FROM_LOST_FOCUS) != 0;
     pMB->isExpanded = false;
 
     if (!pMB->blockNextMouseDown && pMB->isMouseOver) {

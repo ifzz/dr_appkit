@@ -10,6 +10,25 @@ unsigned int ak_get_caret_blink_rate()
 {
     return GetCaretBlinkTime();
 }
+
+const char*  defaultUIFontFamily = "Segoe UI";
+    unsigned int defaultUIFontSize   = 12;
+
+void ak_platform_get_default_font(char* familyOut, size_t familyOutSize, float* sizeOut, drgui_font_weight* weightOut, drgui_font_slant* slantOut)
+{
+    if (familyOut) {
+        strcpy_s(familyOut, familyOutSize, "Segoe UI");
+    }
+    if (sizeOut) {
+        *sizeOut = 12;
+    }
+    if (weightOut) {
+        *weightOut = drgui_font_weight_normal;
+    }
+    if (slantOut) {
+        *slantOut = drgui_font_slant_none;
+    }
+}
 #endif
 
 #ifdef AK_USE_GTK

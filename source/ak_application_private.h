@@ -49,11 +49,20 @@ void ak_application_on_activate_window(ak_window* pWindow);
 /// Called when a window is deactivated.
 void ak_application_on_deactivate_window(ak_window* pWindow);
 
+/// Called when the given window receives the keyboard focus.
+void ak_application_on_focus_window(ak_window* pWindow);
+
+/// Called when the given window loses the keyboard focus.
+void ak_application_on_unfocus_window(ak_window* pWindow);
+
 /// Called when the mouse enters the given window.
 void ak_application_on_mouse_enter(ak_window* pWindow);
 
 /// Called when the mouse leaves the given window.
 void ak_application_on_mouse_leave(ak_window* pWindow);
+
+/// Called when the mouse is moved while over the given window.
+void ak_application_on_mouse_move(ak_window* pWindow, int relativeMousePosX, int relativeMousePosY, int stateFlags);
 
 /// Called when a mouse button is pressed.
 void ak_application_on_mouse_button_down(ak_window* pWindow, int mouseButton, int relativeMousePosX, int relativeMousePosY, int stateFlags);

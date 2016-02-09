@@ -31,8 +31,6 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     assert(pApplication != NULL);
     assert(pTheme       != NULL);
 
-    //dr2d_context* pDrawingContext = ak_get_application_drawing_context(pApplication);
-    //assert(pDrawingContext != NULL);
 
     char  defaultUIFontFamily[256];
     float defaultUIFontSize;
@@ -40,8 +38,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
     drgui_font_slant defaultUIFontSlant;
 
 #ifdef AK_USE_WIN32
-    const char*  defaultUIFontFamily = "Segoe UI";
-    unsigned int defaultUIFontSize   = 12;
+    ak_platform_get_default_font(defaultUIFontFamily, sizeof(defaultUIFontFamily), &defaultUIFontSize, &defaultUIFontWeight, &defaultUIFontSlant);
 
     const char*  defaultMonospaceFontFamily = "Consolas";
     unsigned int defaultMonospaceFontSize   = 13;
@@ -77,7 +74,7 @@ void ak_theme_load_defaults(ak_application* pApplication, ak_theme* pTheme)
 
 
     //// Fonts ////
-    pTheme->pUIFont = drgui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, defaultUIFontSize, defaultUIFontWeight, defaultUIFontSlant, 0);
+    pTheme->pUIFont = drgui_create_font(ak_get_application_gui(pApplication), defaultUIFontFamily, (unsigned int)defaultUIFontSize, defaultUIFontWeight, defaultUIFontSlant, 0);
     pTheme->uiFontColor = drgui_rgb(240, 240, 240);
     drgui_get_glyph_metrics(pTheme->pUIFont, 'X', 1, 1, &pTheme->uiCrossMetrics);
 

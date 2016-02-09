@@ -705,7 +705,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                     ak_application_on_mouse_enter(pWindow);
                 }
 
-                drgui_post_inbound_event_mouse_move(pWindow->pPanel, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
+                ak_application_on_mouse_move(pWindow, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ak_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
 
@@ -1090,6 +1090,18 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
                     return TRUE;
                 }
 
+                break;
+            }
+
+            case WM_SETFOCUS:
+            {
+                ak_application_on_focus_window(pWindow);
+                break;
+            }
+
+            case WM_KILLFOCUS:
+            {
+                ak_application_on_unfocus_window(pWindow);
                 break;
             }
 
@@ -2053,7 +2065,7 @@ static gboolean ak_gtk_on_mouse_move(GtkWidget* pGTKWindow, GdkEventMotion* pEve
         return true;
     }
 
-    drgui_post_inbound_event_mouse_move(pWindow->pPanel, pEvent->x, pEvent->y, ak_gtk_get_modifier_state_flags(pEvent->state));
+    ak_application_on_mouse_move(pWindow, pEvent->x, pEvent->y, ak_gtk_get_modifier_state_flags(pEvent->state));
     return false;
 }
 
