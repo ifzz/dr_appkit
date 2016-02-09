@@ -61,6 +61,11 @@ struct ak_window
 
     /// Keeps track of whether or not the window is marked as deleted.
     bool isMarkedAsDeleted;
+
+
+    /// The position of the inner section of the window. This is set in the configure event handler.
+    int absoluteClientPosX;
+    int absoluteClientPosY;
 #endif
 
 
@@ -1939,6 +1944,8 @@ static void ak_gtk_on_show(GtkWidget* pGTKWindow, gpointer pUserData)
 
     if (!ak_application_on_show_window(pWindow)) {
         ak_hide_window(pWindow, AK_HIDE_BLOCKED);    // The event handler returned false, so prevent the window from being shown.
+    } else {
+        gtk_widget_grab_focus(GTK_WIDGET(pWindow->pGTKWindow));
     }
 }
 
@@ -1997,7 +2004,7 @@ static void ak_gtk_on_paint(GtkWidget* pGTKWindow, cairo_t* pCairoContext, gpoin
     }
 }
 
-static void ak_gtk_on_onfigure(GtkWidget* pGTKWindow, GdkEventConfigure* pEvent, gpointer pUserData)
+static void ak_gtk_on_configure(GtkWidget* pGTKWindow, GdkEventConfigure* pEvent, gpointer pUserData)
 {
     ak_window* pWindow = pUserData;
     if (pWindow == NULL) {
@@ -2022,6 +2029,11 @@ static void ak_gtk_on_onfigure(GtkWidget* pGTKWindow, GdkEventConfigure* pEvent,
         // Invalidate the window to force a redraw.
         gtk_widget_queue_draw(pGTKWindow);
     }
+
+    pWindow->absoluteClientPosX = (int)pEvent->x;
+    pWindow->absoluteClientPosY = (int)pEvent->y;
+
+    //printf("Position: %d %d\n", (int)pEvent->x, (int)pEvent->y);
 }
 
 static gboolean ak_gtk_on_mouse_enter(GtkWidget* pGTKWindow, GdkEventCrossing* pEvent, gpointer pUserData)
@@ -2035,6 +2047,7 @@ static gboolean ak_gtk_on_mouse_enter(GtkWidget* pGTKWindow, GdkEventCrossing* p
     }
 
     pWindow->isCursorOver = true;
+    gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(pWindow->pGTKWindow)), pWindow->pGTKCursor);
 
     ak_application_on_mouse_enter(pWindow);
     return true;
@@ -2201,9 +2214,8 @@ static gboolean ak_gtk_on_receive_focus(GtkWidget* pGTKWindow, GdkEventFocus* pE
         return true;
     }
 
-    // TODO: Do something.
     printf("Receive Focus\n");
-
+    ak_application_on_focus_window(pWindow);
     return true;
 }
 
@@ -2217,9 +2229,8 @@ static gboolean ak_gtk_on_lose_focus(GtkWidget* pGTKWindow, GdkEventFocus* pEven
         return true;
     }
 
-    // TODO: Do something.
     printf("Lose Focus\n");
-
+    ak_application_on_unfocus_window(pWindow);
     return true;
 }
 
@@ -2238,6 +2249,8 @@ ak_window* ak_alloc_and_init_window_gtk(ak_application* pApplication, ak_window*
     pWindow->pGTKCursor            = g_GTKCursor_Default;
     pWindow->isCursorOver          = false;
     pWindow->isMarkedAsDeleted     = false;
+    pWindow->absoluteClientPosX    = 0;
+    pWindow->absoluteClientPosY    = 0;
     pWindow->pApplication          = pApplication;
     pWindow->type                  = type;
     pWindow->pSurface              = NULL;
@@ -2302,7 +2315,7 @@ ak_window* ak_alloc_and_init_window_gtk(ak_application* pApplication, ak_window*
     g_signal_connect(pGTKWindow, "show",                 G_CALLBACK(ak_gtk_on_show),              pWindow);     // Show.
     g_signal_connect(pGTKWindow, "hide",                 G_CALLBACK(ak_gtk_on_hide),              pWindow);     // Hide.
     g_signal_connect(pGTKWindow, "draw",                 G_CALLBACK(ak_gtk_on_paint),             pWindow);     // Paint
-    g_signal_connect(pGTKWindow, "configure-event",      G_CALLBACK(ak_gtk_on_onfigure),          pWindow);     // Reposition and resize.
+    g_signal_connect(pGTKWindow, "configure-event",      G_CALLBACK(ak_gtk_on_configure),         pWindow);     // Reposition and resize.
     g_signal_connect(pGTKWindow, "enter-notify-event",   G_CALLBACK(ak_gtk_on_mouse_enter),       pWindow);     // Mouse enter.
     g_signal_connect(pGTKWindow, "leave-notify-event",   G_CALLBACK(ak_gtk_on_mouse_leave),       pWindow);     // Mouse leave.
     g_signal_connect(pGTKWindow, "motion-notify-event",  G_CALLBACK(ak_gtk_on_mouse_move),        pWindow);     // Mouse move.
@@ -2413,18 +2426,25 @@ PRIVATE ak_window* ak_create_popup_window(ak_application* pApplication, ak_windo
 {
     assert(pApplication != NULL);
 
-    GtkWidget* pGTKWindow = gtk_window_new(GTK_WINDOW_POPUP);
+    GtkWidget* pGTKWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     if (pGTKWindow == NULL) {
         return NULL;
     }
+
+    gtk_window_set_type_hint(GTK_WINDOW(pGTKWindow), GDK_WINDOW_TYPE_HINT_MENU);
+    gtk_window_set_decorated(GTK_WINDOW(pGTKWindow), false);
+    gtk_window_set_attached_to(GTK_WINDOW(pGTKWindow), pParent->pGTKWindow);
+    gtk_window_set_skip_taskbar_hint(GTK_WINDOW(pGTKWindow), true);
+    gtk_window_set_skip_pager_hint(GTK_WINDOW(pGTKWindow), true);
+    gtk_window_set_accept_focus(GTK_WINDOW(pGTKWindow), true);
+    gtk_widget_set_can_focus(pGTKWindow, true);
+    gtk_window_set_focus_on_map(GTK_WINDOW(pGTKWindow), true);
 
     ak_window* pWindow = ak_alloc_and_init_window_gtk(pApplication, pParent, ak_window_type_popup, pGTKWindow, extraDataSize, pExtraData);
     if (pWindow == NULL) {
         gtk_widget_destroy(pGTKWindow);
         return NULL;
     }
-
-    gtk_window_set_attached_to(GTK_WINDOW(pGTKWindow), pParent->pGTKWindow);
 
     return pWindow;
 }
@@ -2468,7 +2488,7 @@ ak_window* ak_create_window(ak_application* pApplication, ak_window_type type, a
 
 void ak_delete_window(ak_window* pWindow)
 {
-    if (pWindow == NULL/* || pWindow->isMarkedAsDeleted*/) {
+    if (pWindow == NULL) {
         return;
     }
 
@@ -2533,7 +2553,14 @@ void ak_set_window_position(ak_window* pWindow, int posX, int posY)
         return;
     }
 
-    gtk_window_move(GTK_WINDOW(pWindow->pGTKWindow), posX, posY);
+    gint parentPosX = 0;
+    gint parentPosY = 0;
+    if (pWindow->pParent != NULL) {
+        parentPosX = pWindow->pParent->absoluteClientPosX;
+        parentPosY = pWindow->pParent->absoluteClientPosY;
+    }
+
+    gtk_window_move(GTK_WINDOW(pWindow->pGTKWindow), parentPosX + posX, parentPosY + posY);
 }
 
 void ak_get_window_position(ak_window* pWindow, int* pPosXOut, int* pPosYOut)
@@ -2725,8 +2752,8 @@ PRIVATE void ak_on_global_capture_mouse(drgui_element* pElement)
 
     ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
-        //gdk_device_grab(gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default())),
-        //    GDK_WINDOW(pElementData->pWindow->pGTKWindow), GDK_OWNERSHIP_APPLICATION, false, GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK, NULL, GDK_CURRENT_TIME);
+        gdk_device_grab(gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default())),
+            gtk_widget_get_window(pElementData->pWindow->pGTKWindow), GDK_OWNERSHIP_APPLICATION, false, GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK, NULL, GDK_CURRENT_TIME);
     }
 }
 
@@ -2737,7 +2764,7 @@ PRIVATE void ak_on_global_release_mouse(drgui_element* pElement)
 
     ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
-        //gdk_device_ungrab(gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default())), GDK_CURRENT_TIME);
+        gdk_device_ungrab(gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default())), GDK_CURRENT_TIME);
     }
 }
 
