@@ -27,13 +27,13 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <dr_libs/wip/dr_gui_tab_bar.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct drgui_element drgui_element;
+typedef struct drgui_image drgui_image;
 typedef struct ak_application ak_application;
 
 #define AK_PANEL_OPTION_SHOW_TOOL_TABS             1
@@ -182,6 +182,9 @@ drgui_element* ak_panel_get_next_tool(drgui_element* pPanel, drgui_element* pToo
 /// @remarks
 ///     This will refresh the tab bar. Usually you will want to only set this once.
 void ak_panel_set_tab_options(drgui_element* pPanel, unsigned int options);
+
+/// Sets the image to use as the close button for tabs.
+void ak_panel_set_tab_close_button_image(drgui_element* pPanel, drgui_image* pImage);
 
 
 #ifdef __cplusplus

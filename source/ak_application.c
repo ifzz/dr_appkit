@@ -9,7 +9,6 @@
 #include "ak_window_private.h"
 #include "ak_config.h"
 #include <dr_libs/dr_util.h>
-#include <dr_libs/dr_gui.h>
 #include <dr_libs/dr_vfs.h>
 #include <dr_libs/dr_path.h>
 #include <stdlib.h>
@@ -17,6 +16,9 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+
+#define DR_GUI_INCLUDE_WIP
+#include <dr_libs/dr_gui.h>
 
 #ifndef PRIVATE
 #define PRIVATE static

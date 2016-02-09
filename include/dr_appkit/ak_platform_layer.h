@@ -4,6 +4,8 @@
 #define ak_platform_layer_h
 
 #include <stddef.h>
+
+#define DR_GUI_INCLUDE_WIP
 #include <dr_libs/dr_gui.h>
 
 /// Retrieves the blink rate in milliseconds for text cursors/carets.

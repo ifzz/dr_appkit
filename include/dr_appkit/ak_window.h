@@ -19,6 +19,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#define DR_GUI_INCLUDE_WIP
 #include <dr_libs/dr_gui.h>
 
 // This flag is posted on on_hide events when a popup window is automatically hidden as a result of the user clicking

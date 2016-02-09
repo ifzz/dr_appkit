@@ -7,9 +7,11 @@
 #include "../include/dr_appkit/ak_build_config.h"
 #include "ak_tool_private.h"
 #include "ak_application_private.h"
-#include <dr_libs/dr_gui.h>
 #include <dr_libs/dr_util.h>
 #include <assert.h>
+
+#define DR_GUI_INCLUDE_WIP
+#include <dr_libs/dr_gui.h>
 
 #ifndef PRIVATE
 #define PRIVATE static
@@ -40,6 +42,9 @@ typedef struct
 
     /// The tab bar for tool tabs.
     drgui_element* pTabBar;
+
+    /// The image to use for the close button the tab bar.
+    drgui_image* pTabBarCloseImage;
 
     /// The container for tools.
     drgui_element* pToolContainer;
@@ -410,6 +415,7 @@ drgui_element* ak_create_panel(ak_application* pApplication, drgui_element* pPar
         pPanelData->maintainSplitRatio = false;
         pPanelData->tabBarOrientation  = drgui_tabbar_orientation_top;
         pPanelData->pTabBar            = NULL;
+        pPanelData->pTabBarCloseImage  = NULL;
         pPanelData->pToolContainer     = NULL;
         pPanelData->optionFlags        = 0;
         pPanelData->isMouseOver        = false;
@@ -740,10 +746,13 @@ bool ak_panel_attach_tool(drgui_element* pPanel, drgui_element* pTool)
         drgui_tabbar_set_font(pPanelData->pTabBar, pTheme->pUIFont);
         drgui_tabbar_enable_auto_size(pPanelData->pTabBar);
         drgui_set_on_size(pPanelData->pTabBar, ak_panel_on_tab_bar_size);
-        //drgui_tabbar_set_close_button_image(pPanelData->pTabBar, ide_get_red_cross_image(ak_get_application_image_manager(pPanelData->pApplication)));
         drgui_tabbar_set_on_tab_deactivated(pPanelData->pTabBar, ak_panel_on_tab_deactivated);
         drgui_tabbar_set_on_tab_activated(pPanelData->pTabBar, ak_panel_on_tab_activated);
         drgui_tabbar_set_on_tab_closed(pPanelData->pTabBar, ak_panel_on_tab_close);
+
+        if (pPanelData->pTabBarCloseImage != NULL) {
+            drgui_tabbar_set_close_button_image(pPanelData->pTabBar, pPanelData->pTabBarCloseImage);
+        }
 
         if ((pPanelData->optionFlags & AK_PANEL_OPTION_SHOW_TOOL_TABS) == 0) {
             drgui_hide(pPanelData->pTabBar);
@@ -908,4 +917,18 @@ void ak_panel_set_tab_options(drgui_element* pPanel, unsigned int options)
 
     // The tabs need to be refreshed in order to reflect the new options.
     ak_panel_refresh_tabs(pPanel);
+}
+
+void ak_panel_set_tab_close_button_image(drgui_element* pPanel, drgui_image* pImage)
+{
+    ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
+    if (pPanelData == NULL) {
+        return;
+    }
+
+    pPanelData->pTabBarCloseImage = pImage;
+
+    if (pPanelData->pTabBar != NULL) {
+        drgui_tabbar_set_close_button_image(pPanelData->pTabBar, pImage);
+    }
 }

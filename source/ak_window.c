@@ -6,9 +6,11 @@
 #include "../include/dr_appkit/ak_panel.h"
 #include "ak_window_private.h"
 #include "ak_application_private.h"
-#include <dr_libs/dr_gui.h>
 #include <dr_libs/dr_util.h>
 #include <assert.h>
+
+#define DR_GUI_INCLUDE_WIP
+#include <dr_libs/dr_gui.h>
 
 #ifndef PRIVATE
 #define PRIVATE static

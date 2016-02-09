@@ -5,8 +5,6 @@
 #include "../include/dr_appkit/ak_application.h"
 #include "../include/dr_appkit/ak_build_config.h"
 #include "ak_tool_private.h"
-#include <dr_libs/dr_gui.h>
-#include <dr_libs/wip/dr_gui_tab_bar.h>
 #include <assert.h>
 
 #ifndef PRIVATE
