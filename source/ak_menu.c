@@ -1,15 +1,5 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/dr_appkit/ak_menu.h"
-#include "../include/dr_appkit/ak_window.h"
-#include <dr_libs/dr_util.h>
-#include <math.h>
-#include <assert.h>
-
-#ifndef PRIVATE
-#define PRIVATE static
-#endif
-
 typedef struct ak_menu ak_menu;
 
 struct ak_menu
@@ -177,19 +167,19 @@ struct ak_menu_item
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Default implementation of the item measure event.
-PRIVATE void ak_menu_on_measure_item_default(ak_menu_item* pMI, float* pWidthOut, float* pHeightOut);
+static void ak_menu_on_measure_item_default(ak_menu_item* pMI, float* pWidthOut, float* pHeightOut);
 
 /// Paints the given menu item.
-PRIVATE void ak_menu_on_paint_item_default(drgui_element* pMenuElement, ak_menu_item* pMI, drgui_rect relativeClippingRect, float posX, float posY, float width, float height, void* pPaintData);
+static void ak_menu_on_paint_item_default(drgui_element* pMenuElement, ak_menu_item* pMI, drgui_rect relativeClippingRect, float posX, float posY, float width, float height, void* pPaintData);
 
 /// Updates the layout data for the default menu items.
-PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow);
+static void ak_menu_update_item_layout_info(ak_window* pMenuWindow);
 
 /// Resizes the menu based on the size of it's menu items.
-PRIVATE void ak_menu_resize_by_items(ak_window* pMenuWindow);
+static void ak_menu_resize_by_items(ak_window* pMenuWindow);
 
 /// Finds the item under the given point.
-PRIVATE ak_menu_item* ak_menu_find_item_under_point(ak_window* pMenuWindow, float relativePosX, float relativePosY);
+static ak_menu_item* ak_menu_find_item_under_point(ak_window* pMenuWindow, float relativePosX, float relativePosY);
 
 ak_window* ak_create_menu(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
@@ -711,7 +701,7 @@ bool ak_menu_on_hide(ak_window* pMenuWindow, unsigned int flags)
     return true;
 }
 
-PRIVATE void ak_menu_on_measure_item_default(ak_menu_item* pMI, float* pWidthOut, float* pHeightOut)
+static void ak_menu_on_measure_item_default(ak_menu_item* pMI, float* pWidthOut, float* pHeightOut)
 {
     assert(pMI != NULL);
 
@@ -754,7 +744,7 @@ PRIVATE void ak_menu_on_measure_item_default(ak_menu_item* pMI, float* pWidthOut
     }
 }
 
-PRIVATE void ak_menu_on_paint_item_default(drgui_element* pMenuElement, ak_menu_item* pMI, drgui_rect relativeClippingRect, float posX, float posY, float width, float height, void* pPaintData)
+static void ak_menu_on_paint_item_default(drgui_element* pMenuElement, ak_menu_item* pMI, drgui_rect relativeClippingRect, float posX, float posY, float width, float height, void* pPaintData)
 {
     (void)relativeClippingRect;
     (void)width;
@@ -903,7 +893,7 @@ PRIVATE void ak_menu_on_paint_item_default(drgui_element* pMenuElement, ak_menu_
     drgui_draw_rect_outline(pMenuElement, drgui_make_rect(posX, posY, posX + menuWidth - borderWidth*2, posY + height), bgcolor, padding, pPaintData);
 }
 
-PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow)
+static void ak_menu_update_item_layout_info(ak_window* pMenuWindow)
 {
     ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
     if (pMenu == NULL) {
@@ -942,7 +932,7 @@ PRIVATE void ak_menu_update_item_layout_info(ak_window* pMenuWindow)
     pMenu->arrowDrawPosX        = pMenu->shortcutTextDrawPosX + maxShortcutTextWidth + pMenu->arrowPaddingLeft;
 }
 
-PRIVATE void ak_menu_resize_by_items(ak_window* pMenuWindow)
+static void ak_menu_resize_by_items(ak_window* pMenuWindow)
 {
     ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
     if (pMenu == NULL) {
@@ -978,7 +968,7 @@ PRIVATE void ak_menu_resize_by_items(ak_window* pMenuWindow)
     ak_menu_set_size(pMenuWindow, (unsigned int)(menuWidth * scaleX), (unsigned int)(menuHeight * scaleY));
 }
 
-PRIVATE ak_menu_item* ak_menu_find_item_under_point(ak_window* pMenuWindow, float relativePosX, float relativePosY)
+static ak_menu_item* ak_menu_find_item_under_point(ak_window* pMenuWindow, float relativePosX, float relativePosY)
 {
     ak_menu* pMenu = ak_get_window_extra_data(pMenuWindow);
     if (pMenu == NULL) {
@@ -1020,10 +1010,10 @@ PRIVATE ak_menu_item* ak_menu_find_item_under_point(ak_window* pMenuWindow, floa
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Appends the given menu item to it's parent menu.
-PRIVATE void ak_mi_append(ak_menu_item* pMI, ak_window* pMenuWindow);
+static void ak_mi_append(ak_menu_item* pMI, ak_window* pMenuWindow);
 
 /// Detaches the given menu item from it's parent menu.
-PRIVATE void ak_mi_detach(ak_menu_item* pMI);
+static void ak_mi_detach(ak_menu_item* pMI);
 
 ak_menu_item* ak_create_menu_item(ak_window* pMenuWindow, size_t extraDataSize, const void* pExtraData)
 {
@@ -1281,7 +1271,7 @@ void ak_mi_on_picked(ak_menu_item* pMI)
 }
 
 
-PRIVATE void ak_mi_append(ak_menu_item* pMI, ak_window* pMenuWindow)
+static void ak_mi_append(ak_menu_item* pMI, ak_window* pMenuWindow)
 {
     assert(pMI != NULL);
     assert(pMenuWindow != NULL);
@@ -1318,7 +1308,7 @@ PRIVATE void ak_mi_append(ak_menu_item* pMI, ak_window* pMenuWindow)
     drgui_dirty(ak_menu_get_gui_element(pMenuWindow), drgui_get_local_rect(ak_menu_get_gui_element(pMenuWindow)));
 }
 
-PRIVATE void ak_mi_detach(ak_menu_item* pMI)
+static void ak_mi_detach(ak_menu_item* pMI)
 {
     assert(pMI != NULL);
 

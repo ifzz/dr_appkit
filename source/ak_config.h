@@ -3,9 +3,6 @@
 #ifndef ak_config_h
 #define ak_config_h
 
-#include "ak_layout.h"
-#include <dr_libs/dr_vfs.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

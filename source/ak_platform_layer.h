@@ -1,22 +1,13 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#ifndef ak_clipboard_h
-#define ak_clipboard_h
+#ifndef ak_platform_layer_h
+#define ak_platform_layer_h
 
-#include <stdbool.h>
-#include <stddef.h>
+/// Retrieves the blink rate in milliseconds for text cursors/carets.
+unsigned int ak_get_caret_blink_rate();
 
-/// Sets the text on the clipboard.
-bool ak_clipboard_set_text(const char* text, size_t textLength);
-
-/// Retrieves the text on the clipboard.
-///
-/// The returned string must be freed with ak_clipboard_free_text().
-char* ak_clipboard_get_text();
-
-/// Frees the text returned by ak_clipboard_get_text().
-void ak_clipboard_free_text(char* text);
-
+/// Retrieves information about the default font to use for things like menus, etc.
+void ak_platform_get_default_font(char* familyOut, size_t familyOutSize, float* sizeOut, drgui_font_weight* weightOut, drgui_font_slant* slantOut);
 
 #endif
 

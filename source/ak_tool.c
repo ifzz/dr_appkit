@@ -1,16 +1,5 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/dr_appkit/ak_panel.h"
-#include "../include/dr_appkit/ak_tool.h"
-#include "../include/dr_appkit/ak_application.h"
-#include "../include/dr_appkit/ak_build_config.h"
-#include "ak_tool_private.h"
-#include <assert.h>
-
-#ifndef PRIVATE
-#define PRIVATE static
-#endif
-
 typedef struct
 {
     /// A pointer to the application that owns this tool.

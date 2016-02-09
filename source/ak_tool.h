@@ -11,9 +11,6 @@
 #ifndef ak_tool_h
 #define ak_tool_h
 
-#include <stddef.h>
-#include <stdbool.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

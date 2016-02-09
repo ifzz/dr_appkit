@@ -3,8 +3,6 @@
 #ifndef ak_window_private_h
 #define ak_window_private_h
 
-#include "ak_config.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

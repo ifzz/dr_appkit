@@ -1,11 +1,6 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/dr_appkit/ak_platform_layer.h"
-#include "../include/dr_appkit/ak_build_config.h"
-
 #ifdef AK_USE_WIN32
-#include <windows.h>
-
 unsigned int ak_get_caret_blink_rate()
 {
     return GetCaretBlinkTime();
@@ -32,9 +27,6 @@ void ak_platform_get_default_font(char* familyOut, size_t familyOutSize, float* 
 #endif
 
 #ifdef AK_USE_GTK
-#include <gtk/gtk.h>
-#include <dr_libs/dr_util.h>
-
 unsigned int ak_get_caret_blink_rate()
 {
     gint blinkTime = 1200;

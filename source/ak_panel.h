@@ -25,9 +25,6 @@
 #ifndef ak_panel_h
 #define ak_panel_h
 
-#include <stdint.h>
-#include <stdbool.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

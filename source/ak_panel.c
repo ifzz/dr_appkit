@@ -1,22 +1,5 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/dr_appkit/ak_panel.h"
-#include "../include/dr_appkit/ak_application.h"
-#include "../include/dr_appkit/ak_theme.h"
-#include "../include/dr_appkit/ak_tool.h"
-#include "../include/dr_appkit/ak_build_config.h"
-#include "ak_tool_private.h"
-#include "ak_application_private.h"
-#include <dr_libs/dr_util.h>
-#include <assert.h>
-
-#define DR_GUI_INCLUDE_WIP
-#include <dr_libs/dr_gui.h>
-
-#ifndef PRIVATE
-#define PRIVATE static
-#endif
-
 typedef struct
 {
     /// A pointer to the main application.
@@ -83,7 +66,7 @@ typedef struct
 // Private API
 
 /// Refreshes the alignment of the child panels of the given panel.
-PRIVATE void ak_panel_refresh_child_alignments(drgui_element* pPanel)
+static void ak_panel_refresh_child_alignments(drgui_element* pPanel)
 {
     ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     assert(pPanelData != NULL);
@@ -138,7 +121,7 @@ PRIVATE void ak_panel_refresh_child_alignments(drgui_element* pPanel)
     }
 }
 
-PRIVATE void ak_panel_refresh_tool_container_layout(drgui_element* pPanel)
+static void ak_panel_refresh_tool_container_layout(drgui_element* pPanel)
 {
     ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     assert(pPanelData != NULL);
@@ -188,7 +171,7 @@ PRIVATE void ak_panel_refresh_tool_container_layout(drgui_element* pPanel)
     }
 }
 
-PRIVATE void ak_panel_refresh_tabs(drgui_element* pPanel)
+static void ak_panel_refresh_tabs(drgui_element* pPanel)
 {
     assert(pPanel != NULL);
 
@@ -254,7 +237,7 @@ PRIVATE void ak_panel_refresh_tabs(drgui_element* pPanel)
 }
 
 
-PRIVATE void ak_panel_on_paint(drgui_element* pPanel, drgui_rect relativeRect, void* pPaintData)
+static void ak_panel_on_paint(drgui_element* pPanel, drgui_rect relativeRect, void* pPaintData)
 {
     ak_panel_data* pPanelData = drgui_get_extra_data(pPanel);
     assert(pPanelData != NULL);
@@ -272,7 +255,7 @@ PRIVATE void ak_panel_on_paint(drgui_element* pPanel, drgui_rect relativeRect, v
     }
 }
 
-PRIVATE void ak_panel_on_size(drgui_element* pElement, float newWidth, float newHeight)
+static void ak_panel_on_size(drgui_element* pElement, float newWidth, float newHeight)
 {
     (void)newWidth;
     (void)newHeight;
@@ -294,7 +277,7 @@ PRIVATE void ak_panel_on_size(drgui_element* pElement, float newWidth, float new
     }
 }
 
-PRIVATE void ak_panel_on_mouse_enter(drgui_element* pElement)
+static void ak_panel_on_mouse_enter(drgui_element* pElement)
 {
     ak_panel_data* pPanelData = drgui_get_extra_data(pElement);
     assert(pPanelData != NULL);
@@ -302,7 +285,7 @@ PRIVATE void ak_panel_on_mouse_enter(drgui_element* pElement)
     pPanelData->isMouseOver = true;
 }
 
-PRIVATE void ak_panel_on_mouse_leave(drgui_element* pElement)
+static void ak_panel_on_mouse_leave(drgui_element* pElement)
 {
     ak_panel_data* pPanelData = drgui_get_extra_data(pElement);
     assert(pPanelData != NULL);
@@ -312,7 +295,7 @@ PRIVATE void ak_panel_on_mouse_leave(drgui_element* pElement)
     ak_panel_refresh_tabs(pElement);
 }
 
-PRIVATE void ak_panel_on_mouse_move(drgui_element* pElement, int relativeMousePosX, int relativeMousePosY, int stateFlags)
+static void ak_panel_on_mouse_move(drgui_element* pElement, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     (void)stateFlags;
 
@@ -324,7 +307,7 @@ PRIVATE void ak_panel_on_mouse_move(drgui_element* pElement, int relativeMousePo
     pPanelData->relativeMousePosY = (float)relativeMousePosY;
 }
 
-PRIVATE void ak_panel_on_mouse_button_down(drgui_element* pElement, int button, int relativeMousePosX, int relativeMousePosY, int stateFlags)
+static void ak_panel_on_mouse_button_down(drgui_element* pElement, int button, int relativeMousePosX, int relativeMousePosY, int stateFlags)
 {
     (void)stateFlags;
     (void)button;
@@ -338,7 +321,7 @@ PRIVATE void ak_panel_on_mouse_button_down(drgui_element* pElement, int button, 
 }
 
 
-PRIVATE void ak_panel_on_tab_bar_size(drgui_element* pTBElement, float newWidth, float newHeight)
+static void ak_panel_on_tab_bar_size(drgui_element* pTBElement, float newWidth, float newHeight)
 {
     (void)newWidth;
     (void)newHeight;
@@ -351,7 +334,7 @@ PRIVATE void ak_panel_on_tab_bar_size(drgui_element* pTBElement, float newWidth,
     ak_panel_refresh_tool_container_layout(pPanel);
 }
 
-PRIVATE void ak_panel_on_tab_deactivated(drgui_element* pTBElement, drgui_tab* pTab)
+static void ak_panel_on_tab_deactivated(drgui_element* pTBElement, drgui_tab* pTab)
 {
     drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
@@ -369,7 +352,7 @@ PRIVATE void ak_panel_on_tab_deactivated(drgui_element* pTBElement, drgui_tab* p
     ak_application_on_tool_deactivated(pPanelData->pApplication, pTool);
 }
 
-PRIVATE void ak_panel_on_tab_activated(drgui_element* pTBElement, drgui_tab* pTab)
+static void ak_panel_on_tab_activated(drgui_element* pTBElement, drgui_tab* pTab)
 {
     drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
@@ -387,7 +370,7 @@ PRIVATE void ak_panel_on_tab_activated(drgui_element* pTBElement, drgui_tab* pTa
     ak_application_on_tool_activated(pPanelData->pApplication, pTool);
 }
 
-PRIVATE void ak_panel_on_tab_close(drgui_element* pTBElement, drgui_tab* pTab)
+static void ak_panel_on_tab_close(drgui_element* pTBElement, drgui_tab* pTab)
 {
     drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);

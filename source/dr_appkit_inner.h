@@ -1,31 +1,34 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#ifndef ak_tool_private_h
-#define ak_tool_private_h
+#include "ak_build_config.h"
+#include "ak_application.h"
+#include "ak_window.h"
+#include "ak_platform_layer.h"
+#include "ak_clipboard.h"
+#include "ak_panel.h"
+#include "ak_layout.h"
+#include "ak_config.h"
+#include "ak_menu.h"
+#include "ak_menu_bar.h"
+#include "ak_theme.h"
+#include "ak_tool.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifdef DR_APPKIT_IMPLEMENTATION
+#include "ak_application_private.h"
+#include "ak_tool_private.h"
+#include "ak_window_private.h"
 
-typedef struct drgui_element drgui_element;
-
-/// Sets the tab to associate with the given tool.
-///
-/// @remarks
-///     This is only used by panels when the tool is attached to it.
-void ak_set_tool_tab(drgui_element* pTool, drgui_tab* pTab);
-
-/// Sets the panel the tool is attached to.
-///
-/// @remarks
-///     This is only used by panels when the tool is attached to it. This is just a basic setter.
-void ak_set_tool_panel(drgui_element* pTool, drgui_element* pPanel);
-
-
-#ifdef __cplusplus
-}
-#endif
-
+#include "ak_application.c"
+#include "ak_window.c"
+#include "ak_platform_layer.c"
+#include "ak_clipboard.c"
+#include "ak_panel.c"
+#include "ak_layout.c"
+#include "ak_config.c"
+#include "ak_menu.c"
+#include "ak_menu_bar.c"
+#include "ak_theme.c"
+#include "ak_tool.c"
 #endif
 
 

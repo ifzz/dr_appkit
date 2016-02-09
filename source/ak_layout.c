@@ -1,8 +1,5 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "ak_layout.h"
-#include <stdlib.h>
-
 void ak_detach_layout(ak_layout* pLayout)
 {
     if (pLayout == NULL) {

@@ -3,8 +3,6 @@
 #ifndef ak_menu_bar_h
 #define ak_menu_bar_h
 
-#include "ak_menu.h"
-
 #ifndef AK_MAX_MENU_BAR_ITEM_TEXT_LENGTH
 #define AK_MAX_MENU_BAR_ITEM_TEXT_LENGTH    64
 #endif

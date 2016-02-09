@@ -1,33 +1,5 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/dr_appkit/ak_application.h"
-#include "../include/dr_appkit/ak_build_config.h"
-#include "../include/dr_appkit/ak_theme.h"
-#include "../include/dr_appkit/ak_window.h"
-#include "../include/dr_appkit/ak_panel.h"
-#include "ak_application_private.h"
-#include "ak_window_private.h"
-#include "ak_config.h"
-#include <dr_libs/dr_util.h>
-#include <dr_libs/dr_vfs.h>
-#include <dr_libs/dr_path.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-#include <assert.h>
-
-#define DR_GUI_INCLUDE_WIP
-#include <dr_libs/dr_gui.h>
-
-#ifndef PRIVATE
-#define PRIVATE static
-#endif
-
-#ifdef AK_USE_WIN32
-#include <windows.h>
-#endif
-
 struct ak_application
 {
     /// The name of the application.
@@ -115,19 +87,19 @@ struct ak_application
 
 
 /// Enter's into the main application loop.
-PRIVATE int ak_main_loop(ak_application* pApplication);
+static int ak_main_loop(ak_application* pApplication);
 
 /// Loads and apply's the main config.
-PRIVATE bool ak_load_and_apply_config(ak_application* pApplication);
+static bool ak_load_and_apply_config(ak_application* pApplication);
 
 /// Applies the given config to the given application object.
-PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig);
+static bool ak_apply_config(ak_application* pApplication, ak_config* pConfig);
 
 /// Applies the given layout object to the given application object.
-PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, drgui_element* pElement);
+static bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, drgui_element* pElement);
 
 /// Recursively deletes the tools that are within the given panel.
-PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, drgui_element* pPanel);
+static void ak_delete_tools_recursive(ak_application* pApplication, drgui_element* pPanel);
 
 
 #ifdef AK_USE_WIN32
@@ -649,7 +621,7 @@ ak_window* ak_get_first_window(ak_application* pApplication)
     return pApplication->pFirstWindow;
 }
 
-PRIVATE ak_window* ak_get_next_non_child_window(ak_application* pApplication, ak_window* pWindow)
+static ak_window* ak_get_next_non_child_window(ak_application* pApplication, ak_window* pWindow)
 {
     if (pApplication == NULL || pWindow == NULL) {
         return NULL;
@@ -705,7 +677,7 @@ drgui_element* ak_get_first_panel(ak_application* pApplication)
     return ak_get_window_panel(pFirstWindow);
 }
 
-PRIVATE drgui_element* ak_get_next_non_child_panel(ak_application* pApplication, drgui_element* pPanel)
+static drgui_element* ak_get_next_non_child_panel(ak_application* pApplication, drgui_element* pPanel)
 {
     if (pPanel == NULL) {
         return NULL;
@@ -1122,7 +1094,7 @@ void ak_delete_timer(ak_timer* pTimer)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-PRIVATE int ak_main_loop(ak_application* pApplication)
+static int ak_main_loop(ak_application* pApplication)
 {
 #ifdef AK_USE_WIN32
     (void)pApplication;
@@ -1151,7 +1123,7 @@ PRIVATE int ak_main_loop(ak_application* pApplication)
 #endif
 }
 
-PRIVATE void ak_on_config_error(void* pUserData, const char* message)
+static void ak_on_config_error(void* pUserData, const char* message)
 {
     ak_application* pApplication = pUserData;
     assert(pApplication != NULL);
@@ -1159,7 +1131,7 @@ PRIVATE void ak_on_config_error(void* pUserData, const char* message)
     ak_errorf(pApplication, "[CONFIG] %s", message);
 }
 
-PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
+static bool ak_load_and_apply_config(ak_application* pApplication)
 {
     assert(pApplication != NULL);
 
@@ -1210,7 +1182,7 @@ PRIVATE bool ak_load_and_apply_config(ak_application* pApplication)
     return false;
 }
 
-PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig)
+static bool ak_apply_config(ak_application* pApplication, ak_config* pConfig)
 {
     assert(pApplication != NULL);
     assert(pConfig      != NULL);
@@ -1228,7 +1200,7 @@ PRIVATE bool ak_apply_config(ak_application* pApplication, ak_config* pConfig)
     return ak_apply_layout(pApplication, pInitialLayout, NULL);
 }
 
-PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, drgui_element* pWorkingPanel)
+static bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, drgui_element* pWorkingPanel)
 {
     assert(pApplication != NULL);
     assert(pLayout      != NULL);
@@ -1359,7 +1331,7 @@ PRIVATE bool ak_apply_layout(ak_application* pApplication, ak_layout* pLayout, d
     return true;
 }
 
-PRIVATE void ak_delete_tools_recursive(ak_application* pApplication, drgui_element* pPanel)
+static void ak_delete_tools_recursive(ak_application* pApplication, drgui_element* pPanel)
 {
     if (pApplication == NULL || pPanel == NULL) {
         return;

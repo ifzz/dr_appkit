@@ -1,16 +1,5 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/dr_appkit/ak_menu_bar.h"
-#include "../include/dr_appkit/ak_window.h"
-#include <dr_libs/dr_util.h>
-#include <math.h>
-#include <string.h>
-#include <assert.h>
-
-#ifndef PRIVATE
-#define PRIVATE static
-#endif
-
 typedef struct ak_menu_bar ak_menu_bar;
 
 struct ak_menu_bar
@@ -120,22 +109,22 @@ struct ak_menu_bar_item
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Finds the menu bar item under the given point.
-PRIVATE ak_menu_bar_item* ak_mb_find_item_under_point(drgui_element* pMBElement, float relativePosX, float relativePosY);
+static ak_menu_bar_item* ak_mb_find_item_under_point(drgui_element* pMBElement, float relativePosX, float relativePosY);
 
 /// Finds the metrics of the given menu bar item (position and size).
-PRIVATE bool ak_mb_find_item_metrics(ak_menu_bar_item* pMBI, float* pPosXOut, float* pPosYOut, float* pWidthOut, float* pHeightOut);
+static bool ak_mb_find_item_metrics(ak_menu_bar_item* pMBI, float* pPosXOut, float* pPosYOut, float* pWidthOut, float* pHeightOut);
 
 /// The default implementation of the function to call when a menu bar item needs to be measured.
-PRIVATE void ak_on_mmbi_measure_default(ak_menu_bar_item* pMBI, float* pWidthOut, float* pHeightOut);
+static void ak_on_mmbi_measure_default(ak_menu_bar_item* pMBI, float* pWidthOut, float* pHeightOut);
 
 /// The default implementation of the function to call when a menu bar item needs to be painted.
-PRIVATE void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_item* pMBI, drgui_rect clippingRect, float offsetX, float offsetY, float width, float height, void* pPaintData);
+static void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_item* pMBI, drgui_rect clippingRect, float offsetX, float offsetY, float width, float height, void* pPaintData);
 
 /// Called when a menu is hidden.
-PRIVATE void ak_mb_on_menu_hide(ak_window* pMenu, unsigned int flags, void* pUserData);
+static void ak_mb_on_menu_hide(ak_window* pMenu, unsigned int flags, void* pUserData);
 
 /// Called when a menu is shown.
-PRIVATE void ak_mb_on_menu_show(ak_window* pMenu, void* pUserData);
+static void ak_mb_on_menu_show(ak_window* pMenu, void* pUserData);
 
 drgui_element* ak_create_menu_bar(drgui_context* pContext, drgui_element* pParent, size_t extraDataSize, const void* pExtraData)
 {
@@ -537,7 +526,7 @@ void ak_mb_on_paint(drgui_element* pMBElement, drgui_rect relativeClippingRect, 
 }
 
 
-PRIVATE ak_menu_bar_item* ak_mb_find_item_under_point(drgui_element* pMBElement, float relativePosX, float relativePosY)
+static ak_menu_bar_item* ak_mb_find_item_under_point(drgui_element* pMBElement, float relativePosX, float relativePosY)
 {
     ak_menu_bar* pMB = drgui_get_extra_data(pMBElement);
     assert(pMB != NULL);
@@ -563,7 +552,7 @@ PRIVATE ak_menu_bar_item* ak_mb_find_item_under_point(drgui_element* pMBElement,
 }
 
 
-PRIVATE bool ak_mb_find_item_metrics(ak_menu_bar_item* pMBI, float* pPosXOut, float* pPosYOut, float* pWidthOut, float* pHeightOut)
+static bool ak_mb_find_item_metrics(ak_menu_bar_item* pMBI, float* pPosXOut, float* pPosYOut, float* pWidthOut, float* pHeightOut)
 {
     ak_menu_bar* pMB = drgui_get_extra_data(pMBI->pMBElement);
     if (pMB == NULL) {
@@ -605,7 +594,7 @@ PRIVATE bool ak_mb_find_item_metrics(ak_menu_bar_item* pMBI, float* pPosXOut, fl
     return false;
 }
 
-PRIVATE void ak_on_mmbi_measure_default(ak_menu_bar_item* pMBI, float* pWidthOut, float* pHeightOut)
+static void ak_on_mmbi_measure_default(ak_menu_bar_item* pMBI, float* pWidthOut, float* pHeightOut)
 {
     assert(pWidthOut  != NULL);
     assert(pHeightOut != NULL);
@@ -633,7 +622,7 @@ PRIVATE void ak_on_mmbi_measure_default(ak_menu_bar_item* pMBI, float* pWidthOut
     *pHeightOut = drgui_get_height(pMBI->pMBElement);
 }
 
-PRIVATE void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_item* pMBI, drgui_rect clippingRect, float offsetX, float offsetY, float width, float height, void* pPaintData)
+static void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_item* pMBI, drgui_rect clippingRect, float offsetX, float offsetY, float width, float height, void* pPaintData)
 {
     (void)clippingRect;
 
@@ -687,7 +676,7 @@ PRIVATE void ak_on_mmbi_paint_default(drgui_element* pMBElement, ak_menu_bar_ite
     drgui_draw_text(pMBElement, pMB->pFont, pMBI->text, (int)strlen(pMBI->text), offsetX + textPosX, offsetY + textPosY, pMB->textColor, bgcolor /*drgui_rgb(255, 128, 128)*/, pPaintData);
 }
 
-PRIVATE void ak_mb_on_menu_hide(ak_window* pMenu, unsigned int flags, void* pUserData)
+static void ak_mb_on_menu_hide(ak_window* pMenu, unsigned int flags, void* pUserData)
 {
     (void)pMenu;
 
@@ -716,7 +705,7 @@ PRIVATE void ak_mb_on_menu_hide(ak_window* pMenu, unsigned int flags, void* pUse
     drgui_dirty(pMBElement, drgui_get_local_rect(pMBElement));
 }
 
-PRIVATE void ak_mb_on_menu_show(ak_window* pMenu, void* pUserData)
+static void ak_mb_on_menu_show(ak_window* pMenu, void* pUserData)
 {
     drgui_element* pMBElement = pUserData;
     if (pMBElement == NULL) {
@@ -755,10 +744,10 @@ PRIVATE void ak_mb_on_menu_show(ak_window* pMenu, void* pUserData)
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Apopends the given item to the given menu bar.
-PRIVATE void ak_mbi_append(ak_menu_bar_item* pMBI, drgui_element* pMBElement);
+static void ak_mbi_append(ak_menu_bar_item* pMBI, drgui_element* pMBElement);
 
 /// Detaches the given item from the menu bar.
-PRIVATE void ak_mbi_detach(ak_menu_bar_item* pMBI);
+static void ak_mbi_detach(ak_menu_bar_item* pMBI);
 
 ak_menu_bar_item* ak_create_menu_bar_item(drgui_element* pMBElement, ak_window* pMenu, size_t extraDataSize, const void* pExtraData)
 {
@@ -857,7 +846,7 @@ const char* ak_mbi_get_text(ak_menu_bar_item* pMBI)
 }
 
 
-PRIVATE void ak_mbi_append(ak_menu_bar_item* pMBI, drgui_element* pMBElement)
+static void ak_mbi_append(ak_menu_bar_item* pMBI, drgui_element* pMBElement)
 {
     assert(pMBI != NULL);
 
@@ -887,7 +876,7 @@ PRIVATE void ak_mbi_append(ak_menu_bar_item* pMBI, drgui_element* pMBElement)
     drgui_dirty(pMBElement, drgui_get_local_rect(pMBElement));
 }
 
-PRIVATE void ak_mbi_detach(ak_menu_bar_item* pMBI)
+static void ak_mbi_detach(ak_menu_bar_item* pMBI)
 {
     assert(pMBI != NULL);
 

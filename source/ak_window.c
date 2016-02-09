@@ -1,30 +1,5 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/dr_appkit/ak_window.h"
-#include "../include/dr_appkit/ak_application.h"
-#include "../include/dr_appkit/ak_build_config.h"
-#include "../include/dr_appkit/ak_panel.h"
-#include "ak_window_private.h"
-#include "ak_application_private.h"
-#include <dr_libs/dr_util.h>
-#include <assert.h>
-
-#define DR_GUI_INCLUDE_WIP
-#include <dr_libs/dr_gui.h>
-
-#ifndef PRIVATE
-#define PRIVATE static
-#endif
-
-#ifdef AK_USE_WIN32
-#include <windows.h>
-#endif
-
-#ifdef AK_USE_GTK
-#include <gdk/gdk.h>
-#include <gtk/gtk.h>
-#endif
-
 struct ak_window
 {
 #ifdef AK_USE_WIN32
@@ -157,7 +132,7 @@ struct ak_window
     char pExtraData[1];
 };
 
-PRIVATE void ak_detach_window(ak_window* pWindow)
+static void ak_detach_window(ak_window* pWindow)
 {
     if (pWindow->pParent != NULL)
     {
@@ -184,7 +159,7 @@ PRIVATE void ak_detach_window(ak_window* pWindow)
     pWindow->pNextSibling = NULL;
 }
 
-PRIVATE void ak_append_window(ak_window* pWindow, ak_window* pParent)
+static void ak_append_window(ak_window* pWindow, ak_window* pParent)
 {
     // Detach the child from it's current parent first.
     ak_detach_window(pWindow);
@@ -227,7 +202,7 @@ typedef struct
 
 
 
-PRIVATE void ak_on_global_capture_mouse(drgui_element* pElement)
+static void ak_on_global_capture_mouse(drgui_element* pElement)
 {
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
@@ -238,7 +213,7 @@ PRIVATE void ak_on_global_capture_mouse(drgui_element* pElement)
     }
 }
 
-PRIVATE void ak_on_global_release_mouse(drgui_element* pElement)
+static void ak_on_global_release_mouse(drgui_element* pElement)
 {
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
@@ -249,7 +224,7 @@ PRIVATE void ak_on_global_release_mouse(drgui_element* pElement)
     }
 }
 
-PRIVATE void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_element* pPrevCapturedElement)
+static void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_element* pPrevCapturedElement)
 {
     (void)pPrevCapturedElement;
 
@@ -262,7 +237,7 @@ PRIVATE void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_elemen
     }
 }
 
-PRIVATE void ak_on_global_release_keyboard(drgui_element* pElement, drgui_element* pNewCapturedElement)
+static void ak_on_global_release_keyboard(drgui_element* pElement, drgui_element* pNewCapturedElement)
 {
     (void)pNewCapturedElement;
 
@@ -275,7 +250,7 @@ PRIVATE void ak_on_global_release_keyboard(drgui_element* pElement, drgui_elemen
     }
 }
 
-PRIVATE void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
+static void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
 {
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
@@ -297,7 +272,7 @@ PRIVATE void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect
 }
 
 
-PRIVATE drgui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow, HWND hWnd)
+static drgui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow, HWND hWnd)
 {
     drgui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(element_user_data), NULL);
     if (pElement == NULL) {
@@ -330,7 +305,7 @@ PRIVATE drgui_element* ak_create_window_panel(ak_application* pApplication, ak_w
     return pElement;
 }
 
-PRIVATE void ak_delete_window_panel(drgui_element* pTopLevelElement)
+static void ak_delete_window_panel(drgui_element* pTopLevelElement)
 {
     drgui_delete_element(pTopLevelElement);
 }
@@ -449,7 +424,7 @@ void ak_uninit_and_free_window_win32(ak_window* pWindow)
     free(pWindow);
 }
 
-PRIVATE void ak_refresh_popup_position(ak_window* pPopupWindow)
+static void ak_refresh_popup_position(ak_window* pPopupWindow)
 {
     // This function will place the given window (which is assumed to be a popup window) relative to the client area of it's parent.
 
@@ -478,7 +453,7 @@ PRIVATE void ak_refresh_popup_position(ak_window* pPopupWindow)
     }
 }
 
-PRIVATE HWND ak_get_top_level_application_HWND(HWND hWnd)
+static HWND ak_get_top_level_application_HWND(HWND hWnd)
 {
     HWND hTopLevelWindow = hWnd;
     do
@@ -500,7 +475,7 @@ PRIVATE HWND ak_get_top_level_application_HWND(HWND hWnd)
 }
 
 
-PRIVATE BOOL ak_is_window_owned_by_this_application(HWND hWnd)
+static BOOL ak_is_window_owned_by_this_application(HWND hWnd)
 {
     // We just use the window class to determine this.
     char className[256];
@@ -510,7 +485,7 @@ PRIVATE BOOL ak_is_window_owned_by_this_application(HWND hWnd)
 }
 
 
-PRIVATE void ak_win32_track_mouse_leave_event(HWND hWnd)
+static void ak_win32_track_mouse_leave_event(HWND hWnd)
 {
     TRACKMOUSEEVENT tme;
     ZeroMemory(&tme, sizeof(tme));
@@ -1121,7 +1096,7 @@ LRESULT CALLBACK GenericWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 }
 
 
-PRIVATE ak_window* ak_create_application_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+static ak_window* ak_create_application_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     assert(pApplication != NULL);
 
@@ -1159,7 +1134,7 @@ PRIVATE ak_window* ak_create_application_window(ak_application* pApplication, ak
     return pWindow;
 }
 
-PRIVATE ak_window* ak_create_child_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+static ak_window* ak_create_child_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     assert(pApplication  != NULL);
 
@@ -1195,7 +1170,7 @@ PRIVATE ak_window* ak_create_child_window(ak_application* pApplication, ak_windo
     return pWindow;
 }
 
-PRIVATE ak_window* ak_create_dialog_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+static ak_window* ak_create_dialog_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     assert(pApplication  != NULL);
 
@@ -1231,7 +1206,7 @@ PRIVATE ak_window* ak_create_dialog_window(ak_application* pApplication, ak_wind
     return pWindow;
 }
 
-PRIVATE ak_window* ak_create_popup_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+static ak_window* ak_create_popup_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     assert(pApplication != NULL);
 
@@ -1624,14 +1599,14 @@ bool ak_is_cursor_over_window(ak_window* pWindow)
 }
 
 
-typedef enum MONITOR_DPI_TYPE {
-    MDT_EFFECTIVE_DPI = 0,
-    MDT_ANGULAR_DPI = 1,
-    MDT_RAW_DPI = 2,
-    MDT_DEFAULT = MDT_EFFECTIVE_DPI
-} MONITOR_DPI_TYPE;
+typedef enum AK_MONITOR_DPI_TYPE {
+    AK_MDT_EFFECTIVE_DPI = 0,
+    AK_MDT_ANGULAR_DPI = 1,
+    AK_MDT_RAW_DPI = 2,
+    AK_MDT_DEFAULT = AK_MDT_EFFECTIVE_DPI
+} AK_MONITOR_DPI_TYPE;
 
-typedef HRESULT (__stdcall * PFN_GetDpiForMonitor) (HMONITOR hmonitor, MONITOR_DPI_TYPE dpiType, UINT *dpiX, UINT *dpiY);
+typedef HRESULT (__stdcall * AK_PFN_GetDpiForMonitor) (HMONITOR hmonitor, AK_MONITOR_DPI_TYPE dpiType, UINT *dpiX, UINT *dpiY);
 
 void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut)
 {
@@ -1643,7 +1618,7 @@ void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut)
         return;
     }
 
-    PFN_GetDpiForMonitor _GetDpiForMonitor = (PFN_GetDpiForMonitor)GetProcAddress(hSHCoreDLL, "GetDpiForMonitor");
+    AK_PFN_GetDpiForMonitor _GetDpiForMonitor = (AK_PFN_GetDpiForMonitor)GetProcAddress(hSHCoreDLL, "GetDpiForMonitor");
     if (_GetDpiForMonitor == NULL)
     {
         dr_win32_get_system_dpi(pDPIXOut, pDPIYOut);
@@ -1654,7 +1629,7 @@ void ak_get_window_dpi(ak_window* pWindow, int* pDPIXOut, int* pDPIYOut)
 
     UINT dpiX;
     UINT dpiY;
-    if (_GetDpiForMonitor(MonitorFromWindow(pWindow->hWnd, MONITOR_DEFAULTTOPRIMARY), MDT_EFFECTIVE_DPI, &dpiX, &dpiY) == S_OK)
+    if (_GetDpiForMonitor(MonitorFromWindow(pWindow->hWnd, MONITOR_DEFAULTTOPRIMARY), AK_MDT_EFFECTIVE_DPI, &dpiX, &dpiY) == S_OK)
     {
         if (pDPIXOut) {
             *pDPIXOut = (int)dpiX;
@@ -1837,7 +1812,7 @@ void ak_uninit_platform()
 
 
 
-PRIVATE drgui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow)
+static drgui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow)
 {
     drgui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(ak_element_user_data_gtk), NULL);
     if (pElement == NULL) {
@@ -1861,7 +1836,7 @@ PRIVATE drgui_element* ak_create_window_panel(ak_application* pApplication, ak_w
     return pElement;
 }
 
-PRIVATE void ak_delete_window_panel(drgui_element* pTopLevelElement)
+static void ak_delete_window_panel(drgui_element* pTopLevelElement)
 {
     drgui_delete_element(pTopLevelElement);
 }
@@ -2366,7 +2341,7 @@ void ak_uninit_and_free_window_gtk(ak_window* pWindow)
 }
 
 
-PRIVATE ak_window* ak_create_application_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+static ak_window* ak_create_application_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     assert(pApplication != NULL);
 
@@ -2384,7 +2359,7 @@ PRIVATE ak_window* ak_create_application_window(ak_application* pApplication, ak
     return pWindow;
 }
 
-PRIVATE ak_window* ak_create_child_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+static ak_window* ak_create_child_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     assert(pApplication  != NULL);
 
@@ -2398,7 +2373,7 @@ PRIVATE ak_window* ak_create_child_window(ak_application* pApplication, ak_windo
     return NULL;
 }
 
-PRIVATE ak_window* ak_create_dialog_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+static ak_window* ak_create_dialog_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     assert(pApplication != NULL);
 
@@ -2424,7 +2399,7 @@ PRIVATE ak_window* ak_create_dialog_window(ak_application* pApplication, ak_wind
     return pWindow;
 }
 
-PRIVATE ak_window* ak_create_popup_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
+static ak_window* ak_create_popup_window(ak_application* pApplication, ak_window* pParent, size_t extraDataSize, const void* pExtraData)
 {
     assert(pApplication != NULL);
 
@@ -2747,7 +2722,7 @@ void ak_get_window_dpi_scale(ak_window* pWindow, float* pDPIScaleXOut, float* pD
 }
 
 
-PRIVATE void ak_on_global_capture_mouse(drgui_element* pElement)
+static void ak_on_global_capture_mouse(drgui_element* pElement)
 {
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
@@ -2759,7 +2734,7 @@ PRIVATE void ak_on_global_capture_mouse(drgui_element* pElement)
     }
 }
 
-PRIVATE void ak_on_global_release_mouse(drgui_element* pElement)
+static void ak_on_global_release_mouse(drgui_element* pElement)
 {
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
@@ -2770,7 +2745,7 @@ PRIVATE void ak_on_global_release_mouse(drgui_element* pElement)
     }
 }
 
-PRIVATE void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_element* pPrevCapturedElement)
+static void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_element* pPrevCapturedElement)
 {
     (void)pPrevCapturedElement;
 
@@ -2783,7 +2758,7 @@ PRIVATE void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_elemen
     }
 }
 
-PRIVATE void ak_on_global_release_keyboard(drgui_element* pElement, drgui_element* pNewCapturedElement)
+static void ak_on_global_release_keyboard(drgui_element* pElement, drgui_element* pNewCapturedElement)
 {
     (void)pNewCapturedElement;
 
@@ -2796,7 +2771,7 @@ PRIVATE void ak_on_global_release_keyboard(drgui_element* pElement, drgui_elemen
     }
 }
 
-PRIVATE void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
+static void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
 {
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);

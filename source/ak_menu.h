@@ -13,9 +13,6 @@
 #ifndef ak_menu_h
 #define ak_menu_h
 
-#define DR_GUI_INCLUDE_WIP
-#include <dr_libs/dr_gui.h>
-
 #ifndef AK_MAX_MENU_ITEM_TEXT_LENGTH
 #define AK_MAX_MENU_ITEM_TEXT_LENGTH    64
 #endif

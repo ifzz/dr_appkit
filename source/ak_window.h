@@ -17,12 +17,6 @@
 #ifndef ak_window_h
 #define ak_window_h
 
-#include <stdint.h>
-#include <stdbool.h>
-
-#define DR_GUI_INCLUDE_WIP
-#include <dr_libs/dr_gui.h>
-
 // This flag is posted on on_hide events when a popup window is automatically hidden as a result of the user clicking
 // outside of it's region.
 #define AK_AUTO_HIDE_FROM_LOST_FOCUS        (1 << 0)

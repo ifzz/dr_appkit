@@ -1,11 +1,5 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/dr_appkit/ak_theme.h"
-#include "../include/dr_appkit/ak_application.h"
-#include "../include/dr_appkit/ak_build_config.h"
-#include "../include/dr_appkit/ak_platform_layer.h"
-#include <assert.h>
-
 ak_text_theme ak_init_text_theme(ak_application* pApplication, const char* family, unsigned int size, drgui_font_weight weight, drgui_font_slant slant, drgui_color textColor, drgui_color backgroundColor)
 {
     ak_text_theme result;

@@ -1,11 +1,6 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "../include/dr_appkit/ak_clipboard.h"
-#include "../include/dr_appkit/ak_build_config.h"
-
 #ifdef AK_USE_WIN32
-#include <windows.h>
-
 bool ak_clipboard_set_text(const char* text, size_t textLength)
 {
     if (textLength == (size_t)-1) {
@@ -118,10 +113,6 @@ void ak_clipboard_free_text(char* text)
 
 
 #ifdef AK_USE_GTK
-#include <gdk/gdk.h>
-#include <gtk/gtk.h>
-#include <string.h>
-
 bool ak_clipboard_set_text(const char* text, size_t textLength)
 {
     if (textLength == (size_t)-1) {

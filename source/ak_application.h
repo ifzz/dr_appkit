@@ -3,12 +3,6 @@
 #ifndef ak_application_h
 #define ak_application_h
 
-#include <stdint.h>
-#include <stdbool.h>
-
-#define DR_GUI_INCLUDE_WIP
-#include <dr_libs/dr_gui.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

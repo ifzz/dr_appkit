@@ -1,15 +1,7 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#include "ak_config.h"
-#include <stdio.h>
-#include <assert.h>
-
-#ifndef PRIVATE
-#define PRIVATE static
-#endif
-
 /// Determines whether or not the given string is a layout item tag.
-PRIVATE bool ak_is_layout_item_tag(const char* tag)
+static bool ak_is_layout_item_tag(const char* tag)
 {
     return
         strcmp(tag, AK_LAYOUT_TYPE_LAYOUT) == 0 ||
