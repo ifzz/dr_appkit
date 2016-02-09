@@ -5,7 +5,6 @@
 #include "../include/dr_appkit/ak_theme.h"
 #include "../include/dr_appkit/ak_window.h"
 #include "../include/dr_appkit/ak_panel.h"
-#include "../include/dr_appkit/ak_gui_image_manager.h"
 #include "ak_application_private.h"
 #include "ak_window_private.h"
 #include "ak_config.h"
@@ -47,9 +46,6 @@ struct ak_application
 
     /// A pointer to the GUI context.
     drgui_context* pGUI;
-
-    /// A pointer to the GUI image manager.
-    ak_gui_image_manager* pGUIImageManager;
 
     /// The application's theme.
     ak_theme theme;
@@ -213,14 +209,6 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
             return NULL;
         }
 
-        pApplication->pGUIImageManager = ak_create_gui_image_manager(pApplication->pVFS, pApplication->pGUI);
-        if (pApplication->pGUIImageManager == NULL) {
-            drgui_delete_context(pApplication->pGUI);
-            dr2d_delete_context(pApplication->pDrawingContext);
-            free(pApplication);
-            return NULL;
-        }
-
 
         // Theme.
         memset(&pApplication->theme, 0, sizeof(pApplication->theme));
@@ -293,7 +281,6 @@ void ak_delete_application(ak_application* pApplication)
     ak_theme_unload(&pApplication->theme);
 
     // GUI.
-    ak_delete_gui_image_manager(pApplication->pGUIImageManager);
     drgui_delete_context(pApplication->pGUI);
     dr2d_delete_context(pApplication->pDrawingContext);
 
@@ -431,15 +418,6 @@ drgui_context* ak_get_application_gui(ak_application* pApplication)
     }
 
     return pApplication->pGUI;
-}
-
-ak_gui_image_manager* ak_get_application_image_manager(ak_application* pApplication)
-{
-    if (pApplication == NULL) {
-        return NULL;
-    }
-
-    return pApplication->pGUIImageManager;
 }
 
 ak_theme* ak_get_application_theme(ak_application* pApplication)

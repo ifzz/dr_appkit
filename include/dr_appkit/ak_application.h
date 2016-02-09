@@ -14,7 +14,6 @@ extern "C" {
 typedef struct ak_application ak_application;
 typedef struct ak_window ak_window;
 typedef struct ak_theme ak_theme;
-typedef struct ak_gui_image_manager ak_gui_image_manager;
 typedef struct ak_timer ak_timer;
 typedef struct drgui_context drgui_context;
 typedef struct drgui_element drgui_element;
@@ -113,9 +112,6 @@ dr2d_context* ak_get_application_drawing_context(ak_application* pApplication);
 
 /// Retrieves a pointer to the GUI context associated with the application.
 drgui_context* ak_get_application_gui(ak_application* pApplication);
-
-/// Retrieves a pointer to the GUI image manager.
-ak_gui_image_manager* ak_get_application_image_manager(ak_application* pApplication);
 
 /// Retrieves a pointer to the object representing the application's theme.
 ak_theme* ak_get_application_theme(ak_application* pApplication);

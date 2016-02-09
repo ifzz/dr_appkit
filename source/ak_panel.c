@@ -4,7 +4,6 @@
 #include "../include/dr_appkit/ak_application.h"
 #include "../include/dr_appkit/ak_theme.h"
 #include "../include/dr_appkit/ak_tool.h"
-#include "../include/dr_appkit/ak_gui_image_manager.h"
 #include "../include/dr_appkit/ak_build_config.h"
 #include "ak_tool_private.h"
 #include "ak_application_private.h"
@@ -741,7 +740,7 @@ bool ak_panel_attach_tool(drgui_element* pPanel, drgui_element* pTool)
         drgui_tabbar_set_font(pPanelData->pTabBar, pTheme->pUIFont);
         drgui_tabbar_enable_auto_size(pPanelData->pTabBar);
         drgui_set_on_size(pPanelData->pTabBar, ak_panel_on_tab_bar_size);
-        drgui_tabbar_set_close_button_image(pPanelData->pTabBar, ak_get_red_cross_image(ak_get_application_image_manager(pPanelData->pApplication)));
+        //drgui_tabbar_set_close_button_image(pPanelData->pTabBar, ide_get_red_cross_image(ak_get_application_image_manager(pPanelData->pApplication)));
         drgui_tabbar_set_on_tab_deactivated(pPanelData->pTabBar, ak_panel_on_tab_deactivated);
         drgui_tabbar_set_on_tab_activated(pPanelData->pTabBar, ak_panel_on_tab_activated);
         drgui_tabbar_set_on_tab_closed(pPanelData->pTabBar, ak_panel_on_tab_close);

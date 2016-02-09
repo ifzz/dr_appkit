@@ -9,7 +9,6 @@ adding each .c file to the build.
 
 ## Dependencies
  - dr_libs (https://github.com/mackron/dr_libs)
- - nanosvg (https://github.com/memononen/nanosvg)
  - GTK+ 3 (Linux Only)
  
 
