@@ -43,11 +43,12 @@ drgui_element* ak_create_tool(ak_application* pApplication, drgui_element* pPare
         ak_tool_data* pToolData = drgui_get_extra_data(pElement);
         assert(pToolData != NULL);
 
-        pToolData->pApplication = pApplication;
-        pToolData->type[0]      = '\0';
-        pToolData->title[0]     = '\0';
-        pToolData->pTab         = NULL;
-        pToolData->pPanel       = NULL;
+        pToolData->pApplication   = pApplication;
+        pToolData->type[0]        = '\0';
+        pToolData->title[0]       = '\0';
+        pToolData->pTab           = NULL;
+        pToolData->pPanel         = NULL;
+        pToolData->onHandleAction = NULL;
 
         if (type != NULL) {
             strcpy_s(pToolData->type, sizeof(pToolData->type), type);
