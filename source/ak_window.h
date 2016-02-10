@@ -46,7 +46,12 @@ typedef enum
     ak_cursor_type_default,
 
     ak_cursor_type_arrow = ak_cursor_type_default,
-    ak_cursor_type_ibeam
+    ak_cursor_type_text,
+    ak_cursor_type_cross,
+    ak_cursor_type_size_ns,           // North/South resize arrows.
+    ak_cursor_type_size_we,           // West/East resize arrows.
+    ak_cursor_type_size_nesw,         // North/East, South/West resize arrows.
+    ak_cursor_type_size_nwse          // North/West, South/East resize arrows.
 
 } ak_cursor_type;
 

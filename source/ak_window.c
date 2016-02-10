@@ -271,6 +271,34 @@ static void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
     }
 }
 
+static void ak_on_global_change_cursor(drgui_element* pElement, drgui_cursor_type cursor)
+{
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData == NULL) {
+        return;
+    }
+
+    switch (cursor)
+    {
+    case drgui_cursor_none:      ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_none);       break;
+    case drgui_cursor_text:      ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_text);       break;
+    case drgui_cursor_cross:     ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_cross);      break;
+    case drgui_cursor_size_ns:   ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_ns);    break;
+    case drgui_cursor_size_we:   ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_we);    break;
+    case drgui_cursor_size_nesw: ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_nesw);  break;
+    case drgui_cursor_size_nwse: ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_nwse);  break;
+
+    case drgui_cursor_default:
+    default:
+        {
+            ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_default);
+        } break;
+    }
+}
+
 
 static drgui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow, HWND hWnd)
 {
@@ -1563,26 +1591,49 @@ void ak_set_window_cursor(ak_window* pWindow, ak_cursor_type cursor)
 
     switch (cursor)
     {
-        case ak_cursor_type_ibeam:
+        case ak_cursor_type_text:
         {
             pWindow->hCursor = LoadCursor(NULL, IDC_IBEAM);
-            break;
-        }
+        } break;
+
+        case ak_cursor_type_cross:
+        {
+            pWindow->hCursor = LoadCursor(NULL, IDC_CROSS);
+        } break;
+
+        case ak_cursor_type_size_ns:
+        {
+            pWindow->hCursor = LoadCursor(NULL, IDC_SIZENS);
+        } break;
+
+        case ak_cursor_type_size_we:
+        {
+            pWindow->hCursor = LoadCursor(NULL, IDC_SIZEWE);
+        } break;
+
+        case ak_cursor_type_size_nesw:
+        {
+            pWindow->hCursor = LoadCursor(NULL, IDC_SIZENESW);
+        } break;
+
+        case ak_cursor_type_size_nwse:
+        {
+            pWindow->hCursor = LoadCursor(NULL, IDC_SIZENWSE);
+        } break;
+
 
 
         case ak_cursor_type_none:
         {
             pWindow->hCursor = NULL;
-            break;
-        }
+        } break;
 
         //case cursor_type_arrow:
         case ak_cursor_type_default:
         default:
         {
             pWindow->hCursor = LoadCursor(NULL, IDC_ARROW);
-            break;
-        }
+        } break;
     }
 
     // If the cursor is currently inside the window it needs to be changed right now.
@@ -3084,6 +3135,7 @@ void ak_connect_gui_to_window_system(drgui_context* pGUI)
     drgui_set_global_on_release_mouse(pGUI, ak_on_global_release_mouse);
     drgui_set_global_on_capture_keyboard(pGUI, ak_on_global_capture_keyboard);
     drgui_set_global_on_release_keyboard(pGUI, ak_on_global_release_keyboard);
+    drgui_set_global_on_change_cursor(pGUI, ak_on_global_change_cursor);
     drgui_set_global_on_dirty(pGUI, ak_on_global_dirty);
 }
 
