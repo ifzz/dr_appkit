@@ -39,6 +39,11 @@ void ak_delete_image(ak_image* pImage)
         return;
     }
 
+    for (size_t i = 0; i < pImage->subImageCount; ++i)
+    {
+        drgui_delete_image(pImage->pSubImages[i].pGUIImage);
+    }
+
     free(pImage->pSubImages);
     free(pImage);
 }
@@ -73,8 +78,6 @@ drgui_image* ak_image_create_and_add_sub_image(ak_image* pImage, drgui_context* 
 
     pNewSubImages[pImage->subImageCount].pGUIImage = pSubImage;
     pNewSubImages[pImage->subImageCount].associatedScale = associatedScale;
-
-    free(pImage->pSubImages);
 
     pImage->pSubImages     = pNewSubImages;
     pImage->subImageCount += 1;

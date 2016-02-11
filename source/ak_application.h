@@ -11,16 +11,17 @@ typedef struct ak_application ak_application;
 typedef struct ak_window ak_window;
 typedef struct ak_theme ak_theme;
 typedef struct ak_timer ak_timer;
+typedef struct ak_image_library ak_image_library;
 typedef struct drgui_context drgui_context;
 typedef struct drgui_element drgui_element;
 typedef struct dr2d_context dr2d_context;
 typedef struct drvfs_context drvfs_context;
 
-typedef bool             (* ak_run_proc)           (ak_application* pApplication);
-typedef void             (* ak_log_proc)           (ak_application* pApplication, const char* message);
-typedef const char*      (* ak_layout_config_proc) (ak_application* pApplication);
+typedef bool           (* ak_run_proc)           (ak_application* pApplication);
+typedef void           (* ak_log_proc)           (ak_application* pApplication, const char* message);
+typedef const char*    (* ak_layout_config_proc) (ak_application* pApplication);
 typedef drgui_element* (* ak_create_tool_proc)   (ak_application* pApplication, ak_window* pWindow, const char* type, const char* attributes);
-typedef bool             (* ak_delete_tool_proc)   (ak_application* pApplication, drgui_element* pTool, bool force);
+typedef bool           (* ak_delete_tool_proc)   (ak_application* pApplication, drgui_element* pTool, bool force);
 
 typedef void (* ak_application_on_key_down_proc)         (ak_application* pApplication, ak_window* pWindow, drgui_key key, int stateFlags);
 typedef void (* ak_application_on_key_up_proc)           (ak_application* pApplication, ak_window* pWindow, drgui_key key, int stateFlags);
@@ -108,6 +109,9 @@ dr2d_context* ak_get_application_drawing_context(ak_application* pApplication);
 
 /// Retrieves a pointer to the GUI context associated with the application.
 drgui_context* ak_get_application_gui(ak_application* pApplication);
+
+/// Retrieves a pointer to the image library associated with the application.
+ak_image_library* ak_get_image_library(ak_application* pApplication);
 
 /// Retrieves a pointer to the object representing the application's theme.
 ak_theme* ak_get_application_theme(ak_application* pApplication);

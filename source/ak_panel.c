@@ -398,7 +398,7 @@ drgui_element* ak_create_panel(ak_application* pApplication, drgui_element* pPar
         pPanelData->maintainSplitRatio = false;
         pPanelData->tabBarOrientation  = drgui_tabbar_orientation_top;
         pPanelData->pTabBar            = NULL;
-        pPanelData->pTabBarCloseImage  = NULL;
+        pPanelData->pTabBarCloseImage  = ak_image_library_get_cross(ak_get_image_library(pApplication), 1);
         pPanelData->pToolContainer     = NULL;
         pPanelData->optionFlags        = 0;
         pPanelData->isMouseOver        = false;

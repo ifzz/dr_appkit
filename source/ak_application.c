@@ -21,6 +21,10 @@ struct ak_application
     /// A pointer to the GUI context.
     drgui_context* pGUI;
 
+    /// A pointer to the image library.
+    ak_image_library* pImageLibrary;
+
+
     /// The application's theme.
     ak_theme theme;
 
@@ -182,6 +186,8 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
             free(pApplication);
             return NULL;
         }
+
+        pApplication->pImageLibrary = ak_create_image_library(pApplication->pGUI);
 
 
         // Theme.
@@ -392,6 +398,15 @@ drgui_context* ak_get_application_gui(ak_application* pApplication)
     }
 
     return pApplication->pGUI;
+}
+
+ak_image_library* ak_get_image_library(ak_application* pApplication)
+{
+    if (pApplication == NULL) {
+        return NULL;
+    }
+
+    return pApplication->pImageLibrary;
 }
 
 ak_theme* ak_get_application_theme(ak_application* pApplication)
