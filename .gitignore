@@ -1,0 +1,2 @@
+build/*
+!build/dr_appkit_build.c
