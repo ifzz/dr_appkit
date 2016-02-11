@@ -157,7 +157,7 @@ void ak_set_tool_title(drgui_element* pTool, const char* title)
 
     strncpy_s(pToolData->title, sizeof(pToolData->title), (title != NULL) ? title : "", _TRUNCATE);
 
-    tab_set_text(pToolData->pTab, title);
+    drgui_tab_set_text(pToolData->pTab, title);
 }
 
 const char* ak_get_tool_title(drgui_element* pTool)

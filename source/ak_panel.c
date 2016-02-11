@@ -339,7 +339,7 @@ static void ak_panel_on_tab_deactivated(drgui_element* pTBElement, drgui_tab* pT
     drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
 
-    drgui_element* pTool = *(drgui_element**)tab_get_extra_data(pTab);
+    drgui_element* pTool = *(drgui_element**)drgui_tab_get_extra_data(pTab);
     assert(pTool != NULL);
 
 
@@ -357,7 +357,7 @@ static void ak_panel_on_tab_activated(drgui_element* pTBElement, drgui_tab* pTab
     drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
 
-    drgui_element* pTool = *(drgui_element**)tab_get_extra_data(pTab);
+    drgui_element* pTool = *(drgui_element**)drgui_tab_get_extra_data(pTab);
     assert(pTool != NULL);
 
 
@@ -375,7 +375,7 @@ static void ak_panel_on_tab_close(drgui_element* pTBElement, drgui_tab* pTab)
     drgui_element* pPanel = *(drgui_element**)drgui_tabbar_get_extra_data(pTBElement);
     assert(pPanel != NULL);
 
-    drgui_element* pTool = *(drgui_element**)tab_get_extra_data(pTab);
+    drgui_element* pTool = *(drgui_element**)drgui_tab_get_extra_data(pTab);
     assert(pTool != NULL);
 
     ak_application_delete_tool(ak_get_panel_application(pPanel), pTool, false);     // "false" means that the tool should not be forced to be deleted - we may want to show a confirmation dialog.
@@ -806,9 +806,9 @@ void ak_panel_detach_tool(drgui_element* pPanel, drgui_element* pTool)
     drgui_tab* pTab = ak_get_tool_tab(pTool);
     if (drgui_tabbar_get_active_tab(pPanelData->pTabBar) == pTab)
     {
-        drgui_tab* pNextTab = tab_get_next_tab(pTab);
+        drgui_tab* pNextTab = drgui_tab_get_next_tab(pTab);
         if (pNextTab == NULL) {
-            pNextTab = tab_get_prev_tab(pTab);
+            pNextTab = drgui_tab_get_prev_tab(pTab);
         }
 
         drgui_tabbar_activate_tab(pPanelData->pTabBar, pNextTab);
@@ -818,7 +818,7 @@ void ak_panel_detach_tool(drgui_element* pPanel, drgui_element* pTool)
     drgui_detach(pTool);
     ak_set_tool_panel(pTool, NULL);
 
-    tab_delete(ak_get_tool_tab(pTool));
+    drgui_tab_delete(ak_get_tool_tab(pTool));
     ak_set_tool_tab(pTool, NULL);
 
 
