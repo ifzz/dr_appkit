@@ -586,8 +586,8 @@ void ak_menu_on_paint(drgui_element* pMenuElement, drgui_rect relativeClippingRe
 
 
     // Top and bottom padding.
-    float menuWidth;
-    float menuHeight;
+    float menuWidth  = 0;
+    float menuHeight = 0;
     drgui_get_size(pMenuElement, &menuWidth, &menuHeight);
 
     menuWidth  = menuWidth / scaleX;
@@ -763,8 +763,8 @@ static void ak_menu_on_paint_item_default(drgui_element* pMenuElement, ak_menu_i
     float scaleY;
     drgui_get_inner_scale(pMenuElement, &scaleX, &scaleY);
 
-    float menuWidth;
-    float menuHeight;
+    float menuWidth  = 0;
+    float menuHeight = 0;
     drgui_get_size(pMenuElement, &menuWidth, &menuHeight);
 
     menuWidth  /= scaleX;
