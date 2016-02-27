@@ -180,7 +180,6 @@ static void ak_append_window(ak_window* pWindow, ak_window* pParent)
 }
 
 
-
 #ifdef AK_USE_WIN32
 static const char* g_WindowClass        = "AK_WindowClass";
 static const char* g_WindowClass_Dialog = "AK_WindowClass_Dialog";
@@ -198,7 +197,7 @@ typedef struct
     /// The Win32 window handle.
     HWND hWnd;
 
-}element_user_data;
+}ak_element_user_data;
 
 
 
@@ -207,7 +206,7 @@ static void ak_on_global_capture_mouse(drgui_element* pElement)
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
-    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
         SetCapture(pElementData->hWnd);
     }
@@ -218,7 +217,7 @@ static void ak_on_global_release_mouse(drgui_element* pElement)
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
-    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
         ReleaseCapture();
     }
@@ -231,7 +230,7 @@ static void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_element
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
-    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
         SetFocus(pElementData->hWnd);
     }
@@ -244,7 +243,7 @@ static void ak_on_global_release_keyboard(drgui_element* pElement, drgui_element
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
-    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
         SetFocus(NULL);
     }
@@ -255,7 +254,7 @@ static void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
-    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL)
     {
         drgui_rect absoluteRect = relativeRect;
@@ -271,38 +270,10 @@ static void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
     }
 }
 
-static void ak_on_global_change_cursor(drgui_element* pElement, drgui_cursor_type cursor)
-{
-    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
-    assert(pTopLevelElement != NULL);
-
-    element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
-    if (pElementData == NULL) {
-        return;
-    }
-
-    switch (cursor)
-    {
-    case drgui_cursor_none:      ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_none);       break;
-    case drgui_cursor_text:      ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_text);       break;
-    case drgui_cursor_cross:     ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_cross);      break;
-    case drgui_cursor_size_ns:   ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_ns);    break;
-    case drgui_cursor_size_we:   ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_we);    break;
-    case drgui_cursor_size_nesw: ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_nesw);  break;
-    case drgui_cursor_size_nwse: ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_nwse);  break;
-
-    case drgui_cursor_default:
-    default:
-        {
-            ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_default);
-        } break;
-    }
-}
-
 
 static drgui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow, HWND hWnd)
 {
-    drgui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(element_user_data), NULL);
+    drgui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(ak_element_user_data), NULL);
     if (pElement == NULL) {
         return NULL;
     }
@@ -324,7 +295,7 @@ static drgui_element* ak_create_window_panel(ak_application* pApplication, ak_wi
 
     drgui_set_inner_scale(pElement, dpiScaleX, dpiScaleY);
 
-    element_user_data* pUserData = ak_panel_get_extra_data(pElement);
+    ak_element_user_data* pUserData = ak_panel_get_extra_data(pElement);
     assert(pUserData != NULL);
 
     pUserData->hWnd    = hWnd;
@@ -1577,10 +1548,10 @@ ak_window* ak_get_panel_window(drgui_element* pPanel)
         return NULL;
     }
 
-    element_user_data* pWindowData = ak_panel_get_extra_data(pTopLevelPanel);
+    ak_element_user_data* pWindowData = ak_panel_get_extra_data(pTopLevelPanel);
     assert(pWindowData != NULL);
 
-    assert(ak_panel_get_extra_data_size(pTopLevelPanel) == sizeof(element_user_data));      // A loose check to help ensure we're working with the right kind of panel.
+    assert(ak_panel_get_extra_data_size(pTopLevelPanel) == sizeof(ak_element_user_data));      // A loose check to help ensure we're working with the right kind of panel.
     return pWindowData->pWindow;
 }
 
@@ -1837,7 +1808,7 @@ typedef struct
     /// A pointer to the window object itself.
     ak_window* pWindow;
 
-} ak_element_user_data_gtk;
+} ak_element_user_data;
 
 void ak_uninit_and_free_window_gtk(ak_window* pWindow);
 
@@ -1865,12 +1836,12 @@ void ak_uninit_platform()
 
 static drgui_element* ak_create_window_panel(ak_application* pApplication, ak_window* pWindow)
 {
-    drgui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(ak_element_user_data_gtk), NULL);
+    drgui_element* pElement = ak_create_panel(pApplication, NULL, sizeof(ak_element_user_data), NULL);
     if (pElement == NULL) {
         return NULL;
     }
 
-    ak_element_user_data_gtk* pUserData = ak_panel_get_extra_data(pElement);
+    ak_element_user_data* pUserData = ak_panel_get_extra_data(pElement);
     assert(pUserData != NULL);
 
     pUserData->pWindow = pWindow;
@@ -2693,10 +2664,10 @@ ak_window* ak_get_panel_window(drgui_element* pPanel)
         return NULL;
     }
 
-    ak_element_user_data_gtk* pWindowData = ak_panel_get_extra_data(pTopLevelPanel);
+    ak_element_user_data* pWindowData = ak_panel_get_extra_data(pTopLevelPanel);
     assert(pWindowData != NULL);
 
-    assert(ak_panel_get_extra_data_size(pTopLevelPanel) == sizeof(ak_element_user_data_gtk));      // A loose check to help ensure we're working with the right kind of panel.
+    assert(ak_panel_get_extra_data_size(pTopLevelPanel) == sizeof(ak_element_user_data));      // A loose check to help ensure we're working with the right kind of panel.
     return pWindowData->pWindow;
 }
 
@@ -2707,7 +2678,7 @@ void ak_set_window_cursor(ak_window* pWindow, ak_cursor_type cursor)
 
     switch (cursor)
     {
-        case ak_cursor_type_ibeam:
+        case ak_cursor_type_text:
         {
             pWindow->pGTKCursor = g_GTKCursor_IBeam;
         } break;
@@ -2778,7 +2749,7 @@ static void ak_on_global_capture_mouse(drgui_element* pElement)
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
-    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
         gdk_device_grab(gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default())),
             gtk_widget_get_window(pElementData->pWindow->pGTKWindow), GDK_OWNERSHIP_APPLICATION, false, GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_SCROLL_MASK, NULL, GDK_CURRENT_TIME);
@@ -2790,7 +2761,7 @@ static void ak_on_global_release_mouse(drgui_element* pElement)
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
-    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
         gdk_device_ungrab(gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default())), GDK_CURRENT_TIME);
     }
@@ -2803,7 +2774,7 @@ static void ak_on_global_capture_keyboard(drgui_element* pElement, drgui_element
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
-    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
         gtk_widget_grab_focus(GTK_WIDGET(pElementData->pWindow->pGTKWindow));
     }
@@ -2816,7 +2787,7 @@ static void ak_on_global_release_keyboard(drgui_element* pElement, drgui_element
     drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
     assert(pTopLevelElement != NULL);
 
-    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL) {
         gtk_widget_grab_focus(NULL);
     }
@@ -2831,7 +2802,7 @@ static void ak_on_global_dirty(drgui_element* pElement, drgui_rect relativeRect)
         return;
     }
 
-    ak_element_user_data_gtk* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
     if (pElementData != NULL && pElementData->pWindow != NULL && pElementData->pWindow->pGTKWindow != NULL)
     {
         drgui_rect absoluteRect = relativeRect;
@@ -2852,6 +2823,34 @@ void ak_gtk_post_quit_message(int resultCode)
 
 
 //// Functions below are cross-platform ////
+
+static void ak_on_global_change_cursor(drgui_element* pElement, drgui_cursor_type cursor)
+{
+    drgui_element* pTopLevelElement = drgui_find_top_level_element(pElement);
+    assert(pTopLevelElement != NULL);
+
+    ak_element_user_data* pElementData = ak_panel_get_extra_data(pTopLevelElement);
+    if (pElementData == NULL) {
+        return;
+    }
+
+    switch (cursor)
+    {
+    case drgui_cursor_none:      ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_none);       break;
+    case drgui_cursor_text:      ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_text);       break;
+    case drgui_cursor_cross:     ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_cross);      break;
+    case drgui_cursor_size_ns:   ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_ns);    break;
+    case drgui_cursor_size_we:   ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_we);    break;
+    case drgui_cursor_size_nesw: ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_nesw);  break;
+    case drgui_cursor_size_nwse: ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_size_nwse);  break;
+
+    case drgui_cursor_default:
+    default:
+        {
+            ak_set_window_cursor(pElementData->pWindow, ak_cursor_type_default);
+        } break;
+    }
+}
 
 ak_application* ak_get_window_application(ak_window* pWindow)
 {
