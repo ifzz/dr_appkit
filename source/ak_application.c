@@ -153,9 +153,8 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
                 strcat_s(path, sizeof(path), istr);
                 strcat_s(path, sizeof(path), ".log");
 
-                pApplication->pLogFile = drvfs_open(pApplication->pVFS, path, DRVFS_WRITE | DRVFS_TRUNCATE);
-                if (pApplication->pLogFile != NULL)
-                {
+                pApplication->pLogFile;
+                if (drvfs_open(pApplication->pVFS, path, DRVFS_WRITE | DRVFS_TRUNCATE, &pApplication->pLogFile) == drvfs_success) {
                     // We were able to open the log file, so break here.
                     break;
                 }
@@ -1164,8 +1163,8 @@ static bool ak_load_and_apply_config(ak_application* pApplication)
     char configPath[DRVFS_MAX_PATH];
     if (ak_get_config_file_path(pApplication, configPath, sizeof(configPath)))
     {
-        drvfs_file* pConfigFile = drvfs_open(ak_get_application_vfs(pApplication), configPath, DRVFS_READ);
-        if (pConfigFile != NULL)
+        drvfs_file* pConfigFile;
+        if (drvfs_open(ak_get_application_vfs(pApplication), configPath, DRVFS_READ, &pConfigFile) == drvfs_success)
         {
             ak_config config;
             if (ak_parse_config_from_file(&config, pConfigFile, ak_on_config_error, pApplication))

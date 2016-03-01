@@ -45,7 +45,7 @@ static size_t ak_config_on_read_from_file_proc(void* pUserData, void* pDataOut, 
     assert(pContext != NULL);
 
     size_t bytesRead;
-    if (drvfs_read(pContext->pFile, pDataOut, bytesToRead, &bytesRead)) {
+    if (drvfs_read(pContext->pFile, pDataOut, bytesToRead, &bytesRead) == drvfs_success) {
         return bytesRead;
     }
 
