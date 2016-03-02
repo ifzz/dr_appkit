@@ -253,6 +253,12 @@ void ak_delete_application(ak_application* pApplication)
         return;
     }
 
+    // If there is an element with keyboard or mouse focus, dr_gui will release the focus which in turn triggers an event handler. It's possible
+    // these event handlers could reference the theme, so we want to explicitly release capture before deleting the theme.
+    drgui_release_keyboard(pApplication->pGUI);
+    drgui_release_mouse(pApplication->pGUI);
+
+
     // Windows need to be deleted.
     ak_delete_all_application_windows(pApplication);
 
