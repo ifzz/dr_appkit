@@ -14,6 +14,7 @@
 #include "ak_menu_bar.h"
 #include "ak_theme.h"
 #include "ak_tool.h"
+#include "ak_textbox.h"
 
 #ifdef DR_APPKIT_IMPLEMENTATION
 #include "ak_application_private.h"
@@ -34,6 +35,7 @@
 #include "ak_menu_bar.c"
 #include "ak_theme.c"
 #include "ak_tool.c"
+#include "ak_textbox.c"
 #endif
 
 
