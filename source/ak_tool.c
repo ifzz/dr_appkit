@@ -113,6 +113,10 @@ void* ak_get_tool_extra_data(drgui_element* pTool)
 
 bool ak_is_of_tool_type(const char* pToolType, const char* pBaseToolType)
 {
+    if (pToolType == NULL || pBaseToolType == NULL) {
+        return false;
+    }
+
     return strncmp(pToolType, pBaseToolType, strlen(pBaseToolType)) == 0;
 }
 
