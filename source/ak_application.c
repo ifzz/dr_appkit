@@ -6,10 +6,10 @@ struct ak_application
     char name[AK_MAX_APPLICATION_NAME_LENGTH];
 
     /// The virtual file system context. This is mainly used for opening log, theme and configuration files.
-    drvfs_context* pVFS;
+    drfs_context* pVFS;
 
     /// The log file.
-    drvfs_file* pLogFile;
+    drfs_file* pLogFile;
 
     /// The log callback.
     ak_log_proc onLog;
@@ -127,7 +127,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
 
 
         // File system.
-        pApplication->pVFS = drvfs_create_context();
+        pApplication->pVFS = drfs_create_context();
         if (pApplication->pVFS == NULL) {
             free(pApplication);
             return NULL;
@@ -137,12 +137,12 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
         // Logging
         pApplication->onLog = NULL;
 
-        char logDirPath[DRVFS_MAX_PATH];
+        char logDirPath[DRFS_MAX_PATH];
         if (ak_get_log_file_folder_path(pApplication, logDirPath, sizeof(logDirPath)))
         {
             const unsigned int maxAttempts = 10;
 
-            char path[DRVFS_MAX_PATH];
+            char path[DRFS_MAX_PATH];
             for (unsigned int iAttempt = 0; iAttempt < maxAttempts; ++iAttempt)
             {
                 char istr[16];
@@ -154,7 +154,7 @@ ak_application* ak_create_application(const char* pName, size_t extraDataSize, c
                 strcat_s(path, sizeof(path), ".log");
 
                 pApplication->pLogFile;
-                if (drvfs_open(pApplication->pVFS, path, DRVFS_WRITE | DRVFS_TRUNCATE, &pApplication->pLogFile) == drvfs_success) {
+                if (drfs_open(pApplication->pVFS, path, DRFS_WRITE | DRFS_TRUNCATE, &pApplication->pLogFile) == drfs_success) {
                     // We were able to open the log file, so break here.
                     break;
                 }
@@ -270,10 +270,10 @@ void ak_delete_application(ak_application* pApplication)
     dr2d_delete_context(pApplication->pDrawingContext);
 
     // Logs.
-    drvfs_close(pApplication->pLogFile);
+    drfs_close(pApplication->pLogFile);
 
     // File system.
-    drvfs_delete_context(pApplication->pVFS);
+    drfs_delete_context(pApplication->pVFS);
 
 
 #ifdef AK_USE_WIN32
@@ -360,7 +360,7 @@ const char* ak_get_application_name(ak_application* pApplication)
     return pApplication->name;
 }
 
-drvfs_context* ak_get_application_vfs(ak_application* pApplication)
+drfs_context* ak_get_application_vfs(ak_application* pApplication)
 {
     if (pApplication == NULL) {
         return NULL;
@@ -436,11 +436,11 @@ void ak_log(ak_application* pApplication, const char* message)
         char dateTime[64];
         dr_datetime_short(dr_now(), dateTime, sizeof(dateTime));
 
-        drvfs_write_string(pApplication->pLogFile, "[");
-        drvfs_write_string(pApplication->pLogFile, dateTime);
-        drvfs_write_string(pApplication->pLogFile, "]");
-        drvfs_write_line  (pApplication->pLogFile, message);
-        drvfs_flush(pApplication->pLogFile);
+        drfs_write_string(pApplication->pLogFile, "[");
+        drfs_write_string(pApplication->pLogFile, dateTime);
+        drfs_write_string(pApplication->pLogFile, "]");
+        drfs_write_line  (pApplication->pLogFile, message);
+        drfs_flush(pApplication->pLogFile);
     }
 
 
@@ -1158,7 +1158,7 @@ static bool ak_load_and_apply_config(ak_application* pApplication)
 
     // We load the theme first because it contains the data we need for drawing the window which will be shown when the
     // main config is applied.
-    char themePath[DRVFS_MAX_PATH];
+    char themePath[DRFS_MAX_PATH];
     if (ak_get_theme_file_path(pApplication, themePath, sizeof(themePath))) {
         ak_theme_load_from_file(pApplication, &pApplication->theme, themePath);
     }
@@ -1166,11 +1166,11 @@ static bool ak_load_and_apply_config(ak_application* pApplication)
 
     // We first need to try and open the config file. If we can't find it we need to try and load the default config. If both
     // fail, we need to return false.
-    char configPath[DRVFS_MAX_PATH];
+    char configPath[DRFS_MAX_PATH];
     if (ak_get_config_file_path(pApplication, configPath, sizeof(configPath)))
     {
-        drvfs_file* pConfigFile;
-        if (drvfs_open(ak_get_application_vfs(pApplication), configPath, DRVFS_READ, &pConfigFile) == drvfs_success)
+        drfs_file* pConfigFile;
+        if (drfs_open(ak_get_application_vfs(pApplication), configPath, DRFS_READ, &pConfigFile) == drfs_success)
         {
             ak_config config;
             if (ak_parse_config_from_file(&config, pConfigFile, ak_on_config_error, pApplication))

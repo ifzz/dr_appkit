@@ -34,7 +34,7 @@
 
 #include "../dr_libs/dr_util.h"
 #include "../dr_libs/dr_path.h"
-#include "../dr_libs/dr_vfs.h"
+#include "../dr_libs/dr_fs.h"
 #include "../dr_libs/dr_gui.h"
 #include "../dr_libs/dr_2d.h"
 
@@ -43,13 +43,13 @@
 #ifdef DR_APPKIT_IMPLEMENTATION
 #define DR_UTIL_IMPLEMENTATION
 #define DR_PATH_IMPLEMENTATION
-#define DR_VFS_IMPLEMENTATION
+#define DR_FS_IMPLEMENTATION
 #define DR_GUI_IMPLEMENTATION
 #define DR_2D_IMPLEMENTATION
 
 #include "../dr_libs/dr_util.h"
 #include "../dr_libs/dr_path.h"
-#include "../dr_libs/dr_vfs.h"
+#include "../dr_libs/dr_fs.h"
 #include "../dr_libs/dr_gui.h"
 #include "../dr_libs/dr_2d.h"
 #endif

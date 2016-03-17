@@ -20,7 +20,7 @@ struct ak_config
 };
 
 /// Parses a config script from a file.
-bool ak_parse_config_from_file(ak_config* pConfig, drvfs_file* pFile, ak_on_config_error_proc onError, void* pOnErrorUserData);
+bool ak_parse_config_from_file(ak_config* pConfig, drfs_file* pFile, ak_on_config_error_proc onError, void* pOnErrorUserData);
 
 /// Parses a config script from a string.
 bool ak_parse_config_from_string(ak_config* pConfig, const char* configString, ak_on_config_error_proc onError, void* pOnErrorUserData);

@@ -15,7 +15,7 @@ typedef struct ak_image_library ak_image_library;
 typedef struct drgui_context drgui_context;
 typedef struct drgui_element drgui_element;
 typedef struct dr2d_context dr2d_context;
-typedef struct drvfs_context drvfs_context;
+typedef struct drfs_context drfs_context;
 
 typedef bool           (* ak_run_proc)           (ak_application* pApplication);
 typedef void           (* ak_log_proc)           (ak_application* pApplication, const char* message);
@@ -96,7 +96,7 @@ void ak_delete_all_application_windows(ak_application* pApplication);
 const char* ak_get_application_name(ak_application* pApplication);
 
 /// Retrieves a pointer ot the application's virtual file system context.
-drvfs_context* ak_get_application_vfs(ak_application* pApplication);
+drfs_context* ak_get_application_vfs(ak_application* pApplication);
 
 /// Retrieves the size of the extra data that is associated with the application.
 size_t ak_get_application_extra_data_size(ak_application* pApplication);
